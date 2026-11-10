@@ -1,0 +1,124 @@
+:root {
+  --el-color-primary: #f97316;
+  --el-color-primary-light-3: #fb923c;
+  --el-color-primary-light-5: #fdba74;
+  --el-color-primary-light-7: #fed7aa;
+  --el-color-primary-light-8: #ffedd5;
+  --el-color-primary-light-9: #fff7ed;
+  --el-color-primary-dark-2: #ea580c;
+
+  --snk-dark: #0f172a;
+  --snk-dark-secondary: #1e293b;
+  --snk-accent: #f97316;
+  --snk-blue: #2563eb;
+  --snk-bg: #f1f5f9;
+  --snk-card: #ffffff;
+  --snk-text: #0f172a;
+  --snk-muted: #64748b;
+  --snk-border: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--snk-bg);
+  color: var(--snk-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-container {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--snk-card);
+  padding: 18px 22px;
+  border-radius: 12px;
+  border: 1px solid var(--snk-border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+
+  .page-title-group {
+    .page-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--snk-dark);
+      letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--snk-muted);
+      margin-top: 3px;
+    }
+  }
+}
+
+.filter-card {
+  background: var(--snk-card);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--snk-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.table-card {
+  background: var(--snk-card);
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--snk-border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+
+.price-text {
+  font-weight: 700;
+  color: #ea580c;
+}
+
+.code-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
