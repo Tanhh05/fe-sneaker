@@ -3,7 +3,7 @@
     <div class="page-header">
       <div class="page-title-group">
         <h2 class="page-title">Quản lý Đơn hàng Bán lẻ</h2>
-        <p class="page-subtitle">Theo dõi danh sách đơn hàng, luồng chuyển trạng thái hợp lệ (DRAFT &rarr; CONFIRMED &rarr; COMPLETED / CANCELLED) và in hóa đơn</p>
+        <p class="page-subtitle">Theo dõi danh sách đơn hàng, luồng chuyển trạng thái (Chờ xác nhận &rarr; Đã xác nhận &rarr; Đang giao hàng &rarr; Hoàn thành / Hủy) và in hóa đơn</p>
       </div>
       <el-button type="primary" @click="$router.push('/sales')">
         <el-icon style="margin-right: 6px"><Plus /></el-icon> Tạo đơn mới tại POS
@@ -22,9 +22,12 @@
           />
         </el-col>
         <el-col :xs="12" :sm="6" :md="5">
-          <el-select v-model="filters.status" placeholder="Trạng thái đơn" clearable style="width: 100%" @change="loadData">
-            <el-option label="Nháp (DRAFT)" value="DRAFT" />
+          <el-select v-model="filters.status" placeholder="Tất cả trạng thái" clearable style="width: 100%" @change="loadData">
+            <el-option label="Tất cả trạng thái" value="" />
+            <el-option label="Chờ xác nhận (PENDING)" value="PENDING" />
+            <el-option label="Đơn nháp (DRAFT)" value="DRAFT" />
             <el-option label="Đã xác nhận (CONFIRMED)" value="CONFIRMED" />
+            <el-option label="Đang giao hàng (SHIPPING)" value="SHIPPING" />
             <el-option label="Hoàn thành (COMPLETED)" value="COMPLETED" />
             <el-option label="Đã hủy (CANCELLED)" value="CANCELLED" />
           </el-select>
@@ -90,14 +93,14 @@
             {{ PAYMENT_METHOD_MAP[row.paymentMethod] || row.paymentMethod }}
           </template>
         </el-table-column>
-        <el-table-column label="Trạng thái" width="125" align="center">
+        <el-table-column label="Trạng thái" width="135" align="center">
           <template #default="{ row }">
             <el-tag :type="ORDER_STATUS_MAP[row.status]?.type || 'info'">
               {{ ORDER_STATUS_MAP[row.status]?.label || row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">
@@ -109,7 +112,7 @@
                 <span>In HĐ</span>
               </button>
               <el-dropdown
-                v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
+                v-if="row.status !== 'COMPLETED' && row.status !== 'CANCELLED'"
                 trigger="click"
                 @command="(status) => handleStatusCommand(row, status)"
               >
@@ -118,20 +121,32 @@
                 </button>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <!-- Đơn DRAFT hoặc PENDING: Xác nhận đơn -->
                     <el-dropdown-item
-                      v-if="row.status === 'DRAFT'"
+                      v-if="row.status === 'DRAFT' || row.status === 'PENDING'"
                       command="CONFIRMED"
+                      style="color: #2563eb; font-weight: 700"
                     >
                       ✓ Xác nhận đơn
                     </el-dropdown-item>
+                    <!-- Đơn CONFIRMED: Bắt đầu giao hàng -->
                     <el-dropdown-item
-                      v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
+                      v-if="row.status === 'CONFIRMED'"
+                      command="SHIPPING"
+                      style="color: #d97706; font-weight: 700"
+                    >
+                      🚚 Bắt đầu giao hàng
+                    </el-dropdown-item>
+                    <!-- Đơn có thể hoàn thành -->
+                    <el-dropdown-item
+                      v-if="['CONFIRMED', 'SHIPPING', 'DRAFT', 'PENDING'].includes(row.status)"
                       command="COMPLETED"
+                      style="color: #10b981; font-weight: 700"
                     >
                       ✓ Hoàn thành đơn
                     </el-dropdown-item>
+                    <!-- Hủy đơn -->
                     <el-dropdown-item
-                      v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
                       command="CANCELLED"
                       divided
                       style="color: #ef4444"
@@ -164,6 +179,7 @@
       v-model="detailVisible"
       :order="selectedOrder"
       @print="openPrintFromDetail"
+      @status-change="handleStatusChangeFromDetail"
     />
 
     <!-- Printable Invoice Modal -->
@@ -251,21 +267,28 @@ function openPrintFromDetail() {
   invoiceVisible.value = true
 }
 
-function changeStatus(row, targetStatus, actionTitle) {
+function changeStatus(row, targetStatus, actionTitle, callback) {
+  const defaultNotes = {
+    CONFIRMED: 'Nhân viên đã kiểm tra và xác nhận đơn hàng',
+    SHIPPING: 'Đơn hàng đã bàn giao cho đơn vị vận chuyển',
+    COMPLETED: 'Đơn hàng đã được giao thành công và hoàn tất thanh toán',
+    CANCELLED: 'Khách hàng / Nhân viên hủy đơn'
+  }
   ElMessageBox.prompt(
     `Nhập ghi chú cho thao tác "${actionTitle}" đối với đơn hàng ${row.orderCode}:`,
     actionTitle,
     {
-      confirmButtonText: 'Xác nhận',
-      cancelButtonText: 'Hủy',
-      inputValue: `${actionTitle} tại quầy`
+      confirmButtonText: 'Xác nhận thực hiện',
+      cancelButtonText: 'Đóng',
+      inputValue: defaultNotes[targetStatus] || `${actionTitle} tại hệ thống`
     }
   ).then(async ({ value }) => {
-    await orderService.updateOrderStatus(row.id, {
+    const res = await orderService.updateOrderStatus(row.id, {
       status: targetStatus,
       note: value
     })
-    ElMessage.success(`Đã cập nhật trạng thái đơn ${row.orderCode} sang ${targetStatus}`)
+    ElMessage.success(`Đã cập nhật trạng thái đơn ${row.orderCode} sang "${ORDER_STATUS_MAP[targetStatus]?.label || targetStatus}"`)
+    if (callback) callback(res.data)
     loadData()
   }).catch(() => {})
 }
@@ -273,10 +296,18 @@ function changeStatus(row, targetStatus, actionTitle) {
 function handleStatusCommand(row, targetStatus) {
   const map = {
     CONFIRMED: 'Xác nhận đơn hàng',
+    SHIPPING: 'Bắt đầu giao hàng',
     COMPLETED: 'Hoàn thành đơn hàng',
     CANCELLED: 'Hủy đơn hàng'
   }
   changeStatus(row, targetStatus, map[targetStatus] || targetStatus)
+}
+
+function handleStatusChangeFromDetail(targetStatus, actionTitle) {
+  if (!selectedOrder.value) return
+  changeStatus(selectedOrder.value, targetStatus, actionTitle, (updatedOrder) => {
+    selectedOrder.value = updatedOrder
+  })
 }
 
 onMounted(() => {

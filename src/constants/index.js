@@ -1,6 +1,8 @@
 export const ORDER_STATUS_MAP = {
-  DRAFT: { label: 'Nháp (DRAFT)', type: 'info' },
-  CONFIRMED: { label: 'Đã xác nhận', type: 'warning' },
+  DRAFT: { label: 'Đơn nháp (DRAFT)', type: 'info' },
+  PENDING: { label: 'Chờ xác nhận', type: 'warning' },
+  CONFIRMED: { label: 'Đã xác nhận', type: 'primary' },
+  SHIPPING: { label: 'Đang giao hàng', type: 'warning' },
   COMPLETED: { label: 'Hoàn thành', type: 'success' },
   CANCELLED: { label: 'Đã hủy', type: 'danger' }
 }

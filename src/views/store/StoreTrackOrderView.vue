@@ -215,9 +215,10 @@ const stepActiveIndex = computed(() => {
   if (!orderData.value) return 1
   const st = orderData.value.status
   if (st === 'COMPLETED') return 4
+  if (st === 'SHIPPING') return 3
   if (st === 'CONFIRMED') return 2
   if (st === 'PENDING') return 1
-  return 2
+  return 1
 })
 
 onMounted(() => {
@@ -278,12 +279,14 @@ const formatDate = (dateStr) => {
 
 const formatStatus = (st) => {
   const map = {
+    DRAFT: 'ĐƠN NHÁP',
+    PENDING: 'CHỜ XÁC NHẬN',
     CONFIRMED: 'ĐÃ XÁC NHẬN',
-    PENDING: 'CHỜ THANH TOÁN',
+    SHIPPING: 'ĐANG GIAO HÀNG',
     COMPLETED: 'HOÀN THÀNH',
     CANCELLED: 'ĐÃ HỦY'
   }
-  return map[st] || st || 'ĐÃ XÁC NHẬN'
+  return map[st] || st || 'CHỜ XÁC NHẬN'
 }
 </script>
 
