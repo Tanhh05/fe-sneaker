@@ -62,14 +62,14 @@
         <template #empty>
           <el-empty description="Không tìm thấy đơn hàng phù hợp" :image-size="84" />
         </template>
-        <el-table-column label="Mã đơn hàng" width="130">
+        <el-table-column label="Mã đơn hàng" width="95" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.orderCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="customerName" label="Khách hàng" min-width="175" />
-        <el-table-column prop="customerPhone" label="SĐT Khách" width="125" />
-        <el-table-column label="Kênh bán / Nhân viên" width="170">
+        <el-table-column prop="customerName" label="Khách hàng" min-width="150" />
+        <el-table-column prop="customerPhone" label="SĐT Khách" width="110" />
+        <el-table-column label="Kênh bán / Nhân viên" width="135">
           <template #default="{ row }">
             <el-tag v-if="!row.employeeName" size="small" type="info" effect="plain" class="online-tag">
               ONLINE STORE
@@ -77,27 +77,27 @@
             <span v-else>{{ row.employeeName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Ngày tạo" width="155">
+        <el-table-column label="Ngày tạo" width="135">
           <template #default="{ row }">{{ formatDateTime(row.orderDate) }}</template>
         </el-table-column>
-        <el-table-column label="Thành tiền" width="150" align="right">
+        <el-table-column label="Thành tiền" width="120" align="right">
           <template #default="{ row }">
             <span class="price-text">{{ formatCurrency(row.finalAmount) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Phương thức TT" width="165">
+        <el-table-column label="Phương thức TT" width="130">
           <template #default="{ row }">
             {{ PAYMENT_METHOD_MAP[row.paymentMethod] || row.paymentMethod }}
           </template>
         </el-table-column>
-        <el-table-column label="Trạng thái" width="145" align="center">
+        <el-table-column label="Trạng thái" width="125" align="center">
           <template #default="{ row }">
             <el-tag :type="ORDER_STATUS_MAP[row.status]?.type || 'info'">
               {{ ORDER_STATUS_MAP[row.status]?.label || row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">
@@ -113,8 +113,8 @@
                 trigger="click"
                 @command="(status) => handleStatusCommand(row, status)"
               >
-                <button class="action-btn action-more">
-                  <span>Xử lý ▾</span>
+                <button class="action-btn action-more" title="Chuyển trạng thái đơn">
+                  <el-icon><MoreFilled /></el-icon>
                 </button>
                 <template #dropdown>
                   <el-dropdown-menu>
@@ -174,7 +174,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, View, Printer } from '@element-plus/icons-vue'
+import { Plus, View, Printer, MoreFilled } from '@element-plus/icons-vue'
 import { orderService } from '@/services/orderService'
 import { formatCurrency, formatDateTime } from '@/utils/formatters'
 import { ORDER_STATUS_MAP, PAYMENT_METHOD_MAP } from '@/constants'
