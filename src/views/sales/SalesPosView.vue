@@ -112,50 +112,81 @@
           </div>
 
           <!-- Variant SKU Grid / Table -->
-          <el-table :data="filteredVariants" stripe border height="440" style="width: 100%">
+          <el-table :data="paginatedVariants" stripe border style="width: 100%">
             <template #empty>
               <el-empty description="Không tìm thấy biến thể SKU phù hợp" :image-size="72" />
             </template>
-            <el-table-column label="SKU" width="145">
+            <el-table-column label="Mã SKU" width="115">
               <template #default="{ row }">
                 <span class="code-badge">{{ row.sku }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="productName" label="Sản phẩm Sneaker" min-width="180" />
-            <el-table-column label="Size / Màu" width="150">
+            <el-table-column label="Sản phẩm Sneaker" min-width="160">
               <template #default="{ row }">
-                <el-tag size="small" type="warning" effect="plain" style="margin-right: 4px">
-                  {{ row.sizeValue }}
-                </el-tag>
-                <span class="color-dot" :style="{ backgroundColor: row.hexCode }"></span>
-                <span style="font-size: 12.5px">{{ row.colorName }}</span>
+                <div class="pos-prod-cell">
+                  <img
+                    v-if="row.thumbnailUrl"
+                    :src="row.thumbnailUrl"
+                    alt="sneaker"
+                    class="pos-prod-thumb"
+                  />
+                  <div v-else class="pos-prod-thumb placeholder">SNK</div>
+                  <div class="pos-prod-meta">
+                    <span class="pos-prod-title">{{ row.productName }}</span>
+                    <span class="pos-prod-sub">{{ row.productCode }}</span>
+                  </div>
+                </div>
               </template>
             </el-table-column>
-            <el-table-column label="Đơn giá bán" width="135" align="right">
+            <el-table-column label="Size / Màu" width="125">
+              <template #default="{ row }">
+                <div class="pos-attr-cell">
+                  <span class="code-badge" style="font-size: 10.5px; padding: 1px 5px">
+                    {{ row.sizeValue }}
+                  </span>
+                  <span class="color-dot" :style="{ backgroundColor: row.hexCode }"></span>
+                  <span class="color-text">{{ row.colorName }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="Đơn giá" width="110" align="right">
               <template #default="{ row }">
                 <span class="price-text">{{ formatCurrency(row.salePrice) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="SL sẵn có" width="100" align="center">
+            <el-table-column label="Sẵn có" width="75" align="center">
               <template #default="{ row }">
                 <el-tag :type="row.availableQuantity > 0 ? 'success' : 'danger'" size="small">
-                  {{ row.availableQuantity }} đôi
+                  {{ row.availableQuantity }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="Chọn" width="105" align="center" fixed="right">
+            <el-table-column label="Chọn" width="75" align="center">
               <template #default="{ row }">
-                <el-button
-                  size="small"
-                  type="primary"
+                <button
+                  class="pos-add-btn"
                   :disabled="row.availableQuantity <= 0"
                   @click="addVariantToCart(row)"
                 >
                   + Chọn
-                </el-button>
+                </button>
               </template>
             </el-table-column>
           </el-table>
+
+          <!-- Pagination Bar -->
+          <div class="pos-pagination-bar">
+            <span class="pos-pagination-info">
+              Hiển thị <strong>{{ paginatedVariants.length }}</strong> / <strong>{{ filteredVariants.length }}</strong> biến thể
+            </span>
+            <el-pagination
+              v-model:current-page="posPagination.page"
+              :page-size="posPagination.size"
+              :total="filteredVariants.length"
+              layout="prev, pager, next"
+              small
+            />
+          </div>
         </div>
       </el-col>
 
@@ -193,9 +224,9 @@
                   :value="c.id"
                 />
               </el-select>
-              <el-button type="primary" plain @click="quickCustVisible = true">
+              <button class="pos-cust-btn" @click="quickCustVisible = true">
                 + Khách mới
-              </el-button>
+              </button>
             </div>
           </div>
 
@@ -225,14 +256,13 @@
                   size="small"
                   style="width: 100px"
                 />
-                <el-button
-                  type="danger"
-                  text
-                  size="small"
+                <button
+                  class="cart-delete-btn"
+                  title="Xóa khỏi đơn"
                   @click="cart.splice(index, 1)"
                 >
                   <el-icon><Delete /></el-icon>
-                </el-button>
+                </button>
               </div>
             </div>
           </div>
@@ -287,16 +317,14 @@
               </div>
             </div>
 
-            <el-button
-              type="primary"
-              size="large"
-              style="width: 100%; font-weight: 800; height: 46px"
-              :disabled="cart.length === 0"
-              :loading="submitting"
+            <button
+              class="pos-checkout-btn"
+              :disabled="cart.length === 0 || submitting"
               @click="submitSaleOrder"
             >
-              XÁC NHẬN ĐƠN HÀNG &amp; XUẤT HÓA ĐƠN
-            </el-button>
+              <span v-if="submitting">Đang tạo đơn hàng...</span>
+              <span v-else>XÁC NHẬN ĐƠN HÀNG &amp; XUẤT HÓA ĐƠN</span>
+            </button>
           </div>
         </div>
       </el-col>
@@ -311,7 +339,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Delete } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
@@ -411,6 +439,20 @@ const filteredVariants = computed(() => {
       (v.productCode && v.productCode.toLowerCase().includes(q))
     )
   })
+})
+
+const posPagination = reactive({
+  page: 1,
+  size: 8
+})
+
+const paginatedVariants = computed(() => {
+  const start = (posPagination.page - 1) * posPagination.size
+  return filteredVariants.value.slice(start, start + posPagination.size)
+})
+
+watch([debouncedSearchQuery, selectedSizeFilter, selectedColorFilter], () => {
+  posPagination.page = 1
 })
 
 const totalCartQty = computed(() => cart.value.reduce((s, i) => s + Number(i.quantity || 0), 0))
@@ -653,6 +695,196 @@ onMounted(() => {
         }
       }
     }
+  }
+}
+
+.pos-prod-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .pos-prod-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 0;
+    object-fit: cover;
+    border: 1px solid #e5e5e5;
+    flex-shrink: 0;
+
+    &.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #09090b;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  .pos-prod-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .pos-prod-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #000000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pos-prod-sub {
+      font-size: 10px;
+      color: #71717a;
+      font-family: var(--font-mono);
+    }
+  }
+}
+
+.pos-attr-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .color-text {
+    font-size: 11.5px;
+    color: #27272a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.pos-add-btn {
+  height: 26px;
+  padding: 0 9px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: #27272a;
+    border-color: #27272a;
+  }
+
+  &:disabled {
+    background: #f4f4f5;
+    color: #a1a1aa;
+    border-color: #e4e4e7;
+    cursor: not-allowed;
+  }
+}
+
+.pos-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e5e5;
+
+  .pos-pagination-info {
+    font-size: 11px;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    strong {
+      color: #000000;
+    }
+  }
+}
+
+.pos-cust-btn {
+  height: 32px;
+  padding: 0 12px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #27272a;
+    border-color: #27272a;
+  }
+}
+
+.cart-delete-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #ef4444;
+  background: #ffffff;
+  color: #ef4444;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  .el-icon {
+    font-size: 13px;
+  }
+}
+
+.pos-checkout-btn {
+  width: 100%;
+  height: 48px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: #27272a;
+    border-color: #27272a;
+  }
+
+  &:disabled {
+    background: #e4e4e7;
+    color: #a1a1aa;
+    border-color: #e4e4e7;
+    cursor: not-allowed;
   }
 }
 </style>
