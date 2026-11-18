@@ -69,7 +69,14 @@
         </el-table-column>
         <el-table-column prop="customerName" label="Khách hàng" min-width="175" />
         <el-table-column prop="customerPhone" label="SĐT Khách" width="125" />
-        <el-table-column prop="employeeName" label="Nhân viên bán" width="155" />
+        <el-table-column label="Kênh bán / Nhân viên" width="170">
+          <template #default="{ row }">
+            <el-tag v-if="!row.employeeName" size="small" type="info" effect="plain" class="online-tag">
+              ONLINE STORE
+            </el-tag>
+            <span v-else>{{ row.employeeName }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="Ngày tạo" width="155">
           <template #default="{ row }">{{ formatDateTime(row.orderDate) }}</template>
         </el-table-column>

@@ -1,92 +1,122 @@
 <template>
   <div class="page-container" v-loading="loading">
+    <!-- Header -->
     <div class="page-header">
       <div class="page-title-group">
-        <h2 class="page-title">Dashboard – Tổng Quan Hoạt Động Cửa Hàng</h2>
-        <p class="page-subtitle">Dữ liệu thời gian thực trực tiếp từ Oracle Database 19c+</p>
+        <h2 class="page-title">TỔNG QUAN HOẠT ĐỘNG KINH DOANH</h2>
+        <p class="page-subtitle">Dữ liệu doanh thu & chỉ số vận hành thời gian thực từ Oracle Database</p>
       </div>
-      <div>
-        <el-button @click="loadDashboard">
-          <el-icon style="margin-right: 6px"><Refresh /></el-icon> Làm mới dữ liệu
+      <div class="header-actions-group">
+        <el-button @click="loadDashboard" class="btn-refresh">
+          <el-icon style="margin-right: 6px"><Refresh /></el-icon> Cập nhật
         </el-button>
-        <el-button type="primary" @click="$router.push('/sales')">
-          <el-icon style="margin-right: 6px"><ShoppingCart /></el-icon> Mở màn hình POS
-        </el-button>
+        <button class="btn-primary-header" @click="$router.push('/sales')">
+          <el-icon style="margin-right: 6px"><ShoppingCart /></el-icon> Mở Màn Hình POS
+        </button>
       </div>
     </div>
 
-    <!-- Revenue Highlight Banner -->
+    <!-- Revenue Key Metrics Grid -->
     <div class="revenue-kpi-row">
-      <div class="rev-card dark">
-        <div class="rev-label">DOANH THU HÔM NAY</div>
+      <div class="rev-card card-primary-dark">
+        <div class="rev-eyebrow">
+          <span>DOANH THU HÔM NAY</span>
+          <span class="live-dot-tag"><span class="dot"></span> REALTIME</span>
+        </div>
         <div class="rev-value">{{ formatCurrency(data.todayRevenue) }}</div>
-        <div class="rev-sub">Chỉ tính đơn hàng hoàn thành (COMPLETED)</div>
+        <div class="rev-sub">Ghi nhận từ các đơn hàng hoàn tất (COMPLETED) trong ngày</div>
       </div>
-      <div class="rev-card accent">
-        <div class="rev-label">DOANH THU THÁNG NÀY</div>
+
+      <div class="rev-card card-white">
+        <div class="rev-eyebrow">
+          <span>DOANH THU THÁNG HIỆN TẠI</span>
+          <span class="period-tag">THÁNG NÀY</span>
+        </div>
         <div class="rev-value">{{ formatCurrency(data.monthRevenue) }}</div>
-        <div class="rev-sub">Tổng hợp doanh thu tháng hiện tại</div>
+        <div class="rev-sub">Doanh số cộng dồn chu kỳ tháng</div>
       </div>
-      <div class="rev-card blue">
-        <div class="rev-label">TỔNG DOANH THU LŨY KẾ</div>
+
+      <div class="rev-card card-white">
+        <div class="rev-eyebrow">
+          <span>TỔNG DOANH THU LŨY KẾ</span>
+          <span class="period-tag">ALL-TIME</span>
+        </div>
         <div class="rev-value">{{ formatCurrency(data.totalRevenue) }}</div>
-        <div class="rev-sub">Toàn bộ đơn hàng đã hoàn thành</div>
+        <div class="rev-sub">Tổng giá trị đơn hàng hoàn thành từ khi khởi tạo</div>
       </div>
     </div>
 
     <!-- 6 Operational KPI Cards -->
     <div class="stat-grid">
       <div class="stat-card">
-        <div class="stat-title">Tổng số sản phẩm</div>
+        <div class="stat-title">TỔNG MẪU SẢN PHẨM</div>
         <div class="stat-num">{{ data.totalProducts }}</div>
-        <div class="stat-meta">Mẫu giày trong danh mục</div>
+        <div class="stat-meta">Thiết kế trong danh mục</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Sản phẩm đang kinh doanh</div>
-        <div class="stat-num text-success">{{ data.activeProducts }}</div>
+        <div class="stat-title">ĐANG KINH DOANH</div>
+        <div class="stat-num text-active">{{ data.activeProducts }}</div>
         <div class="stat-meta">Trạng thái ACTIVE</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Tổng số đơn hàng</div>
+        <div class="stat-title">TỔNG ĐƠN HÀNG</div>
         <div class="stat-num">{{ data.totalOrders }}</div>
-        <div class="stat-meta">Tất cả trạng thái</div>
+        <div class="stat-meta">Gồm cả POS & Online</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Đơn hàng chờ xử lý</div>
-        <div class="stat-num text-warning">{{ data.pendingOrders }}</div>
-        <div class="stat-meta">DRAFT &amp; CONFIRMED</div>
+        <div class="stat-title">ĐƠN CHỜ XỬ LÝ</div>
+        <div class="stat-num text-pending">{{ data.pendingOrders }}</div>
+        <div class="stat-meta">Cần xác nhận / xuất kho</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Tổng số khách hàng</div>
+        <div class="stat-title">KHÁCH HÀNG</div>
         <div class="stat-num">{{ data.totalCustomers }}</div>
-        <div class="stat-meta">Khách hàng thành viên</div>
+        <div class="stat-meta">Hồ sơ khách thành viên</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Tổng số nhân viên</div>
+        <div class="stat-title">NHÂN SỰ VẬN HÀNH</div>
         <div class="stat-num">{{ data.totalEmployees }}</div>
-        <div class="stat-meta">Nhân sự cửa hàng</div>
+        <div class="stat-meta">Nhân viên & Quản lý</div>
       </div>
     </div>
 
-    <!-- Charts Section -->
-    <el-row :gutter="18">
+    <!-- Charts & Analytics Section -->
+    <el-row :gutter="20">
       <!-- Revenue Bar Chart -->
       <el-col :xs="24" :lg="15">
         <div class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>Biểu đồ Doanh thu ({{ chartModeLabel }})</h3>
-              <p>Thống kê doanh thu thực tế từ đơn hoàn thành</p>
+              <h3 class="chart-title">BIỂU ĐỒ DOANH THU ({{ chartModeLabel }})</h3>
+              <p class="chart-sub">Thống kê doanh số thực tế từ các đơn hàng thành công</p>
             </div>
-            <el-radio-group v-model="chartMode" size="small">
-              <el-radio-button label="DAY">Theo ngày</el-radio-button>
-              <el-radio-button label="MONTH">Theo tháng</el-radio-button>
-              <el-radio-button label="YEAR">Theo năm</el-radio-button>
-            </el-radio-group>
+            <div class="mode-tabs">
+              <button
+                class="mode-btn"
+                :class="{ active: chartMode === 'DAY' }"
+                @click="chartMode = 'DAY'"
+              >
+                Theo ngày
+              </button>
+              <button
+                class="mode-btn"
+                :class="{ active: chartMode === 'MONTH' }"
+                @click="chartMode = 'MONTH'"
+              >
+                Theo tháng
+              </button>
+              <button
+                class="mode-btn"
+                :class="{ active: chartMode === 'YEAR' }"
+                @click="chartMode = 'YEAR'"
+              >
+                Theo năm
+              </button>
+            </div>
           </div>
 
           <div v-if="activeRevenueSeries.length === 0" class="empty-box">
-            <el-empty description="Chưa có dữ liệu doanh thu" :image-size="80" />
+            <el-empty description="Chưa có dữ liệu doanh thu" :image-size="70" />
           </div>
           <div v-else class="bar-chart-container">
             <div
@@ -103,76 +133,82 @@
                 ></div>
               </div>
               <div class="bar-label">{{ item.period }}</div>
-              <div class="bar-sub">{{ item.orderCount }} đơn · {{ item.quantitySold }} đôi</div>
+              <div class="bar-sub">{{ item.orderCount }} đơn</div>
             </div>
           </div>
         </div>
       </el-col>
 
-      <!-- Order Status Distribution Chart -->
+      <!-- Order Status Breakdown -->
       <el-col :xs="24" :lg="9">
         <div class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>Số lượng Đơn hàng theo Trạng thái</h3>
-              <p>Tỷ trọng và giá trị theo từng trạng thái đơn</p>
+              <h3 class="chart-title">TRẠNG THÁI ĐƠN HÀNG</h3>
+              <p class="chart-sub">Tỷ lệ phân bổ theo chu trình xử lý đơn</p>
             </div>
           </div>
 
-          <div v-if="(data.orderStatusCounts || []).length === 0" class="empty-box">
-            <el-empty description="Chưa có đơn hàng" :image-size="80" />
+          <div v-if="data.orderStatusCounts.length === 0" class="empty-box">
+            <el-empty description="Chưa có dữ liệu đơn hàng" :image-size="70" />
           </div>
           <div v-else class="status-bars">
             <div
-              v-for="st in data.orderStatusCounts"
-              :key="st.status"
+              v-for="s in data.orderStatusCounts"
+              :key="s.status"
               class="status-row"
             >
               <div class="status-info">
-                <el-tag :type="ORDER_STATUS_MAP[st.status]?.type || 'info'" size="small" effect="dark">
-                  {{ ORDER_STATUS_MAP[st.status]?.label || st.status }}
-                </el-tag>
+                <span class="status-name">{{ s.status }}</span>
                 <span class="status-count">
-                  <strong>{{ st.count }}</strong> đơn ({{ formatCurrency(st.totalAmount) }})
+                  <strong>{{ s.count }}</strong> đơn ({{ calcStatusPercent(s.count) }}%)
                 </span>
               </div>
-              <el-progress
-                :percentage="calcStatusPercent(st.count)"
-                :stroke-width="12"
-                :color="statusColor(st.status)"
-              />
+              <div class="status-progress-track">
+                <div
+                  class="status-progress-fill"
+                  :style="{
+                    width: calcStatusPercent(s.count) + '%',
+                    backgroundColor: statusColor(s.status)
+                  }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
       </el-col>
     </el-row>
 
-    <!-- Top Selling Products Table -->
-    <div class="table-card">
+    <!-- Top Selling Sneakers -->
+    <div class="table-card" style="margin-top: 4px;">
       <div class="section-head">
-        <h3>Top Sản Phẩm Sneaker Bán Chạy Nhất</h3>
-        <el-button text type="primary" @click="$router.push('/reports')">
-          Xem báo cáo chi tiết &rarr;
-        </el-button>
+        <div>
+          <h3 class="section-title">TOP SẢN PHẨM BÁN CHẠY NHẤT</h3>
+          <p class="section-sub">Xếp hạng theo số lượng đôi giày bán ra thực tế</p>
+        </div>
+        <el-button size="small" @click="$router.push('/reports')">Xem báo cáo chi tiết →</el-button>
       </div>
-      <el-table :data="data.topSellingProducts || []" stripe border style="width: 100%">
-        <el-table-column type="index" label="Hạng" width="70" align="center" />
-        <el-table-column label="Mã SP" width="120">
+
+      <el-table :data="data.topSellingProducts" stripe style="width: 100%">
+        <el-table-column type="index" label="#" width="50" align="center" />
+        <el-table-column prop="productCode" label="Mã SKU" width="110">
           <template #default="{ row }">
             <span class="code-badge">{{ row.productCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="productName" label="Tên sản phẩm Sneaker" min-width="220" />
-        <el-table-column prop="brandName" label="Thương hiệu" width="150" />
-        <el-table-column prop="categoryName" label="Danh mục" width="150" />
-        <el-table-column prop="quantitySold" label="Số đôi đã bán" width="140" align="center">
+        <el-table-column prop="productName" label="Tên sản phẩm Sneaker" min-width="200">
           <template #default="{ row }">
-            <el-tag type="success" effect="plain"><strong>{{ row.quantitySold }}</strong> đôi</el-tag>
+            <span class="product-link" @click="$router.push('/products')">{{ row.productName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Doanh thu mang lại" width="190" align="right">
+        <el-table-column prop="quantitySold" label="Số lượng bán" width="130" align="right">
           <template #default="{ row }">
-            <span class="price-text">{{ formatCurrency(row.revenue) }}</span>
+            <strong>{{ row.quantitySold }}</strong> đôi
+          </template>
+        </el-table-column>
+        <el-table-column prop="totalRevenue" label="Doanh thu mang lại" width="180" align="right">
+          <template #default="{ row }">
+            <span class="price-text">{{ formatCurrency(row.totalRevenue) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -185,7 +221,6 @@ import { ref, computed, onMounted } from 'vue'
 import { Refresh, ShoppingCart } from '@element-plus/icons-vue'
 import { reportService } from '@/services/reportService'
 import { formatCurrency } from '@/utils/formatters'
-import { ORDER_STATUS_MAP } from '@/constants'
 
 const loading = ref(false)
 const chartMode = ref('DAY')
@@ -193,10 +228,10 @@ const chartMode = ref('DAY')
 const data = ref({
   totalProducts: 0,
   activeProducts: 0,
-  totalCustomers: 0,
-  totalEmployees: 0,
   totalOrders: 0,
   pendingOrders: 0,
+  totalCustomers: 0,
+  totalEmployees: 0,
   todayRevenue: 0,
   monthRevenue: 0,
   totalRevenue: 0,
@@ -226,7 +261,7 @@ const maxRevenue = computed(() => {
 
 function calcBarHeight(rev) {
   const pct = Math.round((Number(rev || 0) / maxRevenue.value) * 100)
-  return Math.max(pct, 10)
+  return Math.max(pct, 8)
 }
 
 function formatShortCurrency(val) {
@@ -244,13 +279,13 @@ function calcStatusPercent(count) {
 function statusColor(status) {
   switch (status) {
     case 'COMPLETED':
-      return '#16a34a'
+      return '#10b981'
     case 'CONFIRMED':
-      return '#f97316'
+      return '#000000'
     case 'CANCELLED':
-      return '#dc2626'
+      return '#ef4444'
     default:
-      return '#64748b'
+      return '#71717a'
   }
 }
 
@@ -270,88 +305,178 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.header-actions-group {
+  display: flex;
+  gap: 10px;
+
+  .btn-refresh {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .btn-primary-header {
+    display: inline-flex;
+    align-items: center;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 0 16px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #27272a;
+    }
+  }
+}
+
+/* Revenue KPI Row */
 .revenue-kpi-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 
   .rev-card {
-    padding: 22px 24px;
-    border-radius: 14px;
-    color: #ffffff;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
 
-    &.dark {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-left: 5px solid #f97316;
-    }
-    &.accent {
-      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    }
-    &.blue {
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    &.card-primary-dark {
+      background: #09090b;
+      color: #ffffff;
+      border: 1px solid #18181b;
+
+      .rev-eyebrow {
+        color: #a1a1aa;
+      }
+      .rev-sub {
+        color: #71717a;
+      }
     }
 
-    .rev-label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      opacity: 0.85;
+    &.card-white {
+      background: #ffffff;
+      color: #09090b;
+      border: 1px solid #e2e8f0;
+
+      .rev-eyebrow {
+        color: #71717a;
+      }
+      .rev-sub {
+        color: #64748b;
+      }
     }
-    .rev-value {
-      font-size: 26px;
+
+    .rev-eyebrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
       font-weight: 800;
-      margin: 8px 0 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+
+      .live-dot-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        background: #18181b;
+        color: #10b981;
+        padding: 2px 6px;
+        border-radius: 3px;
+
+        .dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #10b981;
+        }
+      }
+
+      .period-tag {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        background: #f4f4f5;
+        color: #52525b;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
     }
+
+    .rev-value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin: 12px 0 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
     .rev-sub {
       font-size: 12px;
-      opacity: 0.8;
+      line-height: 1.4;
     }
   }
 }
 
+/* Stat Grid */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
 
   .stat-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 16px 18px;
 
     .stat-title {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #64748b;
-    }
-    .stat-num {
-      font-size: 26px;
+      font-size: 10px;
       font-weight: 800;
-      color: #0f172a;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .stat-num {
+      font-size: 24px;
+      font-weight: 900;
+      color: #09090b;
       margin: 6px 0 2px;
-      &.text-success {
-        color: #16a34a;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+
+      &.text-active {
+        color: #10b981;
       }
-      &.text-warning {
-        color: #ea580c;
+      &.text-pending {
+        color: #f59e0b;
       }
     }
+
     .stat-meta {
-      font-size: 11.5px;
+      font-size: 11px;
       color: #94a3b8;
     }
   }
 }
 
+/* Chart Card */
 .chart-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 22px;
   height: 100%;
-  min-height: 330px;
   display: flex;
   flex-direction: column;
 
@@ -359,16 +484,47 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 18px;
-    h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
+    margin-bottom: 24px;
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #09090b;
+      margin: 0;
     }
-    p {
+
+    .chart-sub {
       font-size: 12px;
       color: #64748b;
-      margin-top: 2px;
+      margin: 4px 0 0;
+    }
+
+    .mode-tabs {
+      display: flex;
+      background: #f4f4f5;
+      padding: 2px;
+      border-radius: 6px;
+
+      .mode-btn {
+        padding: 5px 12px;
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        color: #71717a;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.15s ease;
+
+        &.active {
+          background: #ffffff;
+          color: #000000;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+      }
     }
   }
 }
@@ -377,61 +533,68 @@ onMounted(() => {
   flex: 1;
   display: flex;
   align-items: flex-end;
-  gap: 18px;
-  padding: 16px 8px 6px;
+  gap: 16px;
+  padding: 20px 8px 6px;
   overflow-x: auto;
+  min-height: 220px;
 
   .bar-column {
     flex: 1;
-    min-width: 90px;
+    min-width: 80px;
     display: flex;
     flex-direction: column;
     align-items: center;
 
     .bar-value {
-      font-size: 12px;
-      font-weight: 700;
-      color: #ea580c;
-      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #09090b;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
     }
 
     .bar-track {
-      width: 44px;
-      height: 170px;
-      background: #f1f5f9;
-      border-radius: 8px;
+      width: 36px;
+      height: 160px;
+      background: #f4f4f5;
+      border-radius: 4px;
       display: flex;
       align-items: flex-end;
       overflow: hidden;
 
       .bar-fill {
         width: 100%;
-        background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
-        border-radius: 8px 8px 0 0;
-        transition: height 0.35s ease;
+        background: #09090b;
+        border-radius: 4px 4px 0 0;
+        transition: height 0.3s ease;
+
+        &:hover {
+          background: #27272a;
+        }
       }
     }
 
     .bar-label {
-      margin-top: 8px;
-      font-size: 12px;
+      margin-top: 10px;
+      font-size: 11px;
       font-weight: 700;
-      color: #0f172a;
+      color: #09090b;
     }
 
     .bar-sub {
-      font-size: 11px;
-      color: #64748b;
+      font-size: 10px;
+      color: #71717a;
       margin-top: 2px;
     }
   }
 }
 
+/* Status Bars */
 .status-bars {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
+  gap: 18px;
+  margin-top: 10px;
 
   .status-row {
     .status-info {
@@ -439,7 +602,32 @@ onMounted(() => {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 6px;
-      font-size: 13px;
+      font-size: 12px;
+
+      .status-name {
+        font-weight: 700;
+        color: #09090b;
+      }
+
+      .status-count {
+        color: #71717a;
+        strong {
+          color: #09090b;
+        }
+      }
+    }
+
+    .status-progress-track {
+      height: 8px;
+      background: #f4f4f5;
+      border-radius: 4px;
+      overflow: hidden;
+
+      .status-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+      }
     }
   }
 }
@@ -448,11 +636,34 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
+  margin-bottom: 16px;
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #09090b;
+    text-transform: uppercase;
+    margin: 0;
   }
+
+  .section-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin: 3px 0 0;
+  }
+}
+
+.product-link {
+  font-weight: 700;
+  color: #09090b;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.empty-box {
+  padding: 40px 0;
 }
 </style>

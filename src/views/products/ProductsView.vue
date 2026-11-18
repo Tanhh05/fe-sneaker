@@ -413,10 +413,11 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0f172a;
-    color: #f97316;
+    background: #09090b;
+    color: #ffffff;
     font-size: 11px;
     font-weight: 800;
+    letter-spacing: 0.05em;
   }
 }
 </style>

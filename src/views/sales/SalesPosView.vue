@@ -608,29 +608,41 @@ onMounted(() => {
   }
 
   .checkout-section {
-    border-top: 2px solid #0f172a;
+    border-top: 1px solid #e2e8f0;
     padding-top: 14px;
 
     .summary-totals {
-      background: #0f172a;
+      background: #09090b;
       color: #ffffff;
-      padding: 14px 16px;
-      border-radius: 10px;
+      padding: 16px 18px;
+      border-radius: 6px;
       margin-bottom: 12px;
 
       .row {
         display: flex;
         justify-content: space-between;
         font-size: 13px;
+        color: #a1a1aa;
         margin-bottom: 4px;
+
+        span:last-child {
+          color: #ffffff;
+          font-variant-numeric: tabular-nums;
+        }
       }
+
       .final {
-        border-top: 1px solid #334155;
-        padding-top: 8px;
-        margin-top: 6px;
-        font-size: 16px;
-        font-weight: 800;
-        color: #f97316;
+        border-top: 1px solid #27272a;
+        padding-top: 10px;
+        margin-top: 8px;
+        font-size: 17px;
+        font-weight: 900;
+        color: #ffffff;
+
+        span:last-child {
+          color: #ffffff;
+          font-size: 20px;
+        }
       }
     }
   }
