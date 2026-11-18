@@ -57,7 +57,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">

@@ -40,32 +40,32 @@
         <template #empty>
           <el-empty description="Không tìm thấy nhân viên phù hợp" :image-size="84" />
         </template>
-        <el-table-column label="Mã NV" width="110">
+        <el-table-column label="Mã NV" width="90" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.employeeCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="fullName" label="Họ và tên nhân viên" min-width="180" />
-        <el-table-column prop="position" label="Chức vụ" width="160" />
-        <el-table-column prop="phone" label="Số điện thoại" width="130" />
-        <el-table-column prop="email" label="Email" min-width="180" />
-        <el-table-column label="Tài khoản liên kết" width="150" align="center">
+        <el-table-column prop="fullName" label="Họ và tên nhân viên" min-width="160" />
+        <el-table-column prop="position" label="Chức vụ" width="130" />
+        <el-table-column prop="phone" label="Số điện thoại" width="115" />
+        <el-table-column prop="email" label="Email" min-width="160" show-overflow-tooltip />
+        <el-table-column label="Tài khoản liên kết" width="125" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.username" type="warning" effect="plain">@{{ row.username }}</el-tag>
             <span v-else style="color: #94a3b8; font-size: 12px">Chưa liên kết</span>
           </template>
         </el-table-column>
-        <el-table-column label="Ngày vào làm" width="120">
+        <el-table-column label="Ngày vào làm" width="105" align="center">
           <template #default="{ row }">{{ formatDate(row.hireDate) }}</template>
         </el-table-column>
-        <el-table-column label="Trạng thái" width="130" align="center">
+        <el-table-column label="Trạng thái" width="115" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'" size="small">
               {{ row.status === 'ACTIVE' ? 'Đang làm việc' : 'Ngừng HĐ' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">

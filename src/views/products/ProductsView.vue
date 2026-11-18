@@ -50,7 +50,7 @@
         <template #empty>
           <el-empty description="Không tìm thấy sản phẩm phù hợp" :image-size="84" />
         </template>
-        <el-table-column label="Ảnh" width="80" align="center">
+        <el-table-column label="Ảnh" width="65" align="center">
           <template #default="{ row }">
             <img
               v-if="row.thumbnailUrl"
@@ -61,31 +61,31 @@
             <div v-else class="product-thumb placeholder">SNK</div>
           </template>
         </el-table-column>
-        <el-table-column label="Mã SP" width="110">
+        <el-table-column label="Mã SP" width="90" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.productCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="productName" label="Tên sản phẩm Sneaker" min-width="210" />
-        <el-table-column prop="brandName" label="Thương hiệu" width="135" />
-        <el-table-column prop="categoryName" label="Danh mục" width="135" />
-        <el-table-column prop="material" label="Chất liệu" min-width="160" show-overflow-tooltip />
-        <el-table-column label="Giá nhập" width="140" align="right">
+        <el-table-column prop="productName" label="Tên sản phẩm Sneaker" min-width="170" />
+        <el-table-column prop="brandName" label="Thương hiệu" width="110" />
+        <el-table-column prop="categoryName" label="Danh mục" width="110" />
+        <el-table-column prop="material" label="Chất liệu" min-width="130" show-overflow-tooltip />
+        <el-table-column label="Giá nhập" width="115" align="right">
           <template #default="{ row }">{{ formatCurrency(row.importPrice) }}</template>
         </el-table-column>
-        <el-table-column label="Giá bán" width="145" align="right">
+        <el-table-column label="Giá bán" width="120" align="right">
           <template #default="{ row }">
             <span class="price-text">{{ formatCurrency(row.salePrice) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Trạng thái" width="145" align="center">
+        <el-table-column label="Trạng thái" width="130" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
               {{ row.status === 'ACTIVE' ? 'Đang kinh doanh' : 'Ngừng KD' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">
@@ -110,7 +110,7 @@
                       command="discontinue"
                       style="color: #ef4444"
                     >
-                      Ngừng KD
+                      ✕ Ngừng KD
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
@@ -426,18 +426,20 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .product-thumb {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 0;
   object-fit: cover;
   border: 1px solid #e5e5e5;
+  display: block;
+  margin: 0 auto;
   &.placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
     background: #09090b;
     color: #ffffff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.05em;
   }
