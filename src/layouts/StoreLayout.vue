@@ -54,6 +54,10 @@
           <router-link to="/shop" class="nav-item" active-class="active">
             Bộ sưu tập
           </router-link>
+          <button class="nav-item wishlist-nav-btn" @click="showWishlist = true">
+            Yêu thích
+            <span v-if="wishlistStore.count > 0" class="nav-badge">{{ wishlistStore.count }}</span>
+          </button>
           <router-link to="/tracking" class="nav-item" active-class="active">
             Tra cứu đơn
           </router-link>
@@ -78,6 +82,19 @@
               class="search-input"
             />
           </div>
+
+          <!-- Wishlist Trigger -->
+          <button class="wishlist-trigger" @click="showWishlist = true" aria-label="Sản phẩm yêu thích" title="Danh sách yêu thích">
+            <div class="wishlist-icon-box">
+              <svg class="heart-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span v-if="wishlistStore.count > 0" class="wishlist-counter">
+                {{ wishlistStore.count }}
+              </span>
+            </div>
+            <span class="wishlist-lbl">YÊU THÍCH</span>
+          </button>
 
           <!-- Account / User Auth Trigger -->
           <button class="account-trigger" @click="openAuthModal('login')" aria-label="Tài khoản">
@@ -209,6 +226,9 @@
 
     <!-- Client Login / Register / Profile Modal -->
     <ClientAuthModal v-model="authModalVisible" :initial-tab="authModalTab" />
+
+    <!-- Wishlist Drawer -->
+    <WishlistDrawer v-model="showWishlist" />
   </div>
 </template>
 
@@ -217,16 +237,20 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
+import { useWishlistStore } from '@/stores/wishlist'
 import { formatCurrency } from '@/utils/formatters'
 import ClientAuthModal from '@/components/store/ClientAuthModal.vue'
+import WishlistDrawer from '@/components/store/WishlistDrawer.vue'
 
 const router = useRouter()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
+const wishlistStore = useWishlistStore()
 
 const searchKeyword = ref('')
 const isScrolled = ref(false)
 const showSizeGuide = ref(false)
+const showWishlist = ref(false)
 const authModalVisible = ref(false)
 const authModalTab = ref('login')
 
@@ -531,6 +555,94 @@ onUnmounted(() => {
         background: #ffffff;
         border-color: #000000;
       }
+    }
+  }
+
+  .wishlist-nav-btn {
+    background: none;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: inherit;
+
+    .nav-badge {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 800;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+  }
+
+  .wishlist-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid #e5e5e5;
+    padding: 0 12px;
+    height: 38px;
+    cursor: pointer;
+    color: #0a0a0a;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    border-radius: 0;
+
+    &:hover {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
+
+      .heart-svg {
+        color: #ef4444;
+        fill: #ef4444;
+      }
+    }
+
+    .wishlist-icon-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .heart-svg {
+        width: 17px;
+        height: 17px;
+        color: #000000;
+        transition: all 0.15s ease;
+      }
+
+      .wishlist-counter {
+        position: absolute;
+        top: -8px;
+        right: -10px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 9px;
+        font-weight: 800;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 3px;
+      }
+    }
+
+    .wishlist-lbl {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
   }
 

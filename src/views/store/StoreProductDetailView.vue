@@ -170,6 +170,18 @@
             >
               MUA NGAY (GIAO TẬN NƠI)
             </button>
+
+            <button
+              class="btn-wishlist-toggle"
+              :class="{ active: wishlistStore.isFavorite(product?.id) }"
+              @click="handleToggleWishlist"
+              :title="wishlistStore.isFavorite(product?.id) ? 'Bỏ khỏi yêu thích' : 'Lưu vào danh sách yêu thích'"
+            >
+              <svg viewBox="0 0 24 24" :fill="wishlistStore.isFavorite(product?.id) ? '#ef4444' : 'none'" :stroke="wishlistStore.isFavorite(product?.id) ? '#ef4444' : '#18181b'" stroke-width="2" class="heart-svg">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span>{{ wishlistStore.isFavorite(product?.id) ? 'ĐÃ LƯU VÀO YÊU THÍCH' : 'THÊM VÀO YÊU THÍCH' }}</span>
+            </button>
           </div>
 
           <!-- Assurance Perks -->
@@ -249,16 +261,28 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
 import { useCartStore } from '@/stores/cart'
+import { useWishlistStore } from '@/stores/wishlist'
 import { formatCurrency } from '@/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
+const wishlistStore = useWishlistStore()
 
 const loading = ref(false)
 const product = ref(null)
 const activeImage = ref('')
 const quantity = ref(1)
+
+const handleToggleWishlist = () => {
+  if (!product.value) return
+  const isAdded = wishlistStore.toggleFavorite(product.value)
+  if (isAdded) {
+    ElMessage.success(`Đã thêm "${product.value.productName}" vào danh sách yêu thích`)
+  } else {
+    ElMessage.info(`Đã bỏ "${product.value.productName}" khỏi danh sách yêu thích`)
+  }
+}
 
 const selectedColor = ref(null)
 const selectedSize = ref(null)
@@ -876,6 +900,48 @@ onMounted(() => {
       &:disabled {
         opacity: 0.4;
         cursor: not-allowed;
+      }
+    }
+
+    .btn-wishlist-toggle {
+      height: 48px;
+      background: #ffffff;
+      color: #000000;
+      border: 1.5px solid #18181b;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+
+      .heart-svg {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.2s ease;
+      }
+
+      &:hover {
+        background: #f4f4f5;
+        border-color: #000000;
+        .heart-svg {
+          transform: scale(1.15);
+        }
+      }
+
+      &.active {
+        background: #fef2f2;
+        border-color: #f87171;
+        color: #dc2626;
+
+        .heart-svg {
+          color: #ef4444;
+          fill: #ef4444;
+        }
       }
     }
   }

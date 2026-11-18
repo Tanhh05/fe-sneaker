@@ -118,6 +118,17 @@
               <div class="media-badges">
                 <span class="brand-mark">{{ product.brandName }}</span>
               </div>
+              <button
+                class="card-wishlist-btn"
+                :class="{ active: wishlistStore.isFavorite(product.id) }"
+                @click.stop="toggleWishlist(product)"
+                :title="wishlistStore.isFavorite(product.id) ? 'Bỏ khỏi yêu thích' : 'Lưu vào yêu thích'"
+                aria-label="Yêu thích"
+              >
+                <svg viewBox="0 0 24 24" :fill="wishlistStore.isFavorite(product.id) ? '#ef4444' : 'none'" :stroke="wishlistStore.isFavorite(product.id) ? '#ef4444' : '#18181b'" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
               <div class="hover-cta">
                 <span>XEM CHI TIẾT & SIZE</span>
                 <span class="cta-arrow">→</span>
@@ -177,15 +188,27 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
 import { formatCurrency } from '@/utils/formatters'
+import { useWishlistStore } from '@/stores/wishlist'
 
 const router = useRouter()
+const wishlistStore = useWishlistStore()
 
 const loading = ref(false)
 const brands = ref([])
 const categories = ref([])
 const featuredProducts = ref([])
+
+const toggleWishlist = (product) => {
+  const isAdded = wishlistStore.toggleFavorite(product)
+  if (isAdded) {
+    ElMessage.success(`Đã thêm "${product.productName}" vào danh sách yêu thích`)
+  } else {
+    ElMessage.info(`Đã bỏ "${product.productName}" khỏi danh sách yêu thích`)
+  }
+}
 
 const loadData = async () => {
   loading.value = true
@@ -592,6 +615,41 @@ onMounted(() => {
           letter-spacing: 0.06em;
           padding: 4px 8px;
           text-transform: uppercase;
+        }
+      }
+
+      .card-wishlist-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        background: #ffffff;
+        border: 1px solid #e4e4e7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.15s ease;
+
+        svg {
+          width: 17px;
+          height: 17px;
+          transition: transform 0.15s ease;
+        }
+
+        &:hover {
+          background: #ffffff;
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        &.active {
+          border-color: #fca5a5;
+          background: #fef2f2;
         }
       }
 
