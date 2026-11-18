@@ -63,6 +63,15 @@
 
         <div class="header-right">
           <el-button
+            size="small"
+            @click="$router.push('/')"
+            class="store-quick-btn"
+          >
+            <el-icon style="margin-right: 5px"><Shop /></el-icon>
+            Xem Website
+          </el-button>
+
+          <el-button
             type="primary"
             size="small"
             @click="$router.push('/sales')"
@@ -122,6 +131,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ShoppingCart,
+  Shop,
   Fold,
   Expand,
   ArrowDown,

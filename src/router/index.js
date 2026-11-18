@@ -1,19 +1,76 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import StoreLayout from '@/layouts/StoreLayout.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 
 const routes = [
+  // ==========================================
+  // CUSTOMER STOREFRONT ROUTES (PUBLIC)
+  // ==========================================
+  {
+    path: '/',
+    component: StoreLayout,
+    children: [
+      {
+        path: '',
+        name: 'StoreHome',
+        component: () => import('@/views/store/StoreHomeView.vue'),
+        meta: { title: 'Trang chủ Sneaker & Streetwear', public: true }
+      },
+      {
+        path: 'shop',
+        name: 'StoreCatalog',
+        component: () => import('@/views/store/StoreCatalogView.vue'),
+        meta: { title: 'Bộ sưu tập Sneaker chính hãng', public: true }
+      },
+      {
+        path: 'product/:id',
+        name: 'StoreProductDetail',
+        component: () => import('@/views/store/StoreProductDetailView.vue'),
+        meta: { title: 'Chi tiết sản phẩm', public: true }
+      },
+      {
+        path: 'cart',
+        name: 'StoreCart',
+        component: () => import('@/views/store/StoreCartView.vue'),
+        meta: { title: 'Giỏ hàng & Đặt hàng', public: true }
+      },
+      {
+        path: 'order-success/:orderCode',
+        name: 'StoreOrderSuccess',
+        component: () => import('@/views/store/StoreOrderSuccessView.vue'),
+        meta: { title: 'Đặt hàng thành công', public: true }
+      },
+      {
+        path: 'tracking',
+        name: 'StoreTrackOrder',
+        component: () => import('@/views/store/StoreTrackOrderView.vue'),
+        meta: { title: 'Tra cứu đơn hàng', public: true }
+      }
+    ]
+  },
+
+  // ==========================================
+  // AUTHENTICATION
+  // ==========================================
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),
-    meta: { title: 'Đăng nhập hệ thống', public: true }
+    meta: { title: 'Đăng nhập hệ thống quản lý', public: true, guestOnly: true }
+  },
+
+  // ==========================================
+  // ADMIN & POS MANAGEMENT (PROTECTED)
+  // ==========================================
+  {
+    path: '/admin',
+    redirect: '/dashboard'
   },
   {
     path: '/',
     component: AdminLayout,
-    redirect: '/dashboard',
     children: [
       {
         path: 'dashboard',
@@ -95,32 +152,46 @@ const routes = [
       }
     ]
   },
+
+  // Fallback route
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/dashboard'
+    redirect: '/'
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  }
 })
 
 router.beforeEach((to, _from, next) => {
-  document.title = `${to.meta?.title || 'Hệ thống'} | SNEAKERHUB PRO`
+  document.title = `${to.meta?.title || 'Trang chủ'} | SNEAKERHUB PRO`
   const authStore = useAuthStore()
 
+  // If user is already logged in and navigates to login, send to dashboard
+  if (to.meta?.guestOnly && authStore.isAuthenticated) {
+    return next('/dashboard')
+  }
+
+  // Public storefront pages
   if (to.meta?.public) {
-    if (authStore.isAuthenticated) {
-      return next('/dashboard')
-    }
     return next()
   }
 
+  // Admin routes: require authentication
   if (!authStore.isAuthenticated) {
     return next('/login')
   }
 
+  // Role check
   const allowedRoles = to.meta?.roles
   if (allowedRoles && !authStore.hasAnyRole(allowedRoles)) {
     ElMessage.warning('Bạn không có quyền truy cập màn hình này')
