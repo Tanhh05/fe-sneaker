@@ -56,21 +56,39 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageCatalog" label="Thao tác" width="165" fixed="right" align="center">
+        <el-table-column v-if="canManageCatalog" label="Thao tác" width="140" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
                 <span>Sửa</span>
               </button>
-              <button
-                v-if="row.status === 'ACTIVE'"
-                class="action-btn danger"
-                @click="handleDeactivate(row)"
+              <el-dropdown
+                trigger="click"
+                @command="(cmd) => handleBrandAction(cmd, row)"
               >
-                <el-icon><Close /></el-icon>
-                <span>Ngừng SD</span>
-              </button>
+                <button class="action-btn action-more" title="Thao tác khác">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-if="row.status === 'ACTIVE'"
+                      command="deactivate"
+                      style="color: #ef4444"
+                    >
+                      ✕ Ngừng sử dụng
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-else
+                      command="activate"
+                      style="color: #10b981"
+                    >
+                      ↻ Kích hoạt lại
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
           </template>
         </el-table-column>
@@ -135,7 +153,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Close } from '@element-plus/icons-vue'
+import { Plus, Edit, Close, MoreFilled } from '@element-plus/icons-vue'
 import { brandService } from '@/services/brandService'
 import { usePermission } from '@/composables/usePermission'
 import { useDebouncedWatch } from '@/composables/useDebounce'
@@ -244,6 +262,14 @@ async function submitForm() {
   })
 }
 
+function handleBrandAction(cmd, row) {
+  if (cmd === 'deactivate') {
+    handleDeactivate(row)
+  } else if (cmd === 'activate') {
+    handleActivate(row)
+  }
+}
+
 function handleDeactivate(row) {
   ElMessageBox.confirm(
     `Bạn có chắc chắn muốn ngừng sử dụng thương hiệu "${row.brandName}"?`,
@@ -254,6 +280,23 @@ function handleDeactivate(row) {
     ElMessage.success('Đã ngừng sử dụng thương hiệu')
     loadData()
   }).catch(() => {})
+}
+
+async function handleActivate(row) {
+  try {
+    await brandService.updateBrand(row.id, {
+      brandCode: row.brandCode,
+      brandName: row.brandName,
+      country: row.country,
+      logoUrl: row.logoUrl,
+      description: row.description,
+      status: 'ACTIVE'
+    })
+    ElMessage.success(`Đã kích hoạt lại thương hiệu "${row.brandName}"`)
+    loadData()
+  } catch (err) {
+    ElMessage.error('Kích hoạt thương hiệu thất bại')
+  }
 }
 
 onMounted(() => {

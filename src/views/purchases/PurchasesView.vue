@@ -81,7 +81,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="note" label="Ghi chú" min-width="180" show-overflow-tooltip />
-        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
               <button class="action-btn" @click="openDetail(row)">
@@ -97,8 +97,8 @@
                   trigger="click"
                   @command="(cmd) => handlePurchaseAction(cmd, row)"
                 >
-                  <button class="action-btn action-more">
-                    <span>Xử lý ▾</span>
+                  <button class="action-btn action-more" title="Thao tác khác">
+                    <el-icon><MoreFilled /></el-icon>
                   </button>
                   <template #dropdown>
                     <el-dropdown-menu>

@@ -410,6 +410,7 @@ body,
   justify-content: center;
   gap: 5px;
   white-space: nowrap;
+  flex-wrap: nowrap;
 
   .action-btn {
     height: 28px;
@@ -422,6 +423,7 @@ body,
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -431,6 +433,7 @@ body,
     border-radius: 0;
     box-sizing: border-box;
     flex-shrink: 0;
+    user-select: none;
 
     .el-icon {
       font-size: 12px;
@@ -461,6 +464,7 @@ body,
     &.action-more {
       width: 28px;
       min-width: 28px;
+      height: 28px;
       padding: 0;
       display: inline-flex;
       align-items: center;
@@ -468,19 +472,21 @@ body,
 
       .el-icon {
         font-size: 13px;
+        margin: 0 !important;
       }
     }
   }
 }
 
 /* Ensure action column cells never clip or overflow buttons */
-.el-table .el-table__cell.is-right {
+.el-table .el-table-fixed-column--right,
+.el-table .el-table__cell:has(.row-actions) {
   .cell {
-    padding-left: 6px !important;
-    padding-right: 6px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     overflow: visible !important;
   }
 }
