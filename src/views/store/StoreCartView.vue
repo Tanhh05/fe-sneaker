@@ -240,7 +240,7 @@ const submitOrder = async () => {
       }
 
       const res = await storeService.checkout(payload)
-      const orderData = res.data && res.data.data
+      const orderData = res?.data
 
       // Save order details to sessionStorage for success page
       sessionStorage.setItem('last_placed_order', JSON.stringify(orderData))

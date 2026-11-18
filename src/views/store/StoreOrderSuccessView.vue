@@ -275,8 +275,8 @@ onMounted(async () => {
   if (code) {
     try {
       const res = await storeService.trackOrder(code)
-      if (res.data && res.data.data) {
-        order.value = res.data.data
+      if (res?.data) {
+        order.value = res.data
       }
     } catch (err) {
       console.error('Không tìm thấy đơn hàng:', err)

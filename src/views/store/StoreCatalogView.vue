@@ -30,8 +30,8 @@
         <div class="filter-group">
           <h4 class="filter-title">THƯƠNG HIỆU</h4>
           <el-radio-group v-model="filters.brandId" @change="handleFilterChange" class="filter-radio-group">
-            <el-radio :label="null">Tất cả thương hiệu</el-radio>
-            <el-radio v-for="b in brands" :key="b.id" :label="b.id">
+            <el-radio :value="null" :label="null">Tất cả thương hiệu</el-radio>
+            <el-radio v-for="b in brands" :key="b.id" :value="b.id" :label="b.id">
               {{ b.brandName }}
             </el-radio>
           </el-radio-group>
@@ -41,8 +41,8 @@
         <div class="filter-group">
           <h4 class="filter-title">DÒNG SẢN PHẨM</h4>
           <el-radio-group v-model="filters.categoryId" @change="handleFilterChange" class="filter-radio-group">
-            <el-radio :label="null">Tất cả dòng sản phẩm</el-radio>
-            <el-radio v-for="c in categories" :key="c.id" :label="c.id">
+            <el-radio :value="null" :label="null">Tất cả dòng sản phẩm</el-radio>
+            <el-radio v-for="c in categories" :key="c.id" :value="c.id" :label="c.id">
               {{ c.categoryName }}
             </el-radio>
           </el-radio-group>
@@ -159,8 +159,8 @@ const loadMeta = async () => {
       storeService.getBrands(),
       storeService.getCategories()
     ])
-    brands.value = (bRes.data && bRes.data.data) || []
-    categories.value = (cRes.data && cRes.data.data) || []
+    brands.value = bRes?.data || []
+    categories.value = cRes?.data || []
   } catch (err) {
     console.error('Lỗi nạp metadata:', err)
   }
@@ -177,7 +177,7 @@ const loadProducts = async () => {
       size: filters.size
     }
     const res = await storeService.getProducts(params)
-    const pageData = (res.data && res.data.data) || {}
+    const pageData = res?.data || {}
     products.value = pageData.content || []
     totalElements.value = pageData.totalElements || 0
     totalPages.value = pageData.totalPages || 0

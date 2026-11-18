@@ -196,9 +196,9 @@ const loadData = async () => {
       storeService.getCategories(),
       storeService.getFeaturedProducts()
     ])
-    brands.value = (bRes.data && bRes.data.data) || []
-    categories.value = (cRes.data && cRes.data.data) || []
-    featuredProducts.value = (pRes.data && pRes.data.data) || []
+    brands.value = bRes?.data || []
+    categories.value = cRes?.data || []
+    featuredProducts.value = pRes?.data || []
   } catch (err) {
     console.error('Lỗi nạp dữ liệu trang chủ:', err)
   } finally {

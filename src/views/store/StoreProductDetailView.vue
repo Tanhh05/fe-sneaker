@@ -267,7 +267,7 @@ const loadProduct = async () => {
   try {
     const id = route.params.id
     const res = await storeService.getProductDetail(id)
-    product.value = (res.data && res.data.data) || null
+    product.value = res?.data || null
     if (allImages.value.length) {
       activeImage.value = allImages.value[0]
     }

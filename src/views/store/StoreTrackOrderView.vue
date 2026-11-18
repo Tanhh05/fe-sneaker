@@ -280,8 +280,8 @@ const handleSearch = async () => {
   hasSearched.value = true
   try {
     const res = await storeService.trackOrder(searchCode.value.trim(), searchPhone.value.trim() || undefined)
-    if (res.data && res.data.data) {
-      orderData.value = res.data.data
+    if (res?.data) {
+      orderData.value = res.data
     } else {
       orderData.value = null
     }
