@@ -406,9 +406,9 @@ onMounted(() => {
 .product-thumb {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
+  border-radius: 0;
   object-fit: cover;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e5e5;
   &.placeholder {
     display: flex;
     align-items: center;

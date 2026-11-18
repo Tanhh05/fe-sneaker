@@ -87,15 +87,16 @@ defineEmits(['update:modelValue', 'manage-variants'])
   .detail-top {
     display: flex;
     gap: 18px;
-    background: #f8fafc;
+    background: #fafafa;
     padding: 16px;
-    border-radius: 10px;
+    border-radius: 0;
+    border: 1px solid #e5e5e5;
     .detail-img {
       width: 120px;
       height: 120px;
       object-fit: cover;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
+      border-radius: 0;
+      border: 1px solid #e5e5e5;
     }
     .detail-info {
       flex: 1;

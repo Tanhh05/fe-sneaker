@@ -38,7 +38,7 @@
       <!-- Sidebar Footer -->
       <div class="sidebar-footer" v-if="!isCollapsed">
         <div class="db-status">
-          <span class="dot pulse"></span>
+          <span class="dot"></span>
           <span class="db-name">Oracle 19c+ Connected</span>
         </div>
       </div>
@@ -58,8 +58,8 @@
           </button>
 
           <el-breadcrumb separator="/" class="admin-breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/dashboard' }">Quản trị</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ $route.meta?.title || 'Tổng quan' }}</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/dashboard' }">QUẢN TRỊ</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ $route.meta?.title ? $route.meta.title.toUpperCase() : 'TỔNG QUAN' }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
 
@@ -67,7 +67,7 @@
           <!-- Quick link to storefront -->
           <router-link to="/" class="header-action-btn btn-store-view">
             <el-icon><Shop /></el-icon>
-            <span>Xem Website Bán Hàng</span>
+            <span>XEM WEBSITE</span>
           </router-link>
 
           <!-- POS Quick Button -->
@@ -76,7 +76,7 @@
             @click="$router.push('/sales')"
           >
             <el-icon><ShoppingCart /></el-icon>
-            <span>Bán hàng POS</span>
+            <span>BÁN HÀNG POS</span>
           </button>
 
           <!-- Roles Badge -->
@@ -180,18 +180,18 @@ function handleCommand(cmd) {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: #f8fafc;
+  background-color: #fafafa;
 }
 
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: #09090b;
-  color: #f4f4f5;
+  background: #000000;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  border-right: 1px solid #18181b;
+  border-right: 1px solid #1a1a1a;
   flex-shrink: 0;
 
   &.collapsed {
@@ -199,13 +199,13 @@ function handleCommand(cmd) {
   }
 
   .brand-logo {
-    height: 60px;
+    height: 64px;
     padding: 0 18px;
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    border-bottom: 1px solid #18181b;
+    border-bottom: 1px solid #1a1a1a;
 
     .logo-mark {
       width: 32px;
@@ -217,7 +217,7 @@ function handleCommand(cmd) {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
+      border-radius: 0;
       flex-shrink: 0;
       letter-spacing: -0.05em;
     }
@@ -229,7 +229,7 @@ function handleCommand(cmd) {
 
       .title {
         font-size: 14px;
-        font-weight: 800;
+        font-weight: 900;
         letter-spacing: 0.08em;
         color: #ffffff;
       }
@@ -237,7 +237,7 @@ function handleCommand(cmd) {
       .subtitle {
         font-size: 9px;
         font-weight: 700;
-        color: #71717a;
+        color: #737373;
         letter-spacing: 0.12em;
         margin-top: 2px;
       }
@@ -250,14 +250,14 @@ function handleCommand(cmd) {
   }
 
   .menu-group {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 
     .group-label {
       font-size: 10px;
       font-weight: 800;
-      color: #71717a;
+      color: #525252;
       padding: 6px 12px;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
   }
@@ -266,19 +266,20 @@ function handleCommand(cmd) {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 9px 12px;
-    border-radius: 6px;
-    color: #a1a1aa;
+    padding: 10px 12px;
+    border-radius: 0;
+    color: #888888;
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-weight: 700;
     margin-bottom: 3px;
+    border-left: 2px solid transparent;
     transition: all 0.15s ease;
 
     .menu-icon {
       font-size: 16px;
       flex-shrink: 0;
-      color: #71717a;
+      color: #737373;
       transition: color 0.15s ease;
     }
 
@@ -287,19 +288,20 @@ function handleCommand(cmd) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      letter-spacing: 0.02em;
     }
 
     .menu-badge {
-      background: #27272a;
-      color: #e4e4e7;
-      font-size: 10px;
-      font-weight: 700;
+      background: #1a1a1a;
+      color: #d4d4d4;
+      font-size: 9px;
+      font-weight: 800;
       padding: 1px 6px;
-      border-radius: 4px;
+      border-radius: 0;
     }
 
     &:hover {
-      background: #18181b;
+      background: #111111;
       color: #ffffff;
       .menu-icon {
         color: #ffffff;
@@ -307,9 +309,10 @@ function handleCommand(cmd) {
     }
 
     &.active {
-      background: #27272a;
+      background: #171717;
       color: #ffffff;
-      font-weight: 700;
+      font-weight: 800;
+      border-left-color: #ffffff;
 
       .menu-icon {
         color: #ffffff;
@@ -324,30 +327,26 @@ function handleCommand(cmd) {
 
   .sidebar-footer {
     padding: 14px 16px;
-    border-top: 1px solid #18181b;
-    background: #09090b;
+    border-top: 1px solid #1a1a1a;
+    background: #000000;
 
     .db-status {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 11px;
-      color: #71717a;
+      color: #737373;
 
       .dot {
         width: 6px;
         height: 6px;
-        border-radius: 50%;
         background: #10b981;
-
-        &.pulse {
-          box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-        }
       }
 
       .db-name {
         font-family: var(--font-mono);
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: 0.04em;
       }
     }
   }
@@ -364,10 +363,10 @@ function handleCommand(cmd) {
 
 /* Header */
 .top-header {
-  height: 60px;
+  height: 64px;
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 24px;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -379,28 +378,29 @@ function handleCommand(cmd) {
     gap: 16px;
 
     .collapse-btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #000000;
       background: #ffffff;
-      border-radius: 6px;
-      color: #52525b;
+      border-radius: 0;
+      color: #000000;
       cursor: pointer;
       transition: all 0.15s ease;
 
       &:hover {
-        background: #f4f4f5;
-        color: #000000;
-        border-color: #d4d4d8;
+        background: #000000;
+        color: #ffffff;
       }
     }
 
     .admin-breadcrumb {
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
   }
 
@@ -413,23 +413,24 @@ function handleCommand(cmd) {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      padding: 8px 14px;
+      border-radius: 0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
       text-decoration: none;
       cursor: pointer;
+      text-transform: uppercase;
       transition: all 0.15s ease;
 
       &.btn-store-view {
-        background: #f4f4f5;
-        border: 1px solid #e4e4e7;
-        color: #18181b;
+        background: #ffffff;
+        border: 1px solid #000000;
+        color: #000000;
 
         &:hover {
-          background: #e4e4e7;
-          color: #000000;
+          background: #000000;
+          color: #ffffff;
         }
       }
 
@@ -439,8 +440,7 @@ function handleCommand(cmd) {
         color: #ffffff;
 
         &:hover {
-          background: #27272a;
-          border-color: #27272a;
+          background: #262626;
         }
       }
     }
@@ -450,25 +450,19 @@ function handleCommand(cmd) {
       gap: 6px;
 
       .role-pill {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        padding: 3px 8px;
-        border-radius: 4px;
-        border: 1px solid #e4e4e7;
-        background: #f4f4f5;
-        color: #3f3f46;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        padding: 4px 8px;
+        border-radius: 0;
+        border: 1px solid #000000;
+        background: #ffffff;
+        color: #000000;
+        text-transform: uppercase;
 
         &.admin {
           background: #000000;
           color: #ffffff;
-          border-color: #000000;
-        }
-
-        &.manager {
-          background: #fef3c7;
-          color: #92400e;
-          border-color: #fde68a;
         }
       }
     }
@@ -479,22 +473,21 @@ function handleCommand(cmd) {
       gap: 8px;
       cursor: pointer;
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: 0;
       border: 1px solid transparent;
       transition: all 0.15s ease;
 
       &:hover {
-        background: #f4f4f5;
-        border-color: #e4e4e7;
+        border-color: #000000;
       }
 
       .avatar {
         width: 30px;
         height: 30px;
-        border-radius: 50%;
+        border-radius: 0;
         background: #000000;
         color: #ffffff;
-        font-weight: 800;
+        font-weight: 900;
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -508,19 +501,19 @@ function handleCommand(cmd) {
 
         .name {
           font-size: 12px;
-          font-weight: 700;
-          color: #09090b;
+          font-weight: 800;
+          color: #000000;
         }
 
         .username {
           font-size: 10px;
-          color: #71717a;
+          color: #737373;
         }
       }
 
       .arrow-icon {
-        font-size: 12px;
-        color: #71717a;
+        font-size: 11px;
+        color: #737373;
       }
     }
   }
@@ -529,6 +522,6 @@ function handleCommand(cmd) {
 .content-area {
   flex: 1;
   overflow-y: auto;
-  background-color: #f8fafc;
+  background-color: #fafafa;
 }
 </style>

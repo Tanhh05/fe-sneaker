@@ -364,8 +364,8 @@ onMounted(() => {
   gap: 14px;
   .role-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 0;
     padding: 14px 18px;
     .role-header {
       display: flex;

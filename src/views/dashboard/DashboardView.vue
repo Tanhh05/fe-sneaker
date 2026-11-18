@@ -8,10 +8,10 @@
       </div>
       <div class="header-actions-group">
         <el-button @click="loadDashboard" class="btn-refresh">
-          <el-icon style="margin-right: 6px"><Refresh /></el-icon> Cập nhật
+          <el-icon style="margin-right: 6px"><Refresh /></el-icon> CẬP NHẬT
         </el-button>
         <button class="btn-primary-header" @click="$router.push('/sales')">
-          <el-icon style="margin-right: 6px"><ShoppingCart /></el-icon> Mở Màn Hình POS
+          <el-icon style="margin-right: 6px"><ShoppingCart /></el-icon> MỞ MÀN HÌNH POS
         </button>
       </div>
     </div>
@@ -51,7 +51,7 @@
       <div class="stat-card">
         <div class="stat-title">TỔNG MẪU SẢN PHẨM</div>
         <div class="stat-num">{{ data.totalProducts }}</div>
-        <div class="stat-meta">Thiết kế trong danh mục</div>
+        <div class="stat-meta">Mẫu giày lưu trữ</div>
       </div>
       <div class="stat-card">
         <div class="stat-title">ĐANG KINH DOANH</div>
@@ -61,7 +61,7 @@
       <div class="stat-card">
         <div class="stat-title">TỔNG ĐƠN HÀNG</div>
         <div class="stat-num">{{ data.totalOrders }}</div>
-        <div class="stat-meta">Gồm cả POS & Online</div>
+        <div class="stat-meta">Bao gồm POS & Online</div>
       </div>
       <div class="stat-card">
         <div class="stat-title">ĐƠN CHỜ XỬ LÝ</div>
@@ -71,7 +71,7 @@
       <div class="stat-card">
         <div class="stat-title">KHÁCH HÀNG</div>
         <div class="stat-num">{{ data.totalCustomers }}</div>
-        <div class="stat-meta">Hồ sơ khách thành viên</div>
+        <div class="stat-meta">Khách hàng thành viên</div>
       </div>
       <div class="stat-card">
         <div class="stat-title">NHÂN SỰ VẬN HÀNH</div>
@@ -96,21 +96,21 @@
                 :class="{ active: chartMode === 'DAY' }"
                 @click="chartMode = 'DAY'"
               >
-                Theo ngày
+                THEO NGÀY
               </button>
               <button
                 class="mode-btn"
                 :class="{ active: chartMode === 'MONTH' }"
                 @click="chartMode = 'MONTH'"
               >
-                Theo tháng
+                THEO THÁNG
               </button>
               <button
                 class="mode-btn"
                 :class="{ active: chartMode === 'YEAR' }"
                 @click="chartMode = 'YEAR'"
               >
-                Theo năm
+                THEO NĂM
               </button>
             </div>
           </div>
@@ -186,7 +186,7 @@
           <h3 class="section-title">TOP SẢN PHẨM BÁN CHẠY NHẤT</h3>
           <p class="section-sub">Xếp hạng theo số lượng đôi giày bán ra thực tế</p>
         </div>
-        <el-button size="small" @click="$router.push('/reports')">Xem báo cáo chi tiết →</el-button>
+        <el-button size="small" @click="$router.push('/reports')">XEM BÁO CÁO CHI TIẾT →</el-button>
       </div>
 
       <el-table :data="data.topSellingProducts" stripe style="width: 100%">
@@ -310,8 +310,9 @@ onMounted(() => {
   gap: 10px;
 
   .btn-refresh {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 0;
   }
 
   .btn-primary-header {
@@ -319,17 +320,18 @@ onMounted(() => {
     align-items: center;
     background: #000000;
     color: #ffffff;
-    border: none;
+    border: 1px solid #000000;
     padding: 0 16px;
-    border-radius: 6px;
+    border-radius: 0;
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     cursor: pointer;
     transition: background 0.15s ease;
 
     &:hover {
-      background: #27272a;
+      background: #262626;
     }
   }
 }
@@ -342,33 +344,33 @@ onMounted(() => {
 
   .rev-card {
     padding: 24px;
-    border-radius: 8px;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
 
     &.card-primary-dark {
-      background: #09090b;
+      background: #000000;
       color: #ffffff;
-      border: 1px solid #18181b;
+      border: 1px solid #000000;
 
       .rev-eyebrow {
-        color: #a1a1aa;
+        color: #a3a3a3;
       }
       .rev-sub {
-        color: #71717a;
+        color: #737373;
       }
     }
 
     &.card-white {
       background: #ffffff;
-      color: #09090b;
-      border: 1px solid #e2e8f0;
+      color: #000000;
+      border: 1px solid #e5e5e5;
 
       .rev-eyebrow {
-        color: #71717a;
+        color: #737373;
       }
       .rev-sub {
-        color: #64748b;
+        color: #737373;
       }
     }
 
@@ -376,9 +378,9 @@ onMounted(() => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
 
       .live-dot-tag {
@@ -388,15 +390,14 @@ onMounted(() => {
         font-size: 9px;
         font-weight: 800;
         letter-spacing: 0.1em;
-        background: #18181b;
+        background: #171717;
         color: #10b981;
         padding: 2px 6px;
-        border-radius: 3px;
+        border-radius: 0;
 
         .dot {
           width: 5px;
           height: 5px;
-          border-radius: 50%;
           background: #10b981;
         }
       }
@@ -405,10 +406,10 @@ onMounted(() => {
         font-size: 9px;
         font-weight: 800;
         letter-spacing: 0.08em;
-        background: #f4f4f5;
-        color: #52525b;
+        background: #f5f5f5;
+        color: #525252;
         padding: 2px 6px;
-        border-radius: 3px;
+        border-radius: 0;
       }
     }
 
@@ -435,22 +436,22 @@ onMounted(() => {
 
   .stat-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 0;
     padding: 16px 18px;
 
     .stat-title {
       font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.08em;
-      color: #64748b;
+      color: #737373;
       text-transform: uppercase;
     }
 
     .stat-num {
       font-size: 24px;
       font-weight: 900;
-      color: #09090b;
+      color: #000000;
       margin: 6px 0 2px;
       letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
@@ -465,7 +466,7 @@ onMounted(() => {
 
     .stat-meta {
       font-size: 11px;
-      color: #94a3b8;
+      color: #a3a3a3;
     }
   }
 }
@@ -473,9 +474,9 @@ onMounted(() => {
 /* Chart Card */
 .chart-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 22px;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  padding: 24px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -487,42 +488,43 @@ onMounted(() => {
     margin-bottom: 24px;
 
     .chart-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #09090b;
+      color: #000000;
       margin: 0;
     }
 
     .chart-sub {
       font-size: 12px;
-      color: #64748b;
+      color: #737373;
       margin: 4px 0 0;
     }
 
     .mode-tabs {
       display: flex;
-      background: #f4f4f5;
+      background: #f5f5f5;
       padding: 2px;
-      border-radius: 6px;
+      border-radius: 0;
+      border: 1px solid #e5e5e5;
 
       .mode-btn {
         padding: 5px 12px;
         background: none;
         border: none;
         font-family: inherit;
-        font-size: 11px;
-        font-weight: 700;
-        color: #71717a;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: #737373;
         cursor: pointer;
-        border-radius: 4px;
+        border-radius: 0;
         transition: all 0.15s ease;
 
         &.active {
-          background: #ffffff;
-          color: #000000;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          background: #000000;
+          color: #ffffff;
         }
       }
     }
@@ -547,8 +549,8 @@ onMounted(() => {
 
     .bar-value {
       font-size: 11px;
-      font-weight: 800;
-      color: #09090b;
+      font-weight: 900;
+      color: #000000;
       margin-bottom: 8px;
       font-variant-numeric: tabular-nums;
     }
@@ -556,20 +558,20 @@ onMounted(() => {
     .bar-track {
       width: 36px;
       height: 160px;
-      background: #f4f4f5;
-      border-radius: 4px;
+      background: #f5f5f5;
+      border-radius: 0;
       display: flex;
       align-items: flex-end;
       overflow: hidden;
 
       .bar-fill {
         width: 100%;
-        background: #09090b;
-        border-radius: 4px 4px 0 0;
+        background: #000000;
+        border-radius: 0;
         transition: height 0.3s ease;
 
         &:hover {
-          background: #27272a;
+          background: #262626;
         }
       }
     }
@@ -577,13 +579,13 @@ onMounted(() => {
     .bar-label {
       margin-top: 10px;
       font-size: 11px;
-      font-weight: 700;
-      color: #09090b;
+      font-weight: 800;
+      color: #000000;
     }
 
     .bar-sub {
       font-size: 10px;
-      color: #71717a;
+      color: #737373;
       margin-top: 2px;
     }
   }
@@ -605,27 +607,27 @@ onMounted(() => {
       font-size: 12px;
 
       .status-name {
-        font-weight: 700;
-        color: #09090b;
+        font-weight: 800;
+        color: #000000;
       }
 
       .status-count {
-        color: #71717a;
+        color: #737373;
         strong {
-          color: #09090b;
+          color: #000000;
         }
       }
     }
 
     .status-progress-track {
       height: 8px;
-      background: #f4f4f5;
-      border-radius: 4px;
+      background: #f5f5f5;
+      border-radius: 0;
       overflow: hidden;
 
       .status-progress-fill {
         height: 100%;
-        border-radius: 4px;
+        border-radius: 0;
         transition: width 0.3s ease;
       }
     }
@@ -639,24 +641,24 @@ onMounted(() => {
   margin-bottom: 16px;
 
   .section-title {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    color: #09090b;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #000000;
     text-transform: uppercase;
     margin: 0;
   }
 
   .section-sub {
     font-size: 12px;
-    color: #64748b;
+    color: #737373;
     margin: 3px 0 0;
   }
 }
 
 .product-link {
-  font-weight: 700;
-  color: #09090b;
+  font-weight: 800;
+  color: #000000;
   cursor: pointer;
   &:hover {
     text-decoration: underline;

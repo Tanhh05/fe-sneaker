@@ -126,7 +126,7 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #09090b;
+  background-color: #000000;
   padding: 24px;
 }
 
@@ -134,10 +134,10 @@ async function handleLogin() {
   width: 100%;
   max-width: 440px;
   background: #ffffff;
-  border: 1px solid #27272a;
-  border-radius: 8px;
-  padding: 40px 36px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid #262626;
+  border-radius: 0;
+  padding: 44px 38px;
+  box-shadow: none;
 }
 
 .login-brand {
@@ -146,7 +146,7 @@ async function handleLogin() {
   gap: 14px;
   margin-bottom: 30px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid #ebebeb;
 
   .logo-mark {
     width: 38px;
@@ -158,7 +158,7 @@ async function handleLogin() {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 0;
     letter-spacing: -0.05em;
     flex-shrink: 0;
   }
@@ -168,16 +168,16 @@ async function handleLogin() {
       font-size: 18px;
       font-weight: 900;
       letter-spacing: 0.08em;
-      color: #09090b;
+      color: #000000;
       margin: 0;
       line-height: 1.1;
     }
 
     p {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #71717a;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #737373;
       margin: 4px 0 0;
     }
   }
@@ -185,22 +185,24 @@ async function handleLogin() {
 
 .login-form {
   :deep(.el-form-item__label) {
-    font-size: 12px;
-    font-weight: 700;
-    color: #27272a;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #000000;
     padding-bottom: 6px;
   }
 }
 
 .btn-login-submit {
   width: 100%;
-  height: 48px;
+  height: 50px;
   background: #000000;
   color: #ffffff;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid #000000;
+  border-radius: 0;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -208,7 +210,7 @@ async function handleLogin() {
   transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: #27272a;
+    background: #262626;
   }
 
   &:disabled {
@@ -220,13 +222,13 @@ async function handleLogin() {
 .demo-accounts {
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px dashed #e4e4e7;
+  border-top: 1px dashed #e5e5e5;
 
   .demo-title {
     font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #71717a;
+    letter-spacing: 0.1em;
+    color: #737373;
     margin-bottom: 10px;
   }
 
@@ -239,20 +241,20 @@ async function handleLogin() {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 10px;
-      background: #f4f4f5;
-      border: 1px solid #e4e4e7;
-      border-radius: 4px;
+      padding: 8px 12px;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 0;
       font-family: inherit;
       cursor: pointer;
       transition: all 0.15s ease;
 
       .pill-role {
         font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        padding: 2px 6px;
-        border-radius: 3px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        padding: 3px 6px;
+        border-radius: 0;
 
         &.admin {
           background: #000000;
@@ -260,38 +262,44 @@ async function handleLogin() {
         }
 
         &.manager {
-          background: #fef3c7;
-          color: #92400e;
+          background: #f5f5f5;
+          color: #000000;
+          border: 1px solid #000000;
         }
 
         &.staff {
-          background: #e0f2fe;
-          color: #0369a1;
+          background: #f5f5f5;
+          color: #525252;
         }
       }
 
       .pill-acc {
         font-size: 12px;
         font-family: var(--font-mono);
-        color: #52525b;
+        font-weight: 700;
+        color: #525252;
       }
 
       &:hover {
-        background: #e4e4e7;
-        border-color: #d4d4d8;
+        background: #000000;
+        border-color: #000000;
+        .pill-acc {
+          color: #ffffff;
+        }
       }
     }
   }
 }
 
 .back-store-row {
-  margin-top: 22px;
+  margin-top: 24px;
   text-align: center;
 
   .back-link {
-    font-size: 12px;
-    font-weight: 700;
-    color: #71717a;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #737373;
     text-decoration: none;
     transition: color 0.15s ease;
 

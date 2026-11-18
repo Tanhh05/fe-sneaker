@@ -508,21 +508,23 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .selector-panel {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 14px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  padding: 14px 16px;
   margin-bottom: 14px;
   .selector-title {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #000000;
+    margin-bottom: 10px;
   }
   .step-match-info {
-    margin-top: 8px;
-    font-size: 12.5px;
-    color: #334155;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #525252;
   }
 }
 
@@ -535,24 +537,28 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 12px;
     h3 {
-      font-size: 16px;
-      font-weight: 800;
-      color: #0f172a;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #000000;
     }
   }
 
   .customer-box {
-    background: #f8fafc;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    background: #fafafa;
+    padding: 14px;
+    border-radius: 0;
+    border: 1px solid #e5e5e5;
     .box-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #475569;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #737373;
       margin-bottom: 6px;
     }
     .cust-row {
@@ -566,36 +572,37 @@ onMounted(() => {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 
     .cart-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
+      border-radius: 0;
+      border: 1px solid #e5e5e5;
       background: #ffffff;
 
       .item-info {
         .item-title {
-          font-size: 13.5px;
-          font-weight: 700;
-          color: #0f172a;
+          font-size: 13px;
+          font-weight: 800;
+          color: #000000;
         }
         .item-meta {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 12px;
-          color: #64748b;
+          font-size: 11px;
+          color: #737373;
           margin: 4px 0;
           .avail {
-            color: #16a34a;
+            color: #10b981;
+            font-weight: 700;
           }
         }
         .item-price {
-          font-size: 12.5px;
+          font-size: 12px;
         }
       }
 
@@ -608,14 +615,15 @@ onMounted(() => {
   }
 
   .checkout-section {
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #e5e5e5;
     padding-top: 14px;
 
     .summary-totals {
-      background: #09090b;
+      background: #000000;
       color: #ffffff;
       padding: 16px 18px;
-      border-radius: 6px;
+      border-radius: 0;
+      border: 1px solid #000000;
       margin-bottom: 12px;
 
       .row {
