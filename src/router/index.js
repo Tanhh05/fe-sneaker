@@ -153,10 +153,27 @@ const routes = [
     ]
   },
 
-  // Fallback route
+  // ==========================================
+  // ERROR & ACCESS CONTROL SCREENS
+  // ==========================================
+  {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/error/ForbiddenView.vue'),
+    meta: { title: '403 Không có quyền truy cập', public: true }
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: () => import('@/views/error/NotFoundView.vue'),
+    meta: { title: '404 Không tìm thấy trang', public: true }
+  },
+
+  // Fallback route -> 404
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/'
+    component: () => import('@/views/error/NotFoundView.vue'),
+    meta: { title: '404 Không tìm thấy trang', public: true }
   }
 ]
 
@@ -176,26 +193,31 @@ router.beforeEach((to, _from, next) => {
   document.title = `${to.meta?.title || 'Trang chủ'} | SNEAKERHUB PRO`
   const authStore = useAuthStore()
 
-  // If user is already logged in and navigates to login, send to dashboard
-  if (to.meta?.guestOnly && authStore.isAuthenticated) {
-    return next('/dashboard')
+  // 1. Guest-only routes like /login
+  if (to.meta?.guestOnly) {
+    if (authStore.isAuthenticated) {
+      if (authStore.isAdmin || authStore.isManager || authStore.isStaff) {
+        return next('/dashboard')
+      }
+      return next('/403')
+    }
+    return next()
   }
 
-  // Public storefront pages
+  // 2. Public storefront & error pages
   if (to.meta?.public) {
     return next()
   }
 
-  // Admin routes: require authentication
+  // 3. Admin routes: require authentication
   if (!authStore.isAuthenticated) {
     return next('/login')
   }
 
-  // Role check
+  // 4. Role check: redirect to 403 page if user does not have permission
   const allowedRoles = to.meta?.roles
   if (allowedRoles && !authStore.hasAnyRole(allowedRoles)) {
-    ElMessage.warning('Bạn không có quyền truy cập màn hình này')
-    return next('/dashboard')
+    return next('/403')
   }
 
   next()
