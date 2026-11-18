@@ -2,15 +2,24 @@
   <div class="store-layout">
     <!-- Top Announcement Bar -->
     <div class="store-announcement">
-      <div class="container announcement-content">
-        <span>🔥 <strong>MIỄN PHÍ VẬN CHUYỂN</strong> TOÀN QUỐC CHO ĐƠN TỪ 1.000.000đ | CAM KẾT 100% CHÍNH HÃNG</span>
-        <div class="top-links">
-          <router-link to="/tracking" class="top-link">
-            <el-icon><Van /></el-icon> Tra cứu đơn hàng
+      <div class="layout-container announcement-content">
+        <div class="announcement-ticker">
+          <span class="ticker-tag">OFFICIAL ARCHIVE</span>
+          <span class="ticker-text">CAM KẾT 100% CHÍNH HÃNG • MIỄN PHÍ VẬN CHUYỂN ĐƠN TỪ 1.000.000₫ • ĐỔI TRẢ TRONG 7 NGÀY</span>
+        </div>
+        <div class="announcement-links">
+          <router-link to="/tracking" class="top-nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            Tra cứu đơn
           </router-link>
-          <span class="divider">|</span>
-          <router-link to="/login" class="top-link admin-pill">
-            <el-icon><User /></el-icon> Quản trị / POS
+          <span class="top-nav-sep">•</span>
+          <router-link to="/login" class="top-nav-link portal-link">
+            Kênh Quản Trị
           </router-link>
         </div>
       </div>
@@ -18,128 +27,160 @@
 
     <!-- Main Navigation Header -->
     <header class="store-header" :class="{ 'scrolled': isScrolled }">
-      <div class="container header-container">
-        <!-- Logo -->
+      <div class="layout-container header-container">
+        <!-- Brand Logo -->
         <router-link to="/" class="store-logo">
-          <span class="logo-badge">⚡</span>
+          <span class="logo-mark">S</span>
           <div class="logo-text">
             <span class="brand-title">SNEAKERHUB</span>
-            <span class="brand-sub">AUTHENTIC STORE</span>
+            <span class="brand-sub">ARCHIVE & STREETWEAR</span>
           </div>
         </router-link>
 
-        <!-- Navigation Menu -->
+        <!-- Center Nav Links -->
         <nav class="nav-links">
-          <router-link to="/" class="nav-item" exact-active-class="active">Trang chủ</router-link>
-          <router-link to="/shop" class="nav-item" active-class="active">Bộ sưu tập Giày</router-link>
-          <router-link to="/tracking" class="nav-item" active-class="active">Tra cứu đơn</router-link>
+          <router-link to="/" class="nav-item" exact-active-class="active">
+            Trang chủ
+          </router-link>
+          <router-link to="/shop" class="nav-item" active-class="active">
+            Bộ sưu tập
+          </router-link>
+          <router-link to="/tracking" class="nav-item" active-class="active">
+            Tra cứu đơn
+          </router-link>
+          <button class="nav-item size-guide-btn" @click="showSizeGuide = true">
+            Bảng Size
+          </button>
         </nav>
 
-        <!-- Header Actions -->
+        <!-- Right Utilities -->
         <div class="header-actions">
-          <!-- Search input -->
-          <div class="search-box">
-            <el-input
+          <!-- Search Bar -->
+          <div class="search-wrap">
+            <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
               v-model="searchKeyword"
-              placeholder="Tìm kiếm Nike, Jordan, Adidas..."
-              :prefix-icon="Search"
-              clearable
+              placeholder="Tìm Nike, Jordan, Samba..."
               @keyup.enter="handleSearch"
+              class="search-input"
             />
           </div>
 
-          <!-- Cart Button -->
-          <router-link to="/cart" class="cart-trigger">
-            <el-badge :value="cartStore.totalItems" :hidden="cartStore.totalItems === 0" class="badge">
-              <div class="cart-icon-btn">
-                <el-icon :size="20"><ShoppingBag /></el-icon>
-              </div>
-            </el-badge>
-            <div class="cart-meta" v-if="cartStore.totalItems > 0">
-              <span class="cart-label">Giỏ hàng</span>
-              <span class="cart-total">{{ formatCurrency(cartStore.totalPrice) }}</span>
+          <!-- Bag / Cart -->
+          <router-link to="/cart" class="cart-trigger" aria-label="Giỏ hàng">
+            <div class="bag-icon-box">
+              <svg class="bag-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+              <span v-if="cartStore.totalItems > 0" class="bag-counter">
+                {{ cartStore.totalItems }}
+              </span>
+            </div>
+            <div class="bag-info" v-if="cartStore.totalItems > 0">
+              <span class="bag-price">{{ formatCurrency(cartStore.totalPrice) }}</span>
             </div>
           </router-link>
         </div>
       </div>
     </header>
 
-    <!-- Main Content Slot -->
+    <!-- Main Content -->
     <main class="store-main">
       <router-view />
     </main>
 
-    <!-- Store Footer -->
+    <!-- Editorial Minimalist Footer -->
     <footer class="store-footer">
-      <div class="container footer-grid">
-        <div class="footer-col brand-col">
-          <div class="footer-logo">
-            <span class="logo-badge">⚡</span>
-            <span class="brand-title">SNEAKERHUB PRO</span>
+      <div class="layout-container">
+        <div class="footer-top-grid">
+          <div class="footer-col brand-col">
+            <div class="footer-brand">
+              <span class="footer-logo-mark">S</span>
+              <span class="footer-logo-title">SNEAKERHUB</span>
+            </div>
+            <p class="footer-desc">
+              Không gian phân phối và tuyển chọn Sneaker chính hãng, kết nối văn hóa đường phố và tinh thần thiết kế đương đại. Mọi đôi giày xuất kho đều được kiểm định nguồn gốc nghiêm ngặt.
+            </p>
+            <div class="footer-legit-stamp">
+              <span class="stamp-dot"></span>
+              <span>100% VERIFIED AUTHENTIC</span>
+            </div>
           </div>
-          <p class="brand-desc">
-            Hệ thống phân phối giày Sneaker chính hãng hàng đầu Việt Nam. Đa dạng mẫu mã, cập nhật xu hướng streetwear mới nhất từ Nike, Jordan, Adidas, Puma, New Balance.
-          </p>
-          <div class="store-badges">
-            <span class="badge-tag">✓ 100% Authentic</span>
-            <span class="badge-tag">✓ Đổi trả 7 ngày</span>
-            <span class="badge-tag">✓ Free ship 1tr+</span>
+
+          <div class="footer-col">
+            <h4 class="col-heading">DANH MỤC</h4>
+            <ul class="col-list">
+              <li><router-link to="/shop?brand=1">Nike Sneakers</router-link></li>
+              <li><router-link to="/shop?brand=2">Adidas Originals</router-link></li>
+              <li><router-link to="/shop?brand=7">Air Jordan Retro</router-link></li>
+              <li><router-link to="/shop?brand=5">New Balance</router-link></li>
+              <li><router-link to="/shop?brand=3">Puma Streetwear</router-link></li>
+              <li><router-link to="/shop?brand=6">Vans Classic</router-link></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4 class="col-heading">DỊCH VỤ</h4>
+            <ul class="col-list">
+              <li><router-link to="/tracking">Tra cứu vận đơn</router-link></li>
+              <li><a href="javascript:void(0)" @click="showSizeGuide = true">Bảng quy đổi Size giày</a></li>
+              <li><router-link to="/cart">Giỏ hàng của bạn</router-link></li>
+              <li><router-link to="/login">Cổng quản trị nội bộ</router-link></li>
+            </ul>
+          </div>
+
+          <div class="footer-col contact-col">
+            <h4 class="col-heading">CỬA HÀNG</h4>
+            <p class="address-text">
+              SneakerHub Flagship Store<br />
+              123 Phố Huế, Hai Bà Trưng, Hà Nội<br />
+              Hotline: 1900 6868 (09:00 - 22:00)<br />
+              Email: contact@sneakerhub.vn
+            </p>
+            <div class="payment-badges">
+              <span class="pay-tag">VIETQR</span>
+              <span class="pay-tag">COD</span>
+              <span class="pay-tag">NAPAS</span>
+              <span class="pay-tag">VISA</span>
+            </div>
           </div>
         </div>
 
-        <div class="footer-col">
-          <h4 class="col-title">THƯƠNG HIỆU</h4>
-          <ul class="col-links">
-            <li><router-link to="/shop?brand=1">Nike Sneakers</router-link></li>
-            <li><router-link to="/shop?brand=2">Adidas Originals</router-link></li>
-            <li><router-link to="/shop?brand=3">Air Jordan Retro</router-link></li>
-            <li><router-link to="/shop?brand=4">New Balance</router-link></li>
-            <li><router-link to="/shop?brand=5">Converse Classic</router-link></li>
-          </ul>
-        </div>
-
-        <div class="footer-col">
-          <h4 class="col-title">HỖ TRỢ KHÁCH HÀNG</h4>
-          <ul class="col-links">
-            <li><router-link to="/tracking">Kiểm tra đơn hàng</router-link></li>
-            <li><a href="javascript:void(0)" @click="showSizeGuide = true">Bảng quy đổi Size giày</a></li>
-            <li><a href="javascript:void(0)">Chính sách bảo hành & đổi trả</a></li>
-            <li><a href="javascript:void(0)">Hướng dẫn mua hàng & thanh toán</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-col">
-          <h4 class="col-title">LIÊN HỆ CỬA HÀNG</h4>
-          <p class="contact-info"><strong>Địa chỉ:</strong> Số 3 Cầu Giấy, Láng Thượng, Đống Đa, Hà Nội</p>
-          <p class="contact-info"><strong>Hotline:</strong> 1900 6868 - 0901 000 001</p>
-          <p class="contact-info"><strong>Email:</strong> support@sneakerhub.vn</p>
-          <p class="contact-info"><strong>Giờ mở cửa:</strong> 08:30 - 22:00 (Cả tuần)</p>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <div class="container bottom-content">
-          <p>© 2026 SNEAKERHUB PRO. Bản quyền thuộc về Nhóm 05 - Đại học Giao thông Vận tải.</p>
-          <div class="payment-methods">
-            <span class="pay-tag">💵 Tiền mặt (COD)</span>
-            <span class="pay-tag">📲 Chuyển khoản VietQR</span>
-            <span class="pay-tag">🏦 Internet Banking</span>
+        <div class="footer-bottom">
+          <p>© 2026 SNEAKERHUB PRO. All rights reserved. Designed for sneakerheads with passion & precision.</p>
+          <div class="legal-links">
+            <span>Chính sách bảo mật</span>
+            <span>Điều khoản dịch vụ</span>
+            <span>Cam kết đổi trả</span>
           </div>
         </div>
       </div>
     </footer>
 
-    <!-- Size Guide Dialog -->
-    <el-dialog v-model="showSizeGuide" title="BẢNG QUY ĐỔI KÍCH THƯỚC GIÀY (SIZE GUIDE)" width="600px">
-      <el-table :data="sizeGuideData" border stripe>
-        <el-table-column prop="eu" label="EU (VN)" align="center" width="100" />
-        <el-table-column prop="us" label="US Men" align="center" width="100" />
-        <el-table-column prop="uk" label="UK" align="center" width="100" />
-        <el-table-column prop="cm" label="Chiều dài bàn chân (cm)" align="center" />
-      </el-table>
-      <p style="margin-top: 12px; font-size: 13px; color: #64748b; line-height: 1.5;">
-        * Mẹo: Nên đo chiều dài từ gót chân đến ngón dài nhất vào buổi chiều muộn để có kích thước chuẩn xác nhất.
-      </p>
+    <!-- Clean Size Guide Modal -->
+    <el-dialog
+      v-model="showSizeGuide"
+      title="BẢNG QUY ĐỔI KÍCH THƯỚC GIÀY CHUẨN (SIZE CHART)"
+      width="640px"
+      class="custom-size-dialog"
+    >
+      <div class="dialog-content">
+        <p class="dialog-tip">
+          Đo chiều dài bàn chân từ gót chân đến ngón dài nhất để lựa chọn size chính xác nhất:
+        </p>
+        <el-table :data="sizeGuideData" border stripe class="size-table">
+          <el-table-column prop="eu" label="EU (VN)" align="center" width="90" />
+          <el-table-column prop="us" label="US Men" align="center" width="90" />
+          <el-table-column prop="uk" label="UK" align="center" width="90" />
+          <el-table-column prop="cm" label="Chiều dài bàn chân" align="center" />
+        </el-table>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -147,7 +188,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, ShoppingBag, Van, User } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
 import { formatCurrency } from '@/utils/formatters'
 
@@ -178,11 +218,11 @@ const handleSearch = () => {
 }
 
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 40
+  isScrolled.value = window.scrollY > 20
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
@@ -191,28 +231,32 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
 .store-layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  color: #0f172a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #ffffff;
+  color: #0a0a0a;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.container {
-  max-width: 1240px;
+.layout-container {
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 28px;
 }
 
-/* Announcement */
+/* Announcement Ticker */
 .store-announcement {
-  background: #0f172a;
-  color: #f8fafc;
-  font-size: 12px;
+  background: #000000;
+  color: #a3a3a3;
+  font-size: 11px;
+  letter-spacing: 0.04em;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #1a1a1a;
 
   .announcement-content {
     display: flex;
@@ -220,81 +264,107 @@ onUnmounted(() => {
     align-items: center;
   }
 
-  .top-links {
+  .announcement-ticker {
     display: flex;
     align-items: center;
     gap: 12px;
-  }
 
-  .top-link {
-    color: #cbd5e1;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.2s;
-
-    &:hover {
-      color: #f97316;
+    .ticker-tag {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 800;
+      font-size: 9px;
+      padding: 2px 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    &.admin-pill {
-      background: rgba(249, 115, 22, 0.2);
-      color: #f97316;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 600;
+    .ticker-text {
+      color: #e5e5e5;
+      font-weight: 500;
+    }
+  }
+
+  .announcement-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .top-nav-sep {
+      color: #404040;
+    }
+
+    .top-nav-link {
+      color: #a3a3a3;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s ease;
+
+      .nav-icon {
+        width: 13px;
+        height: 13px;
+      }
 
       &:hover {
-        background: #f97316;
         color: #ffffff;
+      }
+
+      &.portal-link {
+        font-weight: 600;
+        color: #d4d4d4;
+        &:hover {
+          color: #ffffff;
+        }
       }
     }
   }
-
-  .divider {
-    color: #475569;
-  }
 }
 
-/* Header */
+/* Main Navigation Header */
 .store-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 99;
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #ebebeb;
   transition: all 0.25s ease;
 
   &.scrolled {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   }
 
   .header-container {
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 72px;
+    gap: 24px;
   }
 }
 
+/* Brand Logo */
 .store-logo {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+  color: #000000;
 
-  .logo-badge {
-    display: inline-flex;
+  .logo-mark {
+    width: 34px;
+    height: 34px;
+    background: #000000;
+    color: #ffffff;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: #0f172a;
-    color: #f97316;
-    font-size: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: -0.05em;
   }
 
   .logo-text {
@@ -302,61 +372,113 @@ onUnmounted(() => {
     flex-direction: column;
 
     .brand-title {
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 900;
-      letter-spacing: -0.5px;
-      color: #0f172a;
+      letter-spacing: 0.08em;
       line-height: 1.1;
+      color: #000000;
     }
 
     .brand-sub {
       font-size: 9px;
       font-weight: 700;
-      letter-spacing: 1.5px;
-      color: #f97316;
+      letter-spacing: 0.16em;
+      color: #737373;
+      margin-top: 2px;
     }
   }
 }
 
+/* Navigation Links */
 .nav-links {
   display: flex;
   align-items: center;
   gap: 32px;
 
   .nav-item {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
-    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #262626;
     text-decoration: none;
-    position: relative;
+    background: none;
+    border: none;
     padding: 6px 0;
-    transition: color 0.2s;
+    position: relative;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #000000;
+      transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
     &:hover,
     &.active {
-      color: #f97316;
-
+      color: #000000;
       &::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
         width: 100%;
-        height: 2px;
-        background: #f97316;
-        border-radius: 2px;
+      }
+    }
+
+    &.size-guide-btn {
+      color: #737373;
+      &:hover {
+        color: #000000;
       }
     }
   }
 }
 
+/* Search & Bag */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 
-  .search-box {
-    width: 260px;
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .search-svg {
+      position: absolute;
+      left: 12px;
+      width: 15px;
+      height: 15px;
+      color: #737373;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 220px;
+      height: 38px;
+      padding: 0 12px 0 34px;
+      border: 1px solid #e5e5e5;
+      background: #fafafa;
+      font-size: 13px;
+      font-family: inherit;
+      color: #0a0a0a;
+      transition: all 0.2s ease;
+      outline: none;
+
+      &::placeholder {
+        color: #a3a3a3;
+      }
+
+      &:focus {
+        width: 270px;
+        background: #ffffff;
+        border-color: #000000;
+      }
+    }
   }
 
   .cart-trigger {
@@ -364,170 +486,217 @@ onUnmounted(() => {
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: #f1f5f9;
-    transition: background 0.2s;
+    color: #0a0a0a;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
 
     &:hover {
-      background: #e2e8f0;
+      background: #f5f5f5;
     }
 
-    .cart-icon-btn {
-      color: #0f172a;
+    .bag-icon-box {
+      position: relative;
       display: flex;
       align-items: center;
-    }
 
-    .cart-meta {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-
-      .cart-label {
-        font-size: 11px;
-        color: #64748b;
+      .bag-svg {
+        width: 22px;
+        height: 22px;
+        color: #000000;
       }
 
-      .cart-total {
+      .bag-counter {
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        background: #000000;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .bag-info {
+      display: flex;
+      flex-direction: column;
+
+      .bag-price {
         font-size: 13px;
-        font-weight: 700;
-        color: #0f172a;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
       }
     }
   }
 }
 
-/* Main */
 .store-main {
   flex: 1;
 }
 
 /* Footer */
 .store-footer {
-  background: #0f172a;
-  color: #94a3b8;
-  margin-top: 60px;
-  padding-top: 60px;
+  background: #0a0a0a;
+  color: #ffffff;
+  padding: 80px 0 30px;
+  border-top: 1px solid #1a1a1a;
 
-  .footer-grid {
+  .footer-top-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1.2fr 1.5fr;
-    gap: 40px;
-    padding-bottom: 40px;
-  }
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 48px;
+    padding-bottom: 60px;
+    border-bottom: 1px solid #262626;
 
-  .brand-col {
-    .footer-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-
-      .logo-badge {
-        font-size: 20px;
-      }
-
-      .brand-title {
-        color: #ffffff;
-        font-size: 20px;
-        font-weight: 800;
-      }
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
     }
 
-    .brand-desc {
-      font-size: 13.5px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      color: #94a3b8;
-    }
-
-    .store-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-
-      .badge-tag {
-        background: rgba(255, 255, 255, 0.08);
-        color: #e2e8f0;
-        font-size: 12px;
-        padding: 4px 10px;
-        border-radius: 6px;
-      }
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
     }
   }
 
-  .col-title {
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 18px;
-    letter-spacing: 0.5px;
-  }
+  .footer-col {
+    .col-heading {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ffffff;
+      margin: 0 0 20px;
+    }
 
-  .col-links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    .col-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
 
-    li {
-      margin-bottom: 10px;
+      li {
+        margin-bottom: 12px;
 
-      a {
-        color: #94a3b8;
-        text-decoration: none;
-        font-size: 14px;
-        transition: color 0.2s;
+        a {
+          color: #888888;
+          text-decoration: none;
+          font-size: 13px;
+          transition: color 0.15s ease;
 
-        &:hover {
-          color: #f97316;
+          &:hover {
+            color: #ffffff;
+          }
         }
       }
     }
   }
 
-  .contact-info {
-    font-size: 13.5px;
-    line-height: 1.6;
-    margin-bottom: 8px;
+  .brand-col {
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
 
-    strong {
-      color: #cbd5e1;
+      .footer-logo-mark {
+        width: 32px;
+        height: 32px;
+        background: #ffffff;
+        color: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 16px;
+      }
+
+      .footer-logo-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+      }
+    }
+
+    .footer-desc {
+      font-size: 13px;
+      color: #737373;
+      line-height: 1.6;
+      max-width: 360px;
+      margin-bottom: 20px;
+    }
+
+    .footer-legit-stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid #333333;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #d4d4d4;
+
+      .stamp-dot {
+        width: 6px;
+        height: 6px;
+        background: #10b981;
+        border-radius: 50%;
+      }
+    }
+  }
+
+  .contact-col {
+    .address-text {
+      font-size: 13px;
+      color: #737373;
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .payment-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .pay-tag {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 4px 8px;
+        border: 1px solid #333333;
+        color: #a3a3a3;
+      }
     }
   }
 
   .footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 20px 0;
-    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 28px;
+    font-size: 12px;
+    color: #525252;
+    flex-wrap: wrap;
+    gap: 16px;
 
-    .bottom-content {
+    .legal-links {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      gap: 20px;
 
-    .payment-methods {
-      display: flex;
-      gap: 10px;
-
-      .pay-tag {
-        background: rgba(255, 255, 255, 0.05);
-        color: #cbd5e1;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
+      span {
+        cursor: pointer;
+        transition: color 0.15s ease;
+        &:hover {
+          color: #a3a3a3;
+        }
       }
     }
-  }
-}
-
-@media (max-width: 900px) {
-  .store-footer .footer-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .header-actions .search-box {
-    display: none;
   }
 }
 </style>

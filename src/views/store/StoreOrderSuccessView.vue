@@ -1,224 +1,202 @@
 <template>
   <div class="store-order-success">
-    <div class="store-container">
+    <div class="layout-container">
       <div v-if="loading" class="loading-state">
         <el-skeleton :rows="8" animated />
       </div>
 
       <div v-else-if="!order" class="not-found-state">
-        <el-result
-          icon="warning"
-          title="Không tìm thấy thông tin đơn hàng"
-          sub-title="Vui lòng kiểm tra lại mã đơn hàng hoặc tra cứu tại trang Tra cứu đơn hàng."
-        >
-          <template #extra>
-            <el-button type="primary" @click="router.push('/tracking')">Đến trang tra cứu</el-button>
-            <el-button @click="router.push('/shop')">Tiếp tục mua sắm</el-button>
-          </template>
-        </el-result>
+        <div class="empty-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-svg">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h2 class="state-title">Không tìm thấy thông tin đơn hàng</h2>
+        <p class="state-desc">Vui lòng kiểm tra lại mã đơn hàng hoặc tra cứu tại trang Tra cứu đơn hàng.</p>
+        <div class="state-actions">
+          <router-link to="/tracking" class="btn-black">Đến trang tra cứu</router-link>
+          <router-link to="/shop" class="btn-outline">Tiếp tục mua sắm</router-link>
+        </div>
       </div>
 
-      <div v-else class="success-content">
+      <div v-else class="receipt-container">
         <!-- Top Status Banner -->
-        <div class="success-header">
-          <div class="icon-circle">
-            <el-icon><Check /></el-icon>
+        <div class="receipt-header">
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="check-svg">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
-          <h1 class="headline">ĐẶT HÀNG THÀNH CÔNG!</h1>
-          <p class="subtitle">
-            Cảm ơn bạn đã tin tưởng SneakerHub. Mã đơn hàng của bạn là:
-            <span class="order-code-badge" @click="copyOrderCode">
+          <span class="eyebrow">ORDER CONFIRMED</span>
+          <h1 class="headline">ĐẶT HÀNG THÀNH CÔNG</h1>
+          <p class="order-code-prompt">
+            Mã đơn hàng:
+            <span class="order-code-badge" @click="copyOrderCode" title="Click để sao chép">
               {{ order.orderCode }}
-              <el-icon><DocumentCopy /></el-icon>
+              <span class="copy-glyph">📋</span>
             </span>
           </p>
-          <p class="notification-text">
-            Hệ thống đã ghi nhận đơn hàng và gửi thông báo xác nhận. Chúng tôi sẽ sớm liên hệ và giao hàng tới bạn!
+          <p class="header-note">
+            Đơn hàng đã được lưu trữ trên hệ thống và chuyển sang bộ phận kho để chuẩn bị đóng gói.
           </p>
         </div>
 
-        <div class="grid-layout">
-          <!-- Left Column: Payment & Shipping Info -->
-          <div class="info-column">
+        <div class="receipt-grid">
+          <!-- Left: Payment / Shipping -->
+          <div class="receipt-left-col">
             <!-- VietQR Card if Bank Transfer -->
-            <div v-if="order.paymentMethod === 'BANK_TRANSFER'" class="card qr-card">
-              <div class="card-header">
-                <h3>
-                  <el-icon><CreditCard /></el-icon>
-                  Thanh Toán Chuyển Khoản Qua VietQR
-                </h3>
-                <span class="badge-qr">Quét mã nhanh</span>
+            <div v-if="order.paymentMethod === 'BANK_TRANSFER'" class="card-box qr-card">
+              <div class="box-head">
+                <span class="box-eyebrow">PAYMENT GATEWAY</span>
+                <h3 class="box-title">THANH TOÁN CHUYỂN KHOẢN VIETQR</h3>
               </div>
-              <div class="qr-body">
-                <div class="qr-image-wrapper">
+
+              <div class="qr-layout">
+                <div class="qr-media">
                   <img
                     v-if="order.qrPaymentUrl"
                     :src="order.qrPaymentUrl"
-                    alt="Mã thanh toán VietQR"
-                    class="qr-code-img"
+                    alt="VietQR"
+                    class="vietqr-img"
                   />
-                  <div v-else class="qr-placeholder">
-                    <el-icon><Picture /></el-icon>
-                    <span>Đang tạo mã VietQR...</span>
-                  </div>
-                  <p class="qr-scan-hint">Mở app Ngân hàng hoặc Ví MoMo để quét mã</p>
+                  <p class="qr-scan-hint">Mở app Ngân hàng để quét mã QR</p>
                 </div>
 
-                <div class="bank-details">
-                  <div class="detail-row">
-                    <span class="label">Ngân hàng:</span>
-                    <span class="value strong">MB Bank (Quân Đội)</span>
+                <div class="qr-specs">
+                  <div class="spec-line">
+                    <span class="lbl">Ngân hàng:</span>
+                    <span class="val strong">MB Bank (Quân Đội)</span>
                   </div>
-                  <div class="detail-row">
-                    <span class="label">Chủ tài khoản:</span>
-                    <span class="value strong">SNEAKERHUB STORE</span>
+                  <div class="spec-line">
+                    <span class="lbl">Chủ tài khoản:</span>
+                    <span class="val strong">SNEAKERHUB PRO</span>
                   </div>
-                  <div class="detail-row">
-                    <span class="label">Số tài khoản:</span>
-                    <span class="value code-val" @click="copyText('0901000001', 'Số tài khoản')">
-                      0901000001
-                      <el-icon><CopyDocument /></el-icon>
+                  <div class="spec-line">
+                    <span class="lbl">Số tài khoản:</span>
+                    <span class="val code-val" @click="copyText('0901000001', 'Số tài khoản')">
+                      0901000001 <span class="copy-hint">Sao chép</span>
                     </span>
                   </div>
-                  <div class="detail-row">
-                    <span class="label">Số tiền:</span>
-                    <span class="value price">{{ formatCurrency(order.totalAmount) }}</span>
+                  <div class="spec-line">
+                    <span class="lbl">Số tiền:</span>
+                    <span class="val price-val">{{ formatCurrency(order.totalAmount) }}</span>
                   </div>
-                  <div class="detail-row">
-                    <span class="label">Nội dung chuyển khoản:</span>
-                    <span class="value code-val highlight" @click="copyText(order.orderCode, 'Nội dung chuyển tiền')">
-                      {{ order.orderCode }}
-                      <el-icon><CopyDocument /></el-icon>
+                  <div class="spec-line">
+                    <span class="lbl">Nội dung CK:</span>
+                    <span class="val code-val highlight" @click="copyText(order.orderCode, 'Nội dung chuyển khoản')">
+                      {{ order.orderCode }} <span class="copy-hint">Sao chép</span>
                     </span>
-                  </div>
-                  <div class="qr-notice">
-                    <el-icon><InfoFilled /></el-icon>
-                    <span>Vui lòng giữ nguyên mã <b>{{ order.orderCode }}</b> trong nội dung chuyển khoản để hệ thống tự động gạch nợ.</span>
                   </div>
                 </div>
+              </div>
+
+              <div class="qr-warning">
+                <span>⚠️ Lưu ý: Giữ nguyên nội dung chuyển khoản <strong>{{ order.orderCode }}</strong> để hệ thống tự động gạch nợ đơn hàng.</span>
               </div>
             </div>
 
-            <!-- COD Notification if Cash -->
-            <div v-else class="card cod-card">
-              <div class="cod-body">
-                <el-icon class="cod-icon"><Van /></el-icon>
-                <div>
-                  <h4>Phương thức: Thanh toán khi nhận hàng (COD)</h4>
-                  <p>Bạn sẽ thanh toán số tiền <b>{{ formatCurrency(order.totalAmount) }}</b> trực tiếp cho nhân viên giao hàng khi nhận và kiểm tra giày.</p>
-                </div>
+            <!-- COD Card -->
+            <div v-else class="card-box cod-card">
+              <div class="box-head">
+                <span class="box-eyebrow">PAYMENT METHOD</span>
+                <h3 class="box-title">THANH TOÁN TIỀN MẶT KHI NHẬN HÀNG (COD)</h3>
               </div>
+              <p class="cod-desc">
+                Bạn sẽ thanh toán số tiền <strong>{{ formatCurrency(order.totalAmount) }}</strong> trực tiếp cho nhân viên giao hàng sau khi kiểm tra giày tận nơi.
+              </p>
             </div>
 
-            <!-- Customer & Shipping Card -->
-            <div class="card shipping-card">
-              <div class="card-header">
-                <h3>
-                  <el-icon><Location /></el-icon>
-                  Thông Tin Nhận Hàng
-                </h3>
+            <!-- Shipping Details -->
+            <div class="card-box shipping-card">
+              <div class="box-head">
+                <span class="box-eyebrow">DELIVERY INFO</span>
+                <h3 class="box-title">THÔNG TIN GIAO HÀNG</h3>
               </div>
-              <div class="shipping-body">
-                <div class="info-row">
-                  <span class="label">Họ và tên:</span>
-                  <span class="value">{{ order.customerName }}</span>
+
+              <div class="info-rows">
+                <div class="info-line">
+                  <span class="lbl">Người nhận:</span>
+                  <span class="val">{{ order.customerName }}</span>
                 </div>
-                <div class="info-row">
-                  <span class="label">Số điện thoại:</span>
-                  <span class="value">{{ order.customerPhone }}</span>
+                <div class="info-line">
+                  <span class="lbl">Số điện thoại:</span>
+                  <span class="val">{{ order.customerPhone }}</span>
                 </div>
-                <div class="info-row">
-                  <span class="label">Địa chỉ giao:</span>
-                  <span class="value">{{ order.shippingAddress }}</span>
+                <div class="info-line">
+                  <span class="lbl">Địa chỉ nhận:</span>
+                  <span class="val">{{ order.shippingAddress }}</span>
                 </div>
-                <div v-if="order.note" class="info-row">
-                  <span class="label">Ghi chú:</span>
-                  <span class="value italic">{{ order.note }}</span>
+                <div class="info-line" v-if="order.note">
+                  <span class="lbl">Ghi chú:</span>
+                  <span class="val italic">{{ order.note }}</span>
                 </div>
-                <div class="info-row">
-                  <span class="label">Thời gian đặt:</span>
-                  <span class="value">{{ formatDate(order.orderDate) }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="label">Trạng thái:</span>
-                  <span class="status-badge" :class="order.status ? order.status.toLowerCase() : 'confirmed'">
-                    {{ formatStatus(order.status) }}
-                  </span>
+                <div class="info-line">
+                  <span class="lbl">Thời gian đặt:</span>
+                  <span class="val">{{ formatDate(order.orderDate) }}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Order Items & Summary -->
-          <div class="items-column">
-            <div class="card items-card">
-              <div class="card-header">
-                <h3>
-                  <el-icon><Goods /></el-icon>
-                  Kiện Hàng ({{ (order.items && order.items.length) || 0 }} sản phẩm)
-                </h3>
+          <!-- Right: Items breakdown -->
+          <div class="receipt-right-col">
+            <div class="card-box items-summary-card">
+              <div class="box-head">
+                <span class="box-eyebrow">ORDER DETAILS</span>
+                <h3 class="box-title">KIỆN HÀNG ({{ (order.items && order.items.length) || 0 }} ĐÔI)</h3>
               </div>
-              <div class="items-list">
+
+              <div class="order-items-scroll">
                 <div
-                  v-for="(item, index) in order.items"
-                  :key="index"
-                  class="item-row"
+                  v-for="(item, idx) in order.items"
+                  :key="idx"
+                  class="receipt-item-row"
                 >
-                  <div class="item-img-wrap">
-                    <img
-                      :src="item.productImageUrl || 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=150&q=80'"
-                      :alt="item.productName"
-                    />
-                  </div>
+                  <img
+                    :src="item.productImageUrl || 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=150&q=80'"
+                    :alt="item.productName"
+                    class="item-thumb"
+                  />
                   <div class="item-meta">
-                    <h4 class="item-name">{{ item.productName }}</h4>
-                    <div class="item-chips">
-                      <span v-if="item.sizeValue" class="chip">Size: {{ item.sizeValue }}</span>
-                      <span v-if="item.colorName" class="chip">Màu: {{ item.colorName }}</span>
-                      <span class="chip-qty">x{{ item.quantity }}</span>
+                    <h4 class="item-title">{{ item.productName }}</h4>
+                    <div class="item-tags">
+                      <span v-if="item.sizeValue" class="item-tag">Size: {{ item.sizeValue }}</span>
+                      <span v-if="item.colorName" class="item-tag">{{ item.colorName }}</span>
+                      <span class="item-qty">x{{ item.quantity }}</span>
                     </div>
                   </div>
-                  <div class="item-price">
+                  <div class="item-cost">
                     {{ formatCurrency(item.unitPrice * item.quantity) }}
                   </div>
                 </div>
               </div>
 
-              <div class="order-summary-box">
-                <div class="summary-line">
+              <div class="order-totals-table">
+                <div class="total-row-line">
                   <span>Tạm tính</span>
                   <span>{{ formatCurrency(order.totalAmount) }}</span>
                 </div>
-                <div class="summary-line">
-                  <span>Phí vận chuyển toàn quốc</span>
-                  <span class="free-ship">Miễn phí</span>
+                <div class="total-row-line">
+                  <span>Vận chuyển toàn quốc</span>
+                  <span class="free-text">Miễn phí</span>
                 </div>
-                <div class="summary-line total-line">
-                  <span>Tổng thanh toán</span>
-                  <span class="total-price">{{ formatCurrency(order.totalAmount) }}</span>
+                <div class="total-row-line grand-total">
+                  <span>TỔNG THANH TOÁN</span>
+                  <span class="grand-price">{{ formatCurrency(order.totalAmount) }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Action buttons -->
-            <div class="action-buttons">
-              <el-button
-                size="large"
-                type="primary"
-                class="btn-track"
-                @click="goToTracking"
-              >
-                <el-icon><Search /></el-icon>
-                Theo Dõi Đơn Hàng
-              </el-button>
-              <el-button
-                size="large"
-                class="btn-shop"
-                @click="router.push('/shop')"
-              >
-                <el-icon><ArrowLeft /></el-icon>
-                Tiếp Tục Mua Sắm
-              </el-button>
+            <!-- Actions -->
+            <div class="receipt-actions">
+              <button class="btn-track-action" @click="goToTracking">
+                TRA CỨU VẬN ĐƠN →
+              </button>
+              <button class="btn-shop-action" @click="router.push('/shop')">
+                TIẾP TỤC MUA SẮM
+              </button>
             </div>
           </div>
         </div>
@@ -230,19 +208,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  Check,
-  DocumentCopy,
-  CopyDocument,
-  CreditCard,
-  Picture,
-  InfoFilled,
-  Van,
-  Location,
-  Goods,
-  Search,
-  ArrowLeft
-} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
 import { formatCurrency } from '@/utils/formatters'
@@ -256,7 +221,7 @@ const order = ref(null)
 onMounted(async () => {
   const code = route.params.orderCode
 
-  // Check sessionStorage first for instantaneous load
+  // Check sessionStorage
   const cachedOrderStr = sessionStorage.getItem('last_placed_order')
   if (cachedOrderStr) {
     try {
@@ -317,16 +282,6 @@ const formatDate = (dateStr) => {
   }
 }
 
-const formatStatus = (st) => {
-  const map = {
-    CONFIRMED: 'Đã xác nhận',
-    PENDING: 'Chờ xử lý',
-    COMPLETED: 'Hoàn tất',
-    CANCELLED: 'Đã hủy'
-  }
-  return map[st] || st || 'Đã xác nhận'
-}
-
 const goToTracking = () => {
   if (order.value?.orderCode) {
     router.push({
@@ -341,484 +296,482 @@ const goToTracking = () => {
 
 <style scoped lang="scss">
 .store-order-success {
-  background: #f8fafc;
-  min-height: calc(100vh - 80px);
-  padding: 40px 0 80px;
+  padding: 50px 0 100px;
+  background: #ffffff;
+}
 
-  .store-container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
+.layout-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px;
 }
 
 .loading-state,
 .not-found-state {
-  background: #fff;
-  border-radius: 16px;
-  padding: 60px 40px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  padding: 80px 20px;
+  background: #fafafa;
+  border: 1px dashed #e5e5e5;
+
+  .empty-icon-wrap {
+    margin-bottom: 16px;
+    .empty-svg {
+      width: 48px;
+      height: 48px;
+      color: #a3a3a3;
+    }
+  }
+
+  .state-title {
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0 0 8px;
+  }
+
+  .state-desc {
+    font-size: 14px;
+    color: #737373;
+    margin: 0 0 24px;
+  }
+
+  .state-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    .btn-black {
+      background: #000000;
+      color: #ffffff;
+      padding: 12px 24px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      border: 1px solid #000000;
+      color: #000000;
+      padding: 12px 24px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+    }
+  }
 }
 
-.success-header {
+/* Header */
+.receipt-header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 48px;
 
-  .icon-circle {
-    width: 72px;
-    height: 72px;
+  .check-circle {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    background: #10b981;
-    color: #fff;
+    background: #000000;
+    color: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
-    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
     margin-bottom: 16px;
+
+    .check-svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .eyebrow {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #737373;
+    margin-bottom: 6px;
   }
 
   .headline {
-    font-family: 'Cabinet Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 32px;
     font-weight: 900;
-    letter-spacing: -0.5px;
-    color: #0f172a;
+    letter-spacing: -0.02em;
+    color: #000000;
     margin: 0 0 10px;
   }
 
-  .subtitle {
-    font-size: 16px;
-    color: #475569;
-    margin: 0 0 8px;
+  .order-code-prompt {
+    font-size: 15px;
+    color: #525252;
+    margin: 0 0 10px;
 
     .order-code-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #0f172a;
-      color: #fff;
-      padding: 4px 12px;
-      border-radius: 6px;
+      background: #000000;
+      color: #ffffff;
+      padding: 4px 10px;
+      font-family: monospace;
       font-weight: 800;
-      letter-spacing: 0.5px;
       cursor: pointer;
       margin-left: 6px;
-      transition: all 0.2s;
+      transition: background 0.15s ease;
 
       &:hover {
-        background: #2563eb;
+        background: #262626;
+      }
+
+      .copy-glyph {
+        font-size: 12px;
       }
     }
   }
 
-  .notification-text {
-    font-size: 14px;
-    color: #64748b;
-    margin: 0;
+  .header-note {
+    font-size: 13px;
+    color: #737373;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.5;
   }
 }
 
-.grid-layout {
+/* Grid */
+.receipt-grid {
   display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 24px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 36px;
 
-  @media (max-width: 900px) {
+  @media (max-width: 850px) {
     grid-template-columns: 1fr;
   }
 }
 
-.card {
-  background: #fff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  margin-bottom: 20px;
-  overflow: hidden;
+.card-box {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  padding: 24px;
+  margin-bottom: 24px;
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid #f1f5f9;
-    background: #fafafa;
+  .box-head {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
 
-    h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .el-icon {
-        font-size: 18px;
-        color: #2563eb;
-      }
+    .box-eyebrow {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #737373;
+      display: block;
+      margin-bottom: 2px;
     }
 
-    .badge-qr {
-      background: #eff6ff;
-      color: #2563eb;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
+    .box-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #000000;
+      margin: 0;
     }
   }
 }
 
+/* QR Layout */
 .qr-card {
-  border-color: #bfdbfe;
-
-  .qr-body {
-    padding: 24px 20px;
+  .qr-layout {
     display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 20px;
+    align-items: center;
 
-    .qr-image-wrapper {
+    @media (max-width: 500px) {
+      flex-direction: column;
+    }
+
+    .qr-media {
       text-align: center;
+      flex-shrink: 0;
 
-      .qr-code-img {
-        width: 210px;
-        height: 210px;
+      .vietqr-img {
+        width: 160px;
+        height: 160px;
         object-fit: contain;
-        border-radius: 12px;
-        border: 2px dashed #3b82f6;
-        padding: 6px;
-        background: #fff;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
-      }
-
-      .qr-placeholder {
-        width: 210px;
-        height: 210px;
-        border: 2px dashed #cbd5e1;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #94a3b8;
-        font-size: 13px;
-        gap: 8px;
-
-        .el-icon {
-          font-size: 36px;
-        }
+        border: 1px solid #e5e5e5;
+        padding: 4px;
+        background: #ffffff;
       }
 
       .qr-scan-hint {
-        font-size: 12px;
-        color: #64748b;
-        margin: 8px 0 0;
-        font-weight: 500;
+        font-size: 11px;
+        color: #737373;
+        margin: 6px 0 0;
       }
     }
 
-    .bank-details {
-      width: 100%;
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 16px;
-      border: 1px solid #e2e8f0;
+    .qr-specs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
 
-      .detail-row {
+      .spec-line {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px dashed #e2e8f0;
-        font-size: 13px;
+        font-size: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #f5f5f5;
 
-        &:last-of-type {
+        &:last-child {
           border-bottom: none;
         }
 
-        .label {
-          color: #64748b;
+        .lbl {
+          color: #737373;
         }
 
-        .value {
-          color: #0f172a;
+        .val {
+          color: #000000;
           text-align: right;
 
           &.strong {
             font-weight: 700;
           }
 
-          &.price {
-            font-size: 16px;
-            font-weight: 800;
-            color: #ef4444;
+          &.price-val {
+            font-size: 15px;
+            font-weight: 900;
+            color: #000000;
           }
 
           &.code-val {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
             font-family: monospace;
-            font-weight: 700;
-            background: #fff;
+            font-weight: 800;
+            background: #f5f5f5;
             padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: background 0.15s ease;
+
+            .copy-hint {
+              font-size: 10px;
+              color: #737373;
+              margin-left: 4px;
+            }
 
             &:hover {
-              background: #2563eb;
-              color: #fff;
-              border-color: #2563eb;
+              background: #000000;
+              color: #ffffff;
+              .copy-hint {
+                color: #d4d4d4;
+              }
             }
 
             &.highlight {
-              color: #2563eb;
-              border-color: #93c5fd;
-              background: #eff6ff;
+              border: 1px solid #000000;
             }
           }
         }
       }
-
-      .qr-notice {
-        margin-top: 12px;
-        padding: 8px 10px;
-        background: #fffbeb;
-        border-radius: 6px;
-        border: 1px solid #fef3c7;
-        font-size: 11px;
-        color: #b45309;
-        display: flex;
-        align-items: flex-start;
-        gap: 6px;
-
-        .el-icon {
-          font-size: 14px;
-          margin-top: 1px;
-          flex-shrink: 0;
-        }
-      }
     }
+  }
+
+  .qr-warning {
+    margin-top: 16px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    font-size: 11px;
+    color: #525252;
+    line-height: 1.4;
   }
 }
 
 .cod-card {
-  .cod-body {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    .cod-icon {
-      font-size: 40px;
-      color: #10b981;
-      background: #ecfdf5;
-      padding: 12px;
-      border-radius: 12px;
-    }
-
-    h4 {
-      margin: 0 0 6px;
-      font-size: 15px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    p {
-      margin: 0;
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.5;
-    }
-  }
-}
-
-.shipping-body {
-  padding: 16px 20px;
-
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
+  .cod-desc {
     font-size: 13px;
-    border-bottom: 1px solid #f8fafc;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .label {
-      color: #64748b;
-      min-width: 110px;
-    }
-
-    .value {
-      color: #0f172a;
-      font-weight: 600;
-      text-align: right;
-    }
-
-    .status-badge {
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-
-      &.confirmed {
-        background: #dcfce7;
-        color: #15803d;
-      }
-      &.pending {
-        background: #fef3c7;
-        color: #b45309;
-      }
-      &.completed {
-        background: #eff6ff;
-        color: #1d4ed8;
-      }
-      &.cancelled {
-        background: #fee2e2;
-        color: #b91c1c;
-      }
-    }
+    color: #525252;
+    line-height: 1.6;
+    margin: 0;
   }
 }
 
-.items-card {
-  .items-list {
-    padding: 12px 20px;
-    max-height: 380px;
-    overflow-y: auto;
+.shipping-card {
+  .info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 
-    .item-row {
+    .info-line {
       display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 1px solid #f1f5f9;
+      justify-content: space-between;
+      font-size: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f5f5f5;
 
       &:last-child {
         border-bottom: none;
       }
 
-      .item-img-wrap {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        flex-shrink: 0;
+      .lbl {
+        color: #737373;
+      }
 
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+      .val {
+        color: #000000;
+        font-weight: 600;
+        text-align: right;
+      }
+    }
+  }
+}
+
+/* Items Summary */
+.items-summary-card {
+  .order-items-scroll {
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .receipt-item-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .item-thumb {
+        width: 52px;
+        height: 52px;
+        background: #f5f5f7;
+        border: 1px solid #e5e5e5;
+        object-fit: contain;
+        padding: 4px;
+        flex-shrink: 0;
       }
 
       .item-meta {
         flex: 1;
 
-        .item-name {
-          font-size: 14px;
+        .item-title {
+          font-size: 13px;
           font-weight: 700;
-          color: #0f172a;
-          margin: 0 0 6px;
+          color: #0a0a0a;
+          margin: 0 0 4px;
         }
 
-        .item-chips {
+        .item-tags {
           display: flex;
-          align-items: center;
           gap: 6px;
+          align-items: center;
 
-          .chip {
-            font-size: 11px;
-            background: #f1f5f9;
-            color: #475569;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
+          .item-tag {
+            font-size: 10px;
+            font-weight: 700;
+            background: #f5f5f5;
+            padding: 1px 6px;
+            color: #525252;
           }
 
-          .chip-qty {
+          .item-qty {
             font-size: 11px;
-            font-weight: 700;
-            color: #2563eb;
+            font-weight: 800;
+            color: #000000;
           }
         }
       }
 
-      .item-price {
-        font-size: 14px;
+      .item-cost {
+        font-size: 13px;
         font-weight: 800;
-        color: #0f172a;
+        color: #000000;
+        font-variant-numeric: tabular-nums;
       }
     }
   }
 
-  .order-summary-box {
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    padding: 16px 20px;
+  .order-totals-table {
+    border-top: 1px solid #ebebeb;
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-    .summary-line {
+    .total-row-line {
       display: flex;
       justify-content: space-between;
-      font-size: 13px;
-      color: #64748b;
-      margin-bottom: 8px;
+      font-size: 12px;
+      color: #525252;
 
-      .free-ship {
+      .free-text {
         color: #10b981;
-        font-weight: 700;
+        font-weight: 800;
       }
 
-      &.total-line {
-        margin-top: 12px;
+      &.grand-total {
+        margin-top: 8px;
         padding-top: 12px;
-        border-top: 1px dashed #cbd5e1;
-        font-size: 16px;
-        font-weight: 800;
-        color: #0f172a;
+        border-top: 1px solid #e5e5e5;
+        font-size: 13px;
+        font-weight: 900;
+        color: #000000;
+        letter-spacing: 0.06em;
 
-        .total-price {
-          font-size: 20px;
-          color: #ef4444;
+        .grand-price {
+          font-size: 18px;
+          font-variant-numeric: tabular-nums;
         }
       }
     }
   }
 }
 
-.action-buttons {
+.receipt-actions {
   display: flex;
   gap: 12px;
 
-  .btn-track {
+  .btn-track-action {
     flex: 1.2;
-    background: #0f172a;
-    border-color: #0f172a;
-    font-weight: 700;
     height: 48px;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.15s ease;
 
     &:hover {
-      background: #2563eb;
-      border-color: #2563eb;
+      background: #262626;
     }
   }
 
-  .btn-shop {
+  .btn-shop-action {
     flex: 1;
-    font-weight: 600;
     height: 48px;
+    background: transparent;
+    border: 1px solid #000000;
+    color: #000000;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f5f5f5;
+    }
   }
 }
 </style>

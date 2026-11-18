@@ -1,150 +1,231 @@
 <template>
   <div class="store-detail">
-    <div class="container" v-loading="loading">
+    <div class="layout-container">
       <!-- Breadcrumb -->
-      <div class="breadcrumb-bar" v-if="product">
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/' }">Trang chủ</el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: '/shop' }">Sản phẩm</el-breadcrumb-item>
-          <el-breadcrumb-item>{{ product.productName }}</el-breadcrumb-item>
-        </el-breadcrumb>
+      <div class="detail-breadcrumb">
+        <router-link to="/">Trang chủ</router-link>
+        <span class="sep">/</span>
+        <router-link to="/shop">Bộ sưu tập</router-link>
+        <span class="sep">/</span>
+        <span class="current">{{ product ? product.productName : 'Chi tiết giày' }}</span>
       </div>
 
-      <div class="detail-grid" v-if="product">
-        <!-- Left: Image Gallery -->
-        <div class="gallery-col">
-          <div class="main-image-wrap">
-            <img :src="activeImage" :alt="product.productName" class="main-image" />
-            <span class="brand-floating-tag">{{ product.brandName }}</span>
+      <!-- Loading State -->
+      <div v-if="loading" class="detail-loading-box">
+        <el-skeleton :rows="10" animated />
+      </div>
+
+      <!-- Main Product Grid -->
+      <div v-else-if="product" class="product-layout-grid">
+        <!-- Left: Product Gallery -->
+        <div class="product-gallery">
+          <div class="main-image-viewport">
+            <img
+              :src="activeImage"
+              :alt="product.productName"
+              class="active-sneaker-img"
+            />
+            <div class="gallery-badge">
+              <span>AUTHENTIC PAIR</span>
+            </div>
           </div>
-          <div class="thumbnail-list" v-if="allImages.length > 1">
-            <div
+
+          <!-- Thumbnails Strip -->
+          <div class="thumbnails-strip" v-if="allImages.length > 1">
+            <button
               v-for="(img, idx) in allImages"
               :key="idx"
-              class="thumb-item"
+              class="thumb-btn"
               :class="{ active: activeImage === img }"
               @click="activeImage = img"
             >
-              <img :src="img" :alt="product.productName" />
-            </div>
+              <img :src="img" :alt="`Thumbnail ${idx}`" />
+            </button>
           </div>
         </div>
 
-        <!-- Right: Purchase Panel -->
-        <div class="info-col">
-          <div class="code-badge">{{ product.productCode }}</div>
-          <h1 class="product-title">{{ product.productName }}</h1>
-          
-          <div class="meta-row">
-            <span class="meta-item">Thương hiệu: <strong>{{ product.brandName }}</strong></span>
-            <span class="meta-item">Dòng sản phẩm: <strong>{{ product.categoryName }}</strong></span>
-            <span class="meta-item" v-if="product.material">Chất liệu: <strong>{{ product.material }}</strong></span>
-          </div>
-
-          <!-- Price Display -->
-          <div class="price-display">
-            <span class="price-current">{{ formatCurrency(selectedVariant ? selectedVariant.salePrice : product.salePrice) }}</span>
-            <span class="tax-tag">Đã bao gồm VAT</span>
-          </div>
-
-          <!-- Color selection -->
-          <div class="selector-section" v-if="uniqueColors.length">
-            <div class="section-title">
-              MÀU SẮC: <strong>{{ selectedColor ? selectedColor.colorName : 'Chọn màu' }}</strong>
+        <!-- Right: Sticky Buy Box -->
+        <div class="product-buybox">
+          <div class="buybox-header">
+            <div class="brand-eyebrow">
+              <span class="brand-name">{{ product.brandName }}</span>
+              <span class="dot-sep">•</span>
+              <span class="category-name">{{ product.categoryName }}</span>
             </div>
-            <div class="color-options">
-              <div
-                v-for="color in uniqueColors"
-                :key="color.id"
-                class="color-pill"
-                :class="{ active: selectedColor && selectedColor.id === color.id }"
-                @click="selectColor(color)"
-              >
-                <span class="color-dot" :style="{ backgroundColor: color.hexCode || '#000000' }"></span>
-                <span class="color-text">{{ color.colorName }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Size selection -->
-          <div class="selector-section">
-            <div class="section-title flex-between">
-              <span>KÍCH THƯỚC (SIZE): <strong>{{ selectedSize ? selectedSize.sizeValue : 'Chọn size' }}</strong></span>
-              <a href="javascript:void(0)" class="link-guide" @click="showSizeGuide = true">📏 Hướng dẫn chọn size</a>
-            </div>
-            <div class="size-options">
-              <button
-                v-for="size in availableSizesForColor"
-                :key="size.id"
-                class="size-box"
-                :class="{
-                  active: selectedSize && selectedSize.id === size.id,
-                  disabled: size.availableQuantity === 0
-                }"
-                :disabled="size.availableQuantity === 0"
-                @click="selectSize(size)"
-              >
-                <span class="size-val">{{ size.sizeValue }}</span>
-                <span class="stock-sub" v-if="size.availableQuantity > 0">Còn {{ size.availableQuantity }}</span>
-                <span class="stock-sub out" v-else>Hết</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Quantity & Stock Status -->
-          <div class="quantity-section">
-            <span class="section-title">SỐ LƯỢNG MUA:</span>
-            <div class="quantity-controls">
-              <el-input-number
-                v-model="quantity"
-                :min="1"
-                :max="selectedVariant ? selectedVariant.availableQuantity : 1"
-                :disabled="!selectedVariant || selectedVariant.availableQuantity <= 0"
-              />
-              <span class="stock-note" v-if="selectedVariant">
-                (Kho còn sẵn <strong>{{ selectedVariant.availableQuantity }}</strong> đôi)
+            <h1 class="product-headline">{{ product.productName }}</h1>
+            <div class="sku-row">
+              <span class="sku-tag">MÃ SKU: {{ selectedVariant ? selectedVariant.sku : product.productCode }}</span>
+              <span class="stock-indicator" :class="{ 'in-stock': currentStock > 0, 'out-stock': currentStock === 0 }">
+                <span class="stock-dot"></span>
+                <span>{{ currentStock > 0 ? `Còn ${currentStock} đôi sẵn kho` : 'Tạm hết size này' }}</span>
               </span>
             </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="action-buttons">
+          <!-- Pricing Section -->
+          <div class="pricing-card">
+            <div class="price-main">
+              <span class="price-val">{{ formatCurrency(product.salePrice) }}</span>
+              <span class="price-tax">Đã bao gồm VAT & Hộp chính hãng</span>
+            </div>
+            <div class="perk-pill">
+              <span class="perk-highlight">Freeship</span> toàn quốc cho đơn hàng này
+            </div>
+          </div>
+
+          <!-- Color Options -->
+          <div class="option-group" v-if="uniqueColors.length">
+            <div class="group-title-row">
+              <span class="group-title">MÀU SẮC</span>
+              <span class="selected-text">{{ selectedColor ? selectedColor.colorName : '' }}</span>
+            </div>
+            <div class="color-swatches">
+              <button
+                v-for="c in uniqueColors"
+                :key="c.id"
+                class="swatch-btn"
+                :class="{ active: selectedColor && selectedColor.id === c.id }"
+                @click="selectColor(c)"
+              >
+                <span
+                  class="color-dot"
+                  :style="{ backgroundColor: c.hexCode || '#000000' }"
+                ></span>
+                <span class="color-title">{{ c.colorName }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Size Selector Matrix -->
+          <div class="option-group">
+            <div class="group-title-row">
+              <span class="group-title">CHỌN KÍCH CỠ (SIZE EU / VN)</span>
+              <button class="size-chart-link" @click="showSizeGuide = true">
+                Bảng quy đổi size ↗
+              </button>
+            </div>
+
+            <div class="size-matrix">
+              <button
+                v-for="size in availableSizesForColor"
+                :key="size.id"
+                class="size-tile"
+                :class="{
+                  active: selectedSize && selectedSize.id === size.id,
+                  disabled: size.stock <= 0
+                }"
+                :disabled="size.stock <= 0"
+                @click="selectSize(size)"
+              >
+                <span class="size-val">{{ size.sizeValue }}</span>
+                <span class="size-sub">{{ size.stock > 0 ? `Kho: ${size.stock}` : 'Hết' }}</span>
+              </button>
+            </div>
+            <p v-if="!selectedSize" class="size-hint">
+              Vui lòng chọn size phù hợp với bạn để tiếp tục đặt hàng.
+            </p>
+          </div>
+
+          <!-- Quantity Stepper -->
+          <div class="quantity-row" v-if="selectedVariant && currentStock > 0">
+            <span class="qty-label">SỐ LƯỢNG:</span>
+            <div class="qty-stepper">
+              <button
+                class="step-btn"
+                :disabled="quantity <= 1"
+                @click="quantity > 1 && quantity--"
+              >
+                −
+              </button>
+              <span class="qty-val">{{ quantity }}</span>
+              <button
+                class="step-btn"
+                :disabled="quantity >= currentStock"
+                @click="quantity < currentStock && quantity++"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Purchase Action Buttons -->
+          <div class="cta-actions">
             <button
               class="btn-add-cart"
               :disabled="!isReadyToBuy"
               @click="handleAddToCart"
             >
-              <el-icon><ShoppingBag /></el-icon> THÊM VÀO GIỎ HÀNG
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cart-icon-svg">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+              <span>{{ isReadyToBuy ? 'THÊM VÀO GIỎ HÀNG' : 'CHỌN SIZE ĐỂ MUA' }}</span>
             </button>
+
             <button
-              class="btn-buy-now"
+              class="btn-buy-express"
               :disabled="!isReadyToBuy"
               @click="handleBuyNow"
             >
-              MUA NGAY (THANH TOÁN)
+              MUA NGAY (GIAO TẬN NƠI)
             </button>
           </div>
 
-          <!-- Guarantee Perks -->
-          <div class="perks-list">
-            <div class="perk-item">
-              <span class="perk-icon">🚚</span>
-              <span>Giao hàng miễn phí toàn quốc cho đơn trên 1.000.000đ</span>
+          <!-- Assurance Perks -->
+          <div class="assurance-list">
+            <div class="assurance-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="perk-svg">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+              <div>
+                <strong>Miễn phí vận chuyển toàn quốc</strong>
+                <p>Đơn hàng từ 1.000.000₫ được hỗ trợ freeship tận nhà.</p>
+              </div>
             </div>
-            <div class="perk-item">
-              <span class="perk-icon">🛡️</span>
-              <span>Cam kết 100% Authentic chính hãng - Check legit trọn đời</span>
+
+            <div class="assurance-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="perk-svg">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <div>
+                <strong>Cam kết chính hãng trọn đời</strong>
+                <p>Phát hiện hàng giả/nhái đền tiền gấp đôi ngay lập tức.</p>
+              </div>
             </div>
-            <div class="perk-item">
-              <span class="perk-icon">🔄</span>
-              <span>Đổi size trong 7 ngày nếu mang không vừa chân</span>
+
+            <div class="assurance-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="perk-svg">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <div>
+                <strong>Đổi size linh hoạt trong 7 ngày</strong>
+                <p>Hỗ trợ đổi sang size vừa vặn nếu sản phẩm còn nguyên tem mác.</p>
+              </div>
             </div>
           </div>
 
-          <!-- Description -->
-          <div class="product-description" v-if="product.description">
-            <h3 class="desc-heading">MÔ TẢ CHI TIẾT SẢN PHẨM</h3>
-            <p class="desc-content">{{ product.description }}</p>
+          <!-- Product Specifications & Story -->
+          <div class="specs-accordion" v-if="product.description || product.material">
+            <h3 class="specs-title">THÔNG TIN SẢN PHẨM & CHẤT LIỆU</h3>
+            <p class="specs-desc" v-if="product.description">{{ product.description }}</p>
+            <div class="spec-row" v-if="product.material">
+              <span class="spec-label">Chất liệu:</span>
+              <span class="spec-val">{{ product.material }}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Thương hiệu:</span>
+              <span class="spec-val">{{ product.brandName }}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Phân loại:</span>
+              <span class="spec-val">{{ product.categoryName }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -156,7 +237,7 @@
         <el-table-column prop="eu" label="EU (VN)" align="center" width="100" />
         <el-table-column prop="us" label="US Men" align="center" width="100" />
         <el-table-column prop="uk" label="UK" align="center" width="100" />
-        <el-table-column prop="cm" label="Chiều dài chân (cm)" align="center" />
+        <el-table-column prop="cm" label="Chiều dài bàn chân" align="center" />
       </el-table>
     </el-dialog>
   </div>
@@ -165,7 +246,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ShoppingBag } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
 import { useCartStore } from '@/stores/cart'
@@ -226,36 +306,48 @@ const uniqueColors = computed(() => {
 
 const availableSizesForColor = computed(() => {
   if (!product.value || !product.value.variants) return []
-  let variants = product.value.variants
-  if (selectedColor.value) {
-    variants = variants.filter(v => (v.color ? v.color.id : v.colorId) === selectedColor.value.id)
-  }
-  return variants.map(v => {
-    const s = v.size || { id: v.sizeId, sizeValue: v.sizeValue }
-    return {
-      ...s,
-      variantId: v.id,
-      availableQuantity: v.availableQuantity
-    }
-  })
+  return product.value.variants
+    .filter(v => {
+      if (!selectedColor.value) return true
+      const cId = v.color ? v.color.id : v.colorId
+      return cId === selectedColor.value.id
+    })
+    .map(v => ({
+      id: v.size ? v.size.id : v.sizeId,
+      sizeValue: v.size ? v.size.sizeValue : v.sizeValue,
+      stock: v.quantityInStock !== undefined ? v.quantityInStock : 10,
+      variant: v
+    }))
 })
 
 const selectedVariant = computed(() => {
   if (!product.value || !product.value.variants || !selectedSize.value) return null
   return product.value.variants.find(v => {
-    const matchesSize = (v.size ? v.size.id : v.sizeId) === selectedSize.value.id
-    const matchesColor = !selectedColor.value || (v.color ? v.color.id : v.colorId) === selectedColor.value.id
-    return matchesSize && matchesColor
+    const sId = v.size ? v.size.id : v.sizeId
+    const cId = v.color ? v.color.id : v.colorId
+    const matchSize = sId === selectedSize.value.id
+    const matchColor = selectedColor.value ? cId === selectedColor.value.id : true
+    return matchSize && matchColor
   })
 })
 
+const currentStock = computed(() => {
+  if (!selectedVariant.value) {
+    if (product.value && product.value.variants) {
+      return product.value.variants.reduce((acc, v) => acc + (v.quantityInStock || 0), 0)
+    }
+    return 10
+  }
+  return selectedVariant.value.quantityInStock !== undefined ? selectedVariant.value.quantityInStock : 10
+})
+
 const isReadyToBuy = computed(() => {
-  return selectedVariant.value && selectedVariant.value.availableQuantity > 0 && quantity.value > 0
+  return selectedVariant.value && currentStock.value > 0
 })
 
 const selectColor = (color) => {
   selectedColor.value = color
-  selectedSize.value = null // reset size
+  selectedSize.value = null
 }
 
 const selectSize = (size) => {
@@ -271,7 +363,6 @@ const loadProduct = async () => {
     if (allImages.value.length) {
       activeImage.value = allImages.value[0]
     }
-    // Auto select first color
     if (uniqueColors.value.length) {
       selectedColor.value = uniqueColors.value[0]
     }
@@ -285,7 +376,7 @@ const loadProduct = async () => {
 
 const handleAddToCart = () => {
   if (!selectedVariant.value) {
-    ElMessage.warning('Vui lòng chọn Size và Màu sắc trước khi thêm!')
+    ElMessage.warning('Vui lòng chọn Size giày trước khi thêm vào giỏ!')
     return
   }
   cartStore.addToCart(product.value, selectedVariant.value, quantity.value)
@@ -304,379 +395,563 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .store-detail {
-  padding-bottom: 70px;
+  padding-bottom: 90px;
+  background: #ffffff;
 }
 
-.container {
-  max-width: 1240px;
+.layout-container {
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 28px;
 }
 
-.breadcrumb-bar {
-  padding: 24px 0 20px;
-}
+.detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #737373;
+  padding: 24px 0 32px;
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 50px;
-}
-
-/* Left: Gallery */
-.gallery-col {
-  .main-image-wrap {
-    position: relative;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    overflow: hidden;
-    height: 480px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-
-    .main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .brand-floating-tag {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      background: rgba(15, 23, 42, 0.9);
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 6px;
-      backdrop-filter: blur(4px);
+  a {
+    color: #737373;
+    text-decoration: none;
+    transition: color 0.15s ease;
+    &:hover {
+      color: #000000;
     }
   }
 
-  .thumbnail-list {
+  .sep {
+    color: #d4d4d4;
+  }
+
+  .current {
+    color: #000000;
+  }
+}
+
+.product-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 60px;
+  align-items: flex-start;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+/* Gallery */
+.product-gallery {
+  position: sticky;
+  top: 96px;
+
+  .main-image-viewport {
+    position: relative;
+    background: #f5f5f7;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .active-sneaker-img {
+      width: 85%;
+      height: 85%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-badge {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      background: #000000;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 4px 8px;
+    }
+  }
+
+  .thumbnails-strip {
     display: flex;
     gap: 12px;
     margin-top: 16px;
 
-    .thumb-item {
+    .thumb-btn {
       width: 80px;
       height: 80px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      overflow: hidden;
+      background: #f5f5f7;
+      border: 1px solid #e5e5e5;
+      padding: 6px;
       cursor: pointer;
-      background: #ffffff;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
 
       img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
-      &.active,
-      &:hover {
-        border-color: #f97316;
+      &:hover,
+      &.active {
+        border-color: #000000;
+        background: #ffffff;
       }
     }
   }
 }
 
-/* Right: Info Col */
-.info-col {
-  .code-badge {
-    display: inline-block;
+/* Buy Box */
+.product-buybox {
+  display: flex;
+  flex-direction: column;
+
+  .brand-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1px;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 4px;
-    margin-bottom: 8px;
+    letter-spacing: 0.12em;
+    color: #737373;
     text-transform: uppercase;
+    margin-bottom: 8px;
+
+    .dot-sep {
+      color: #d4d4d4;
+    }
   }
 
-  .product-title {
-    font-size: 32px;
+  .product-headline {
+    font-size: 34px;
     font-weight: 900;
-    color: #0f172a;
-    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: #000000;
+    line-height: 1.15;
     margin: 0 0 12px;
-    letter-spacing: -0.5px;
+
+    @media (max-width: 600px) {
+      font-size: 26px;
+    }
   }
 
-  .meta-row {
+  .sku-row {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 16px;
-    font-size: 13.5px;
-    color: #64748b;
-    margin-bottom: 20px;
-
-    strong {
-      color: #0f172a;
-    }
-  }
-
-  .price-display {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    padding: 16px 20px;
-    border-radius: 12px;
     margin-bottom: 24px;
 
-    .price-current {
-      font-size: 28px;
-      font-weight: 900;
-      color: #0f172a;
-    }
-
-    .tax-tag {
-      font-size: 12px;
-      color: #10b981;
-      font-weight: 600;
-    }
-  }
-
-  .selector-section {
-    margin-bottom: 24px;
-
-    .section-title {
-      font-size: 13.5px;
+    .sku-tag {
+      font-size: 11px;
       font-weight: 700;
-      color: #334155;
+      color: #737373;
+      font-family: monospace;
+      letter-spacing: 0.06em;
+    }
+
+    .stock-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+
+      .stock-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+
+      &.in-stock {
+        color: #15803d;
+        .stock-dot {
+          background: #10b981;
+        }
+      }
+
+      &.out-stock {
+        color: #b91c1c;
+        .stock-dot {
+          background: #ef4444;
+        }
+      }
+    }
+  }
+
+  .pricing-card {
+    background: #fafafa;
+    border: 1px solid #ebebeb;
+    padding: 20px 24px;
+    margin-bottom: 30px;
+
+    .price-main {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+
+      .price-val {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: #000000;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .price-tax {
+        font-size: 12px;
+        color: #737373;
+      }
+    }
+
+    .perk-pill {
+      font-size: 12px;
+      color: #525252;
+      .perk-highlight {
+        font-weight: 800;
+        color: #000000;
+      }
+    }
+  }
+
+  .option-group {
+    margin-bottom: 28px;
+
+    .group-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 12px;
 
-      strong {
-        color: #f97316;
+      .group-title {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: #000000;
+        text-transform: uppercase;
       }
 
-      &.flex-between {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .link-guide {
+      .selected-text {
         font-size: 12px;
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
+        color: #525252;
+      }
+
+      .size-chart-link {
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #737373;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
 
         &:hover {
-          text-decoration: underline;
+          color: #000000;
         }
       }
     }
-  }
 
-  .color-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-
-    .color-pill {
+    .color-swatches {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border: 1.5px solid #e2e8f0;
-      background: #ffffff;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13.5px;
-      font-weight: 600;
-      transition: all 0.2s;
+      gap: 10px;
+      flex-wrap: wrap;
 
-      .color-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        border: 1px solid #cbd5e1;
-      }
+      .swatch-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
 
-      &.active {
-        border-color: #f97316;
-        background: #fff7ed;
-        color: #ea580c;
-      }
-    }
-  }
-
-  .size-options {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-
-    .size-box {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 10px 4px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-
-      .size-val {
-        font-size: 15px;
-        font-weight: 800;
-        color: #0f172a;
-      }
-
-      .stock-sub {
-        font-size: 10px;
-        color: #10b981;
-        margin-top: 2px;
-
-        &.out {
-          color: #ef4444;
+        .color-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          border: 1px solid rgba(0, 0, 0, 0.1);
         }
-      }
 
-      &.active {
-        border-color: #f97316;
-        background: #0f172a;
+        &:hover {
+          border-color: #000000;
+        }
 
-        .size-val {
+        &.active {
+          border-color: #000000;
+          background: #000000;
           color: #ffffff;
         }
-        .stock-sub {
-          color: #f97316;
-        }
+      }
+    }
+
+    .size-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+
+      @media (max-width: 500px) {
+        grid-template-columns: repeat(3, 1fr);
       }
 
-      &.disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-        background: #f1f5f9;
+      .size-tile {
+        height: 52px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        .size-val {
+          font-size: 14px;
+          font-weight: 800;
+          color: #000000;
+        }
+
+        .size-sub {
+          font-size: 10px;
+          color: #737373;
+          margin-top: 2px;
+        }
+
+        &:hover:not(.disabled) {
+          border-color: #000000;
+        }
+
+        &.active {
+          background: #000000;
+          border-color: #000000;
+          .size-val {
+            color: #ffffff;
+          }
+          .size-sub {
+            color: #a3a3a3;
+          }
+        }
+
+        &.disabled {
+          background: #fafafa;
+          border-color: #f0f0f0;
+          opacity: 0.4;
+          cursor: not-allowed;
+          position: relative;
+        }
       }
+    }
+
+    .size-hint {
+      font-size: 12px;
+      color: #e11d48;
+      margin: 8px 0 0;
+      font-weight: 600;
     }
   }
 
-  .quantity-section {
-    margin-bottom: 28px;
-
-    .quantity-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 8px;
-
-      .stock-note {
-        font-size: 13px;
-        color: #64748b;
-
-        strong {
-          color: #0f172a;
-        }
-      }
-    }
-  }
-
-  .action-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
+  .quantity-row {
+    display: flex;
+    align-items: center;
     gap: 16px;
     margin-bottom: 28px;
 
-    button {
-      padding: 16px;
-      font-size: 14px;
+    .qty-label {
+      font-size: 11px;
       font-weight: 800;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
+      letter-spacing: 0.1em;
+      color: #000000;
+    }
+
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #e5e5e5;
+
+      .step-btn {
+        width: 36px;
+        height: 36px;
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        color: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        &:hover:not(:disabled) {
+          background: #f5f5f5;
+        }
+      }
+
+      .qty-val {
+        width: 36px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 36px;
+
+    .btn-add-cart {
+      height: 54px;
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #000000;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-    }
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
-    .btn-add-cart {
-      background: #ffffff;
-      border: 2px solid #0f172a;
-      color: #0f172a;
+      .cart-icon-svg {
+        width: 18px;
+        height: 18px;
+      }
 
       &:hover:not(:disabled) {
-        background: #f1f5f9;
+        background: #262626;
+      }
+
+      &:disabled {
+        background: #e5e5e5;
+        border-color: #e5e5e5;
+        color: #a3a3a3;
+        cursor: not-allowed;
       }
     }
 
-    .btn-buy-now {
-      background: #f97316;
-      border: 2px solid #f97316;
-      color: #ffffff;
-      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+    .btn-buy-express {
+      height: 50px;
+      background: transparent;
+      color: #000000;
+      border: 1px solid #000000;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
       &:hover:not(:disabled) {
-        background: #ea580c;
-        border-color: #ea580c;
+        background: #f5f5f5;
       }
-    }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      box-shadow: none;
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
     }
   }
 
-  .perks-list {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 16px;
+  .assurance-list {
+    border-top: 1px solid #ebebeb;
+    border-bottom: 1px solid #ebebeb;
+    padding: 24px 0;
+    margin-bottom: 30px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 28px;
+    gap: 16px;
 
-    .perk-item {
+    .assurance-item {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: #334155;
+      gap: 14px;
+      align-items: flex-start;
 
-      .perk-icon {
-        font-size: 16px;
+      .perk-svg {
+        width: 20px;
+        height: 20px;
+        color: #000000;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      strong {
+        font-size: 13px;
+        font-weight: 800;
+        color: #000000;
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      p {
+        font-size: 12px;
+        color: #737373;
+        margin: 0;
+        line-height: 1.4;
       }
     }
   }
 
-  .product-description {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 24px;
-
-    .desc-heading {
-      font-size: 15px;
+  .specs-accordion {
+    .specs-title {
+      font-size: 12px;
       font-weight: 800;
-      color: #0f172a;
-      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+      color: #000000;
+      text-transform: uppercase;
+      margin: 0 0 12px;
     }
 
-    .desc-content {
-      font-size: 14px;
+    .specs-desc {
+      font-size: 13px;
+      color: #525252;
       line-height: 1.6;
-      color: #475569;
-      white-space: pre-line;
+      margin: 0 0 16px;
     }
-  }
-}
 
-@media (max-width: 900px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 12px;
+
+      .spec-label {
+        color: #737373;
+      }
+
+      .spec-val {
+        color: #000000;
+        font-weight: 700;
+      }
+    }
   }
 }
 </style>

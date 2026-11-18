@@ -1,223 +1,185 @@
 <template>
   <div class="store-track-order">
-    <div class="store-container">
+    <div class="layout-container">
       <!-- Search Box Card -->
-      <div class="track-search-card">
-        <div class="search-header">
-          <div class="header-icon">
-            <el-icon><Search /></el-icon>
-          </div>
-          <h2>TRA CỨU ĐƠN HÀNG</h2>
-          <p>Nhập mã đơn hàng hoặc số điện thoại để kiểm tra hành trình vận chuyển chi tiết</p>
-        </div>
+      <div class="track-header-box">
+        <span class="track-eyebrow">SHIPMENT TRACKING</span>
+        <h1 class="track-headline">TRA CỨU HÀNH TRÌNH ĐƠN HÀNG</h1>
+        <p class="track-subhead">
+          Nhập mã đơn hàng (VD: HD0012) hoặc số điện thoại người nhận để kiểm tra trạng thái kiện hàng
+        </p>
 
-        <el-form :inline="true" class="search-form" @submit.prevent="handleSearch">
-          <el-form-item label="Mã đơn hàng">
-            <el-input
+        <form class="track-form" @submit.prevent="handleSearch">
+          <div class="input-wrap">
+            <span class="input-lbl">MÃ ĐƠN HÀNG:</span>
+            <input
+              type="text"
               v-model="searchCode"
-              placeholder="VD: DH20261118..."
-              clearable
-              size="large"
-              class="input-code"
-            >
-              <template #prefix>
-                <el-icon><Document /></el-icon>
-              </template>
-            </el-input>
-          </el-form-item>
+              placeholder="VD: HD0012..."
+              class="track-input"
+            />
+          </div>
 
-          <el-form-item label="Số điện thoại (tùy chọn)">
-            <el-input
+          <div class="input-wrap">
+            <span class="input-lbl">SỐ ĐIỆN THOẠI (TÙY CHỌN):</span>
+            <input
+              type="text"
               v-model="searchPhone"
-              placeholder="VD: 0912345678"
-              clearable
-              size="large"
-              class="input-phone"
-            >
-              <template #prefix>
-                <el-icon><Phone /></el-icon>
-              </template>
-            </el-input>
-          </el-form-item>
+              placeholder="VD: 0987654321..."
+              class="track-input"
+            />
+          </div>
 
-          <el-form-item class="form-btn">
-            <el-button
-              type="primary"
-              size="large"
-              :loading="searching"
-              class="btn-search-submit"
-              @click="handleSearch"
-            >
-              <el-icon><Search /></el-icon>
-              Tra Cứu
-            </el-button>
-          </el-form-item>
-        </el-form>
+          <button type="submit" class="btn-track-submit" :disabled="searching">
+            <span v-if="searching">ĐANG TRA CỨU...</span>
+            <span v-else>TRA CỨU VẬN ĐƠN →</span>
+          </button>
+        </form>
       </div>
 
       <!-- State: Loading -->
-      <div v-if="searching" class="card status-container">
+      <div v-if="searching" class="track-loading-box">
         <el-skeleton :rows="6" animated />
       </div>
 
       <!-- State: Not Found -->
-      <div v-else-if="hasSearched && !orderData" class="card not-found-card">
-        <el-result
-          icon="error"
-          title="Không tìm thấy thông tin đơn hàng"
-          sub-title="Vui lòng kiểm tra lại mã đơn hàng hoặc liên hệ CSKH qua hotline 1900 6868 để được hỗ trợ."
-        >
-          <template #extra>
-            <el-button @click="resetSearch">Thử lại</el-button>
-            <el-button type="primary" @click="router.push('/shop')">Khám phá sản phẩm</el-button>
-          </template>
-        </el-result>
+      <div v-else-if="hasSearched && !orderData" class="track-empty-box">
+        <div class="empty-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-svg">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <h3 class="empty-title">Không tìm thấy thông tin đơn hàng</h3>
+        <p class="empty-desc">
+          Vui lòng kiểm tra lại mã đơn hàng hoặc số điện thoại bạn đã nhập. Nếu cần hỗ trợ khẩn cấp, vui lòng gọi hotline 1900 6868.
+        </p>
+        <button class="btn-reset-track" @click="resetSearch">Thử lại</button>
       </div>
 
       <!-- State: Order Result Found -->
-      <div v-else-if="orderData" class="order-result">
-        <!-- Top Status Bar -->
-        <div class="card order-top-card">
-          <div class="order-info-meta">
-            <div class="meta-item">
-              <span class="label">Mã đơn hàng:</span>
-              <span class="value-code">{{ orderData.orderCode }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="label">Thời gian tạo:</span>
-              <span class="value">{{ formatDate(orderData.orderDate) }}</span>
-            </div>
-            <div class="meta-item">
-              <span class="label">Hình thức thanh toán:</span>
-              <span class="value">{{ orderData.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng (COD)' }}</span>
-            </div>
+      <div v-else-if="orderData" class="track-result-area">
+        <!-- Top Summary Bar -->
+        <div class="order-hero-card">
+          <div class="order-meta-col">
+            <span class="meta-label">MÃ ĐƠN HÀNG</span>
+            <span class="meta-code">{{ orderData.orderCode }}</span>
           </div>
-          <div class="order-status-pill">
-            <span class="pill-badge" :class="orderData.status ? orderData.status.toLowerCase() : 'confirmed'">
-              {{ formatStatus(orderData.status) }}
-            </span>
+          <div class="order-meta-col">
+            <span class="meta-label">NGÀY TẠO ĐƠN</span>
+            <span class="meta-val">{{ formatDate(orderData.orderDate) }}</span>
+          </div>
+          <div class="order-meta-col">
+            <span class="meta-label">PHƯƠNG THỨC</span>
+            <span class="meta-val">{{ orderData.paymentMethod === 'BANK_TRANSFER' ? 'VietQR Chuyển khoản' : 'Thanh toán COD' }}</span>
+          </div>
+          <div class="order-status-badge" :class="orderData.status ? orderData.status.toLowerCase() : 'confirmed'">
+            {{ formatStatus(orderData.status) }}
           </div>
         </div>
 
-        <!-- Timeline Steps -->
-        <div class="card timeline-card">
-          <h3 class="card-title">Hành Trình Đơn Hàng</h3>
-
-          <div v-if="orderData.status === 'CANCELLED'" class="cancelled-banner">
-            <el-alert
-              title="Đơn hàng này đã bị hủy"
-              type="error"
-              description="Đơn hàng đã được hủy theo yêu cầu hoặc do sự cố kho hàng. Liên hệ hỗ trợ nếu cần thông tin chi tiết."
-              show-icon
-              :closable="false"
-            />
+        <!-- Tracking Progress Stepper -->
+        <div class="progress-box">
+          <h3 class="progress-title">HÀNH TRÌNH KIỆN HÀNG</h3>
+          <div class="progress-steps-row">
+            <div
+              v-for="(step, idx) in stepsList"
+              :key="idx"
+              class="step-item"
+              :class="{
+                completed: stepActiveIndex > idx + 1,
+                active: stepActiveIndex === idx + 1,
+                pending: stepActiveIndex < idx + 1
+              }"
+            >
+              <div class="step-marker">
+                <span v-if="stepActiveIndex > idx + 1">✓</span>
+                <span v-else>{{ idx + 1 }}</span>
+              </div>
+              <div class="step-text">
+                <span class="step-name">{{ step.title }}</span>
+                <span class="step-sub">{{ step.desc }}</span>
+              </div>
+            </div>
           </div>
-
-          <el-steps
-            v-else
-            :active="stepActiveIndex"
-            finish-status="success"
-            align-center
-            class="store-steps"
-          >
-            <el-step title="Đã đặt hàng" description="Tiếp nhận thông tin" />
-            <el-step title="Đã xác nhận" description="Đang kiểm tra hàng" />
-            <el-step title="Đang giao hàng" description="Chuyển cho đơn vị vận chuyển" />
-            <el-step title="Giao thành công" description="Hoàn tất đơn hàng" />
-          </el-steps>
         </div>
 
-        <div class="detail-columns">
-          <!-- Left: Customer info & QR if needed -->
-          <div class="info-block">
-            <div class="card">
-              <h3 class="card-title">
-                <el-icon><Location /></el-icon>
-                Địa Chỉ Giao Hàng
-              </h3>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="lbl">Người nhận:</span>
-                  <span class="val">{{ orderData.customerName }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="lbl">Số điện thoại:</span>
-                  <span class="val">{{ orderData.customerPhone }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="lbl">Địa chỉ:</span>
-                  <span class="val">{{ orderData.shippingAddress }}</span>
-                </div>
-                <div v-if="orderData.note" class="info-item">
-                  <span class="lbl">Ghi chú:</span>
-                  <span class="val italic">{{ orderData.note }}</span>
-                </div>
+        <div class="track-details-grid">
+          <!-- Left: Shipping & Customer -->
+          <div class="detail-panel">
+            <h3 class="panel-heading">THÔNG TIN NHẬN HÀNG</h3>
+            <div class="info-specs">
+              <div class="spec-item">
+                <span class="lbl">Họ tên:</span>
+                <span class="val">{{ orderData.customerName }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="lbl">Số điện thoại:</span>
+                <span class="val">{{ orderData.customerPhone }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="lbl">Địa chỉ:</span>
+                <span class="val">{{ orderData.shippingAddress }}</span>
+              </div>
+              <div class="spec-item" v-if="orderData.note">
+                <span class="lbl">Ghi chú:</span>
+                <span class="val italic">{{ orderData.note }}</span>
               </div>
             </div>
 
-            <!-- VietQR reminder if not paid -->
-            <div v-if="orderData.paymentMethod === 'BANK_TRANSFER' && orderData.qrPaymentUrl" class="card qr-box">
-              <h3 class="card-title">
-                <el-icon><CreditCard /></el-icon>
-                Mã QR Thanh Toán
-              </h3>
-              <div class="qr-content">
-                <img :src="orderData.qrPaymentUrl" alt="VietQR" class="qr-preview" />
-                <div class="qr-info">
-                  <p class="bank-name">MB Bank - 0901000001</p>
-                  <p class="acc-name">SNEAKERHUB STORE</p>
-                  <p class="syntax">Nội dung: <b>{{ orderData.orderCode }}</b></p>
+            <!-- VietQR reminder if needed -->
+            <div v-if="orderData.paymentMethod === 'BANK_TRANSFER' && orderData.qrPaymentUrl" class="qr-quick-box">
+              <span class="qr-quick-title">MÃ VIETQR ĐƠN HÀNG NÀY</span>
+              <div class="qr-flex">
+                <img :src="orderData.qrPaymentUrl" alt="VietQR" class="qr-small" />
+                <div class="qr-text">
+                  <p>MB Bank: <strong>0901000001</strong></p>
+                  <p>Nội dung: <strong>{{ orderData.orderCode }}</strong></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right: Item list -->
-          <div class="items-block">
-            <div class="card">
-              <h3 class="card-title">
-                <el-icon><Goods /></el-icon>
-                Chi Tiết Sản Phẩm ({{ (orderData.items && orderData.items.length) || 0 }})
-              </h3>
-
-              <div class="items-table">
-                <div
-                  v-for="(item, idx) in orderData.items"
-                  :key="idx"
-                  class="item-line"
-                >
-                  <img
-                    :src="item.productImageUrl || 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=150&q=80'"
-                    :alt="item.productName"
-                    class="item-thumb"
-                  />
-                  <div class="item-info">
-                    <h4 class="item-title">{{ item.productName }}</h4>
-                    <div class="item-tags">
-                      <span v-if="item.sizeValue" class="tag">Size: {{ item.sizeValue }}</span>
-                      <span v-if="item.colorName" class="tag">Màu: {{ item.colorName }}</span>
-                      <span class="qty">x{{ item.quantity }}</span>
-                    </div>
+          <!-- Right: Items list -->
+          <div class="detail-panel">
+            <h3 class="panel-heading">SẢN PHẨM TRONG ĐƠN ({{ (orderData.items && orderData.items.length) || 0 }})</h3>
+            <div class="order-items-table">
+              <div
+                v-for="(item, idx) in orderData.items"
+                :key="idx"
+                class="track-item-row"
+              >
+                <img
+                  :src="item.productImageUrl || 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=150&q=80'"
+                  :alt="item.productName"
+                  class="item-img"
+                />
+                <div class="item-meta">
+                  <h4 class="item-name">{{ item.productName }}</h4>
+                  <div class="item-tags">
+                    <span v-if="item.sizeValue" class="tag">Size: {{ item.sizeValue }}</span>
+                    <span v-if="item.colorName" class="tag">{{ item.colorName }}</span>
+                    <span class="qty">x{{ item.quantity }}</span>
                   </div>
-                  <div class="item-cost">
-                    {{ formatCurrency(item.unitPrice * item.quantity) }}
-                  </div>
+                </div>
+                <div class="item-sum">
+                  {{ formatCurrency(item.unitPrice * item.quantity) }}
                 </div>
               </div>
+            </div>
 
-              <div class="cost-summary">
-                <div class="cost-row">
-                  <span>Tạm tính</span>
-                  <span>{{ formatCurrency(orderData.totalAmount) }}</span>
-                </div>
-                <div class="cost-row">
-                  <span>Phí ship</span>
-                  <span class="free">Miễn phí</span>
-                </div>
-                <div class="cost-row total-row">
-                  <span>Tổng tiền</span>
-                  <span class="total-val">{{ formatCurrency(orderData.totalAmount) }}</span>
-                </div>
+            <div class="totals-bar">
+              <div class="bar-line">
+                <span>Tổng tiền hàng</span>
+                <span>{{ formatCurrency(orderData.totalAmount) }}</span>
+              </div>
+              <div class="bar-line">
+                <span>Vận chuyển</span>
+                <span class="free">Miễn phí</span>
+              </div>
+              <div class="bar-line grand">
+                <span>TỔNG THANH TOÁN</span>
+                <span class="grand-num">{{ formatCurrency(orderData.totalAmount) }}</span>
               </div>
             </div>
           </div>
@@ -229,27 +191,25 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import {
-  Search,
-  Document,
-  Phone,
-  Location,
-  CreditCard,
-  Goods
-} from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
 import { formatCurrency } from '@/utils/formatters'
 
 const route = useRoute()
-const router = useRouter()
 
 const searchCode = ref('')
 const searchPhone = ref('')
 const searching = ref(false)
 const hasSearched = ref(false)
 const orderData = ref(null)
+
+const stepsList = [
+  { title: 'Tiếp nhận đơn', desc: 'Đơn hàng được ghi nhận' },
+  { title: 'Xác nhận kho', desc: 'Kiểm tra & đóng gói' },
+  { title: 'Đang vận chuyển', desc: 'Bàn giao đơn vị giao vận' },
+  { title: 'Giao thành công', desc: 'Khách hàng nhận giày' }
+]
 
 const stepActiveIndex = computed(() => {
   if (!orderData.value) return 1
@@ -318,374 +278,505 @@ const formatDate = (dateStr) => {
 
 const formatStatus = (st) => {
   const map = {
-    CONFIRMED: 'Đã xác nhận đơn hàng',
-    PENDING: 'Chờ thanh toán / xác nhận',
-    COMPLETED: 'Đã hoàn thành',
-    CANCELLED: 'Đã hủy'
+    CONFIRMED: 'ĐÃ XÁC NHẬN',
+    PENDING: 'CHỜ THANH TOÁN',
+    COMPLETED: 'HOÀN THÀNH',
+    CANCELLED: 'ĐÃ HỦY'
   }
-  return map[st] || st || 'Đã xác nhận'
+  return map[st] || st || 'ĐÃ XÁC NHẬN'
 }
 </script>
 
 <style scoped lang="scss">
 .store-track-order {
-  background: #f8fafc;
-  min-height: calc(100vh - 80px);
-  padding: 40px 0 80px;
-
-  .store-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
+  padding: 50px 0 100px;
+  background: #ffffff;
 }
 
-.track-search-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  padding: 36px 30px;
-  margin-bottom: 28px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-
-  .search-header {
-    text-align: center;
-    margin-bottom: 28px;
-
-    .header-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #eff6ff;
-      color: #2563eb;
-      font-size: 26px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 12px;
-    }
-
-    h2 {
-      font-family: 'Cabinet Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 26px;
-      font-weight: 900;
-      color: #0f172a;
-      margin: 0 0 6px;
-    }
-
-    p {
-      color: #64748b;
-      font-size: 14px;
-      margin: 0;
-    }
-  }
-
-  .search-form {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-
-    :deep(.el-form-item) {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-
-    .input-code {
-      width: 280px;
-    }
-
-    .input-phone {
-      width: 240px;
-    }
-
-    .btn-search-submit {
-      background: #0f172a;
-      border-color: #0f172a;
-      font-weight: 700;
-      padding: 0 24px;
-
-      &:hover {
-        background: #2563eb;
-        border-color: #2563eb;
-      }
-    }
-  }
+.layout-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px;
 }
 
-.card {
-  background: #fff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 24px;
-  margin-bottom: 20px;
+/* Header Form */
+.track-header-box {
+  background: #fafafa;
+  border: 1px solid #ebebeb;
+  padding: 40px;
+  margin-bottom: 36px;
 
-  .card-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .el-icon {
-      color: #2563eb;
-      font-size: 18px;
-    }
+  .track-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #737373;
+    display: block;
+    margin-bottom: 6px;
   }
-}
 
-.order-top-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  .track-headline {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #000000;
+    margin: 0 0 8px;
+  }
 
-  .order-info-meta {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
+  .track-subhead {
+    font-size: 14px;
+    color: #525252;
+    margin: 0 0 28px;
+  }
 
-    .meta-item {
+  .track-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: flex-end;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .input-wrap {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
 
-      .label {
-        font-size: 12px;
-        color: #64748b;
-        text-transform: uppercase;
-        font-weight: 600;
+      .input-lbl {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #000000;
       }
 
-      .value {
-        font-size: 14px;
-        font-weight: 600;
-        color: #0f172a;
+      .track-input {
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid #e5e5e5;
+        background: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.15s ease;
+
+        &:focus {
+          border-color: #000000;
+        }
+      }
+    }
+
+    .btn-track-submit {
+      height: 44px;
+      padding: 0 24px;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      &:hover:not(:disabled) {
+        background: #262626;
       }
 
-      .value-code {
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* Empty State */
+.track-empty-box {
+  text-align: center;
+  padding: 80px 20px;
+  border: 1px dashed #e5e5e5;
+  background: #fafafa;
+
+  .empty-icon-wrap {
+    margin-bottom: 16px;
+    .empty-svg {
+      width: 48px;
+      height: 48px;
+      color: #a3a3a3;
+    }
+  }
+
+  .empty-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #000000;
+    margin: 0 0 8px;
+  }
+
+  .empty-desc {
+    font-size: 14px;
+    color: #737373;
+    max-width: 480px;
+    margin: 0 auto 24px;
+    line-height: 1.5;
+  }
+
+  .btn-reset-track {
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+}
+
+/* Tracking Result Area */
+.track-result-area {
+  .order-hero-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #000000;
+    color: #ffffff;
+    padding: 24px 30px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    .order-meta-col {
+      display: flex;
+      flex-direction: column;
+
+      .meta-label {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #a3a3a3;
+      }
+
+      .meta-code {
         font-size: 18px;
         font-weight: 900;
-        color: #2563eb;
         font-family: monospace;
-      }
-    }
-  }
-
-  .pill-badge {
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-
-    &.confirmed {
-      background: #dcfce7;
-      color: #15803d;
-    }
-    &.pending {
-      background: #fef3c7;
-      color: #b45309;
-    }
-    &.completed {
-      background: #eff6ff;
-      color: #1d4ed8;
-    }
-    &.cancelled {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-  }
-}
-
-.timeline-card {
-  .store-steps {
-    margin: 20px 0 10px;
-
-    :deep(.el-step__title) {
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    :deep(.el-step__description) {
-      font-size: 12px;
-    }
-  }
-}
-
-.detail-columns {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 20px;
-
-  @media (max-width: 850px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  .info-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    padding-bottom: 8px;
-    border-bottom: 1px dashed #f1f5f9;
-
-    &:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .lbl {
-      color: #64748b;
-    }
-
-    .val {
-      color: #0f172a;
-      font-weight: 600;
-      text-align: right;
-    }
-  }
-}
-
-.qr-box {
-  .qr-content {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    .qr-preview {
-      width: 100px;
-      height: 100px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      padding: 4px;
-    }
-
-    .qr-info {
-      font-size: 13px;
-
-      p {
-        margin: 0 0 4px;
+        letter-spacing: 0.04em;
+        margin-top: 2px;
       }
 
-      .bank-name {
-        font-weight: 700;
-        color: #0f172a;
-      }
-
-      .acc-name {
-        color: #475569;
-      }
-
-      .syntax {
-        color: #2563eb;
-      }
-    }
-  }
-}
-
-.items-table {
-  max-height: 320px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-
-  .item-line {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .item-thumb {
-      width: 50px;
-      height: 50px;
-      border-radius: 6px;
-      object-fit: cover;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-    }
-
-    .item-info {
-      flex: 1;
-
-      .item-title {
+      .meta-val {
         font-size: 13px;
-        font-weight: 700;
-        margin: 0 0 4px;
-        color: #0f172a;
+        font-weight: 600;
+        margin-top: 2px;
+      }
+    }
+
+    .order-status-badge {
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      background: #10b981;
+      color: #ffffff;
+
+      &.pending {
+        background: #f59e0b;
+      }
+      &.cancelled {
+        background: #ef4444;
+      }
+    }
+  }
+
+  /* Progress */
+  .progress-box {
+    background: #ffffff;
+    border: 1px solid #ebebeb;
+    padding: 28px 30px;
+    margin-bottom: 24px;
+
+    .progress-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #000000;
+      text-transform: uppercase;
+      margin: 0 0 24px;
+    }
+
+    .progress-steps-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+
+      @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
       }
 
-      .item-tags {
+      .step-item {
         display: flex;
-        gap: 6px;
+        align-items: flex-start;
+        gap: 12px;
+        position: relative;
+
+        .step-marker {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 2px solid #e5e5e5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 800;
+          color: #a3a3a3;
+          flex-shrink: 0;
+        }
+
+        .step-text {
+          display: flex;
+          flex-direction: column;
+
+          .step-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #000000;
+          }
+
+          .step-sub {
+            font-size: 11px;
+            color: #737373;
+            margin-top: 2px;
+          }
+        }
+
+        &.completed {
+          .step-marker {
+            background: #000000;
+            border-color: #000000;
+            color: #ffffff;
+          }
+        }
+
+        &.active {
+          .step-marker {
+            background: #ffffff;
+            border-color: #000000;
+            color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        &.pending {
+          opacity: 0.5;
+        }
+      }
+    }
+  }
+
+  /* Grid */
+  .track-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+
+    @media (max-width: 800px) {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-panel {
+      background: #ffffff;
+      border: 1px solid #ebebeb;
+      padding: 24px;
+
+      .panel-heading {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #000000;
+        margin: 0 0 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+    }
+
+    .info-specs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .spec-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f5f5f5;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .lbl {
+          color: #737373;
+        }
+
+        .val {
+          color: #000000;
+          font-weight: 600;
+          text-align: right;
+        }
+      }
+    }
+
+    .qr-quick-box {
+      margin-top: 20px;
+      padding: 16px;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+
+      .qr-quick-title {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #737373;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .qr-flex {
+        display: flex;
+        gap: 14px;
         align-items: center;
 
-        .tag {
-          font-size: 10px;
-          background: #f1f5f9;
-          padding: 1px 5px;
-          border-radius: 3px;
-          color: #475569;
-          font-weight: 600;
+        .qr-small {
+          width: 80px;
+          height: 80px;
+          border: 1px solid #e5e5e5;
+          padding: 2px;
+          background: #ffffff;
         }
 
-        .qty {
-          font-size: 11px;
-          font-weight: 700;
-          color: #2563eb;
+        .qr-text {
+          font-size: 12px;
+          p {
+            margin: 0 0 4px;
+            color: #525252;
+            strong {
+              color: #000000;
+            }
+          }
         }
       }
     }
 
-    .item-cost {
-      font-size: 13px;
-      font-weight: 800;
-      color: #0f172a;
+    .order-items-table {
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .track-item-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f5f5f5;
+
+        &:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        .item-img {
+          width: 48px;
+          height: 48px;
+          background: #f5f5f7;
+          border: 1px solid #e5e5e5;
+          object-fit: contain;
+          padding: 3px;
+          flex-shrink: 0;
+        }
+
+        .item-meta {
+          flex: 1;
+
+          .item-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin: 0 0 4px;
+          }
+
+          .item-tags {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+
+            .tag {
+              font-size: 10px;
+              font-weight: 600;
+              background: #f5f5f5;
+              padding: 1px 6px;
+              color: #525252;
+            }
+
+            .qty {
+              font-size: 11px;
+              font-weight: 800;
+              color: #000000;
+            }
+          }
+        }
+
+        .item-sum {
+          font-size: 13px;
+          font-weight: 800;
+          color: #000000;
+          font-variant-numeric: tabular-nums;
+        }
+      }
     }
-  }
-}
 
-.cost-summary {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 12px 16px;
+    .totals-bar {
+      border-top: 1px solid #ebebeb;
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
 
-  .cost-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 6px;
+      .bar-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #525252;
 
-    .free {
-      color: #10b981;
-      font-weight: 700;
-    }
+        .free {
+          color: #10b981;
+          font-weight: 800;
+        }
 
-    &.total-row {
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px dashed #cbd5e1;
-      font-size: 15px;
-      font-weight: 800;
-      color: #0f172a;
+        &.grand {
+          margin-top: 6px;
+          padding-top: 10px;
+          border-top: 1px solid #e5e5e5;
+          font-size: 13px;
+          font-weight: 900;
+          color: #000000;
+          letter-spacing: 0.04em;
 
-      .total-val {
-        color: #ef4444;
-        font-size: 17px;
+          .grand-num {
+            font-size: 16px;
+            font-variant-numeric: tabular-nums;
+          }
+        }
       }
     }
   }
