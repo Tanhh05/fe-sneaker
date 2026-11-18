@@ -85,6 +85,24 @@
               <h2 class="box-title">THÔNG TIN NHẬN HÀNG</h2>
             </div>
 
+            <!-- Customer Member Status Banner -->
+            <div v-if="!authStore.isAuthenticated" class="auth-suggest-banner">
+              <div class="banner-text">
+                <strong>Bạn đã có tài khoản thành viên?</strong>
+                <span>Đăng nhập hoặc tiếp tục bằng Google để tự động điền thông tin và theo dõi đơn hàng.</span>
+              </div>
+              <button class="banner-login-btn" type="button" @click="authModalVisible = true">
+                ĐĂNG NHẬP / GOOGLE &rarr;
+              </button>
+            </div>
+            <div v-else class="auth-suggest-banner logged-in">
+              <div class="banner-text">
+                <strong>Thành viên: {{ authStore.user?.fullName || authStore.user?.username }}</strong>
+                <span>Thông tin giao hàng đã được liên kết tự động với tài khoản của bạn.</span>
+              </div>
+              <span class="member-tag">✓ ĐÃ ĐĂNG NHẬP</span>
+            </div>
+
             <el-form
               ref="formRef"
               :model="form"
@@ -210,19 +228,26 @@
         </aside>
       </div>
     </div>
+
+    <!-- Client Auth Modal -->
+    <ClientAuthModal v-model="authModalVisible" @authenticated="fillCustomerFromAuth" />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 import storeService from '@/services/storeService'
 import { formatCurrency } from '@/utils/formatters'
+import ClientAuthModal from '@/components/store/ClientAuthModal.vue'
 
 const router = useRouter()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const authModalVisible = ref(false)
 
 const formRef = ref(null)
 const submitting = ref(false)
@@ -234,6 +259,22 @@ const form = reactive({
   shippingAddress: '',
   paymentMethod: 'BANK_TRANSFER',
   note: ''
+})
+
+const fillCustomerFromAuth = () => {
+  if (authStore.isAuthenticated && authStore.user) {
+    if (authStore.user.fullName && !form.customerName) form.customerName = authStore.user.fullName
+    if (authStore.user.phone && !form.customerPhone) form.customerPhone = authStore.user.phone
+    if (authStore.user.email && !form.customerEmail) form.customerEmail = authStore.user.email
+  }
+}
+
+onMounted(() => {
+  fillCustomerFromAuth()
+})
+
+watch(() => authStore.isAuthenticated, () => {
+  fillCustomerFromAuth()
 })
 
 const rules = {
@@ -439,6 +480,67 @@ const submitOrder = async () => {
         color: #ef4444;
       }
     }
+  }
+}
+
+.auth-suggest-banner {
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  &.logged-in {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  .banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    strong {
+      font-size: 13px;
+      font-weight: 800;
+      color: #000000;
+    }
+
+    span {
+      font-size: 12px;
+      color: #52525b;
+    }
+  }
+
+  .banner-login-btn {
+    height: 34px;
+    padding: 0 14px;
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #27272a;
+    }
+  }
+
+  .member-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: #16a34a;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
   }
 }
 

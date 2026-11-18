@@ -18,9 +18,18 @@
             Tra cứu đơn
           </router-link>
           <span class="top-nav-sep">•</span>
-          <router-link to="/login" class="top-nav-link portal-link">
-            Kênh Quản Trị
-          </router-link>
+          <button v-if="!authStore.isAuthenticated" class="top-nav-link text-btn" @click="openAuthModal('login')">
+            Đăng nhập / Đăng ký
+          </button>
+          <button v-else class="top-nav-link text-btn" @click="openAuthModal('login')">
+            Hi, {{ authStore.user?.fullName?.split(' ').slice(-1)[0] || authStore.user?.username }}
+          </button>
+          <template v-if="isStaffOrAdmin">
+            <span class="top-nav-sep">•</span>
+            <router-link to="/dashboard" class="top-nav-link portal-link">
+              Kênh Quản Trị
+            </router-link>
+          </template>
         </div>
       </div>
     </div>
@@ -69,6 +78,21 @@
               class="search-input"
             />
           </div>
+
+          <!-- Account / User Auth Trigger -->
+          <button class="account-trigger" @click="openAuthModal('login')" aria-label="Tài khoản">
+            <template v-if="authStore.isAuthenticated">
+              <span class="user-avatar-mini">{{ userInitials }}</span>
+              <span class="user-name-short">{{ authStore.user?.fullName?.split(' ').slice(-1)[0] || authStore.user?.username }}</span>
+            </template>
+            <template v-else>
+              <svg class="account-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span class="account-lbl">TÀI KHOẢN</span>
+            </template>
+          </button>
 
           <!-- Bag / Cart -->
           <router-link to="/cart" class="cart-trigger" aria-label="Giỏ hàng">
@@ -182,21 +206,41 @@
         </el-table>
       </div>
     </el-dialog>
+
+    <!-- Client Login / Register / Profile Modal -->
+    <ClientAuthModal v-model="authModalVisible" :initial-tab="authModalTab" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 import { formatCurrency } from '@/utils/formatters'
+import ClientAuthModal from '@/components/store/ClientAuthModal.vue'
 
 const router = useRouter()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 const searchKeyword = ref('')
 const isScrolled = ref(false)
 const showSizeGuide = ref(false)
+const authModalVisible = ref(false)
+const authModalTab = ref('login')
+
+const isStaffOrAdmin = computed(() => authStore.isAdmin || authStore.isManager || authStore.isStaff)
+
+const userInitials = computed(() => {
+  const name = authStore.user?.fullName || authStore.user?.username || 'U'
+  return name.charAt(0).toUpperCase()
+})
+
+const openAuthModal = (tab = 'login') => {
+  authModalTab.value = tab
+  authModalVisible.value = true
+}
 
 const sizeGuideData = [
   { eu: '36', us: '4.0', uk: '3.5', cm: '22.5 cm' },
@@ -317,6 +361,15 @@ onUnmounted(() => {
         &:hover {
           color: #ffffff;
         }
+      }
+
+      &.text-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 11px;
       }
     }
   }
@@ -478,6 +531,67 @@ onUnmounted(() => {
         background: #ffffff;
         border-color: #000000;
       }
+    }
+  }
+
+  .account-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid #e5e5e5;
+    padding: 0 12px;
+    height: 38px;
+    cursor: pointer;
+    color: #0a0a0a;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    border-radius: 0;
+
+    &:hover {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
+
+      .account-svg {
+        color: #ffffff;
+      }
+    }
+
+    .account-svg {
+      width: 17px;
+      height: 17px;
+      color: #000000;
+      transition: color 0.15s ease;
+    }
+
+    .account-lbl {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .user-avatar-mini {
+      width: 22px;
+      height: 22px;
+      background: #000000;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+    }
+
+    .user-name-short {
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 

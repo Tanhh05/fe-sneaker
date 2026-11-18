@@ -11,9 +11,28 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => roles.value.includes('ADMIN'))
   const isManager = computed(() => roles.value.includes('MANAGER') || roles.value.includes('ADMIN'))
   const isStaff = computed(() => roles.value.includes('STAFF'))
+  const isCustomer = computed(() => roles.value.includes('CUSTOMER'))
 
   async function login(username, password) {
     const res = await authService.login({ username, password })
+    token.value = res.data.accessToken
+    user.value = res.data.user
+    localStorage.setItem('sneaker_token', token.value)
+    localStorage.setItem('sneaker_user', JSON.stringify(user.value))
+    return res.data
+  }
+
+  async function register(payload) {
+    const res = await authService.register(payload)
+    token.value = res.data.accessToken
+    user.value = res.data.user
+    localStorage.setItem('sneaker_token', token.value)
+    localStorage.setItem('sneaker_user', JSON.stringify(user.value))
+    return res.data
+  }
+
+  async function loginWithGoogle(payload) {
+    const res = await authService.loginWithGoogle(payload)
     token.value = res.data.accessToken
     user.value = res.data.user
     localStorage.setItem('sneaker_token', token.value)
@@ -47,7 +66,10 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isManager,
     isStaff,
+    isCustomer,
     login,
+    register,
+    loginWithGoogle,
     logout,
     hasAnyRole
   }
