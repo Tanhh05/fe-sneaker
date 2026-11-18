@@ -91,9 +91,14 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column v-if="canManageCatalog" label="Thao tác" width="110" fixed="right" align="center">
+            <el-table-column v-if="canManageCatalog" label="Thao tác" width="90" fixed="right" align="center">
               <template #default="{ row }">
-                <el-button size="small" @click="openEditVariant(row)">Sửa</el-button>
+                <div class="row-actions">
+                  <button class="action-btn" @click="openEditVariant(row)">
+                    <el-icon><Edit /></el-icon>
+                    <span>Sửa</span>
+                  </button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -207,7 +212,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 import { productService } from '@/services/productService'
 import { formatCurrency } from '@/utils/formatters'

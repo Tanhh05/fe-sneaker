@@ -81,14 +81,38 @@
           </template>
         </el-table-column>
         <el-table-column prop="note" label="Ghi chú" min-width="180" show-overflow-tooltip />
-        <el-table-column label="Thao tác" width="280" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">Chi tiết</el-button>
-            <template v-if="row.status === 'DRAFT'">
-              <el-button size="small" type="primary" plain @click="openEdit(row)">Sửa nháp</el-button>
-              <el-button size="small" type="success" @click="handleConfirm(row)">Xác nhận</el-button>
-              <el-button size="small" type="danger" plain @click="handleCancel(row)">Hủy</el-button>
-            </template>
+            <div class="row-actions">
+              <button class="action-btn" @click="openDetail(row)">
+                <el-icon><View /></el-icon>
+                <span>Chi tiết</span>
+              </button>
+              <template v-if="row.status === 'DRAFT'">
+                <button class="action-btn" @click="openEdit(row)">
+                  <el-icon><Edit /></el-icon>
+                  <span>Sửa</span>
+                </button>
+                <el-dropdown
+                  trigger="click"
+                  @command="(cmd) => handlePurchaseAction(cmd, row)"
+                >
+                  <button class="action-btn action-more">
+                    <span>Xử lý ▾</span>
+                  </button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="confirm">
+                        ✓ Xác nhận nhập kho
+                      </el-dropdown-item>
+                      <el-dropdown-item command="cancel" divided style="color: #ef4444">
+                        ✕ Hủy phiếu nhập
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </template>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -212,7 +236,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Edit, MoreFilled } from '@element-plus/icons-vue'
 import { purchaseService } from '@/services/purchaseService'
 import { supplierService } from '@/services/supplierService'
 import { variantService } from '@/services/variantService'
@@ -380,6 +404,11 @@ async function submitForm(confirmImmediately) {
   } finally {
     saving.value = false
   }
+}
+
+function handlePurchaseAction(cmd, row) {
+  if (cmd === 'confirm') handleConfirm(row)
+  else if (cmd === 'cancel') handleCancel(row)
 }
 
 function handleConfirm(row) {

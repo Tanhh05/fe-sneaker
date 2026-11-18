@@ -19,9 +19,14 @@
           <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="canManageCatalog" label="Thao tác" width="130" align="center">
+      <el-table-column v-if="canManageCatalog" label="Thao tác" width="100" align="center">
         <template #default="{ row }">
-          <el-button size="small" @click="openEditColor(row)">Sửa</el-button>
+          <div class="row-actions">
+            <button class="action-btn" @click="openEditColor(row)">
+              <el-icon><Edit /></el-icon>
+              <span>Sửa</span>
+            </button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -58,6 +63,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Edit } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 
 defineProps({

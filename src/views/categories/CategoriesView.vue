@@ -58,10 +58,18 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageCatalog" label="Thao tác" width="180" fixed="right" align="center">
+        <el-table-column v-if="canManageCatalog" label="Thao tác" width="160" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">Sửa</el-button>
-            <el-button size="small" type="danger" plain @click="handleDelete(row)">Xóa</el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <button class="action-btn danger" @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon>
+                <span>Xóa</span>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -113,7 +121,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { categoryService } from '@/services/categoryService'
 import { formatDateTime } from '@/utils/formatters'
 import { usePermission } from '@/composables/usePermission'

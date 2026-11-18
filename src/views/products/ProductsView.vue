@@ -85,21 +85,37 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="240" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">Chi tiết</el-button>
-            <el-button v-if="canManageCatalog" size="small" type="primary" plain @click="openEdit(row)">
-              Sửa
-            </el-button>
-            <el-button
-              v-if="canManageCatalog && row.status === 'ACTIVE'"
-              size="small"
-              type="danger"
-              plain
-              @click="handleDiscontinue(row)"
-            >
-              Ngừng KD
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openDetail(row)">
+                <el-icon><View /></el-icon>
+                <span>Chi tiết</span>
+              </button>
+              <button v-if="canManageCatalog" class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <el-dropdown
+                v-if="canManageCatalog && row.status === 'ACTIVE'"
+                trigger="click"
+                @command="(cmd) => handleProductAction(cmd, row)"
+              >
+                <button class="action-btn action-more" title="Thao tác khác">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      command="discontinue"
+                      style="color: #ef4444"
+                    >
+                      Ngừng KD
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -210,7 +226,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Edit, MoreFilled } from '@element-plus/icons-vue'
 import { productService } from '@/services/productService'
 import { brandService } from '@/services/brandService'
 import { categoryService } from '@/services/categoryService'
@@ -382,6 +398,12 @@ async function submitForm() {
       saving.value = false
     }
   })
+}
+
+function handleProductAction(cmd, row) {
+  if (cmd === 'discontinue') {
+    handleDiscontinue(row)
+  }
 }
 
 function handleDiscontinue(row) {

@@ -400,3 +400,65 @@ body,
   border-radius: 0 !important;
   text-transform: uppercase;
 }
+
+/* =========================================================
+   STANDARDIZED ACTION BUTTONS IN DATA TABLES (ROW-ACTIONS)
+   ========================================================= */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+
+  .action-btn {
+    height: 28px;
+    padding: 0 9px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    color: #000000;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    border-radius: 0;
+
+    .el-icon {
+      font-size: 12px;
+    }
+
+    &:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+
+    &.primary {
+      background: #000000;
+      color: #ffffff;
+      &:hover {
+        background: #262626;
+      }
+    }
+
+    &.danger {
+      border-color: #ef4444;
+      color: #ef4444;
+      &:hover {
+        background: #ef4444;
+        color: #ffffff;
+      }
+    }
+
+    &.action-more {
+      padding: 0 8px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+  }
+}
+

@@ -97,35 +97,51 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác &amp; Luồng trạng thái" width="320" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">Chi tiết</el-button>
-            <el-button size="small" type="info" plain @click="openPrint(row)">In HĐ</el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              size="small"
-              type="warning"
-              @click="changeStatus(row, 'CONFIRMED', 'Xác nhận đơn hàng')"
-            >
-              Xác nhận
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
-              size="small"
-              type="success"
-              @click="changeStatus(row, 'COMPLETED', 'Hoàn thành đơn hàng')"
-            >
-              Hoàn thành
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
-              size="small"
-              type="danger"
-              plain
-              @click="changeStatus(row, 'CANCELLED', 'Hủy đơn hàng')"
-            >
-              Hủy
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openDetail(row)">
+                <el-icon><View /></el-icon>
+                <span>Chi tiết</span>
+              </button>
+              <button class="action-btn" @click="openPrint(row)">
+                <el-icon><Printer /></el-icon>
+                <span>In HĐ</span>
+              </button>
+              <el-dropdown
+                v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
+                trigger="click"
+                @command="(status) => handleStatusCommand(row, status)"
+              >
+                <button class="action-btn action-more">
+                  <span>Xử lý ▾</span>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-if="row.status === 'DRAFT'"
+                      command="CONFIRMED"
+                    >
+                      ✓ Xác nhận đơn
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
+                      command="COMPLETED"
+                    >
+                      ✓ Hoàn thành đơn
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="row.status === 'DRAFT' || row.status === 'CONFIRMED'"
+                      command="CANCELLED"
+                      divided
+                      style="color: #ef4444"
+                    >
+                      ✕ Hủy đơn hàng
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -158,7 +174,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Printer } from '@element-plus/icons-vue'
 import { orderService } from '@/services/orderService'
 import { formatCurrency, formatDateTime } from '@/utils/formatters'
 import { ORDER_STATUS_MAP, PAYMENT_METHOD_MAP } from '@/constants'
@@ -252,6 +268,15 @@ function changeStatus(row, targetStatus, actionTitle) {
     ElMessage.success(`Đã cập nhật trạng thái đơn ${row.orderCode} sang ${targetStatus}`)
     loadData()
   }).catch(() => {})
+}
+
+function handleStatusCommand(row, targetStatus) {
+  const map = {
+    CONFIRMED: 'Xác nhận đơn hàng',
+    COMPLETED: 'Hoàn thành đơn hàng',
+    CANCELLED: 'Hủy đơn hàng'
+  }
+  changeStatus(row, targetStatus, map[targetStatus] || targetStatus)
 }
 
 onMounted(() => {

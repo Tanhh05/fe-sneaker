@@ -86,28 +86,32 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageUsers" label="Thao tác" width="190" fixed="right" align="center">
+        <el-table-column v-if="canManageUsers" label="Thao tác" width="150" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">Sửa</el-button>
-            <el-button
-              v-if="row.status === 'ACTIVE'"
-              size="small"
-              type="danger"
-              plain
-              :disabled="row.username === 'admin'"
-              @click="handleToggleStatus(row, 'LOCKED')"
-            >
-              Khóa
-            </el-button>
-            <el-button
-              v-else
-              size="small"
-              type="success"
-              plain
-              @click="handleToggleStatus(row, 'ACTIVE')"
-            >
-              Mở khóa
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <button
+                v-if="row.status === 'ACTIVE'"
+                class="action-btn danger"
+                :disabled="row.username === 'admin'"
+                :title="row.username === 'admin' ? 'Không thể khóa tài khoản quản trị tối cao' : 'Khóa tài khoản'"
+                @click="handleToggleStatus(row, 'LOCKED')"
+              >
+                <el-icon><Lock /></el-icon>
+                <span>Khóa</span>
+              </button>
+              <button
+                v-else
+                class="action-btn"
+                @click="handleToggleStatus(row, 'ACTIVE')"
+              >
+                <el-icon><Unlock /></el-icon>
+                <span>Mở</span>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -194,7 +198,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, Lock, Unlock } from '@element-plus/icons-vue'
 import { userService } from '@/services/userService'
 import { formatDateTime } from '@/utils/formatters'
 import { usePermission } from '@/composables/usePermission'

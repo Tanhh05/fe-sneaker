@@ -67,14 +67,18 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="240" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" type="warning" plain @click="openHistory(row)">
-              Lịch sử mua
-            </el-button>
-            <el-button size="small" type="primary" plain @click="openEdit(row)">
-              Sửa
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openHistory(row)">
+                <el-icon><Tickets /></el-icon>
+                <span>Lịch sử</span>
+              </button>
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -178,7 +182,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, Tickets } from '@element-plus/icons-vue'
 import { customerService } from '@/services/customerService'
 import { orderService } from '@/services/orderService'
 import { formatDate, formatDateTime } from '@/utils/formatters'

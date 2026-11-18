@@ -56,18 +56,22 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageCatalog" label="Thao tác" width="195" fixed="right" align="center">
+        <el-table-column v-if="canManageCatalog" label="Thao tác" width="165" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">Sửa</el-button>
-            <el-button
-              v-if="row.status === 'ACTIVE'"
-              size="small"
-              type="danger"
-              plain
-              @click="handleDeactivate(row)"
-            >
-              Ngừng SD
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <button
+                v-if="row.status === 'ACTIVE'"
+                class="action-btn danger"
+                @click="handleDeactivate(row)"
+              >
+                <el-icon><Close /></el-icon>
+                <span>Ngừng SD</span>
+              </button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -131,7 +135,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, Close } from '@element-plus/icons-vue'
 import { brandService } from '@/services/brandService'
 import { usePermission } from '@/composables/usePermission'
 import { useDebouncedWatch } from '@/composables/useDebounce'

@@ -65,28 +65,43 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="235" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">Chi tiết</el-button>
-            <el-button size="small" type="primary" plain @click="openEdit(row)">Sửa</el-button>
-            <el-button
-              v-if="row.status === 'ACTIVE'"
-              size="small"
-              type="danger"
-              plain
-              @click="handleToggleStatus(row, 'INACTIVE')"
-            >
-              Khóa
-            </el-button>
-            <el-button
-              v-else
-              size="small"
-              type="success"
-              plain
-              @click="handleToggleStatus(row, 'ACTIVE')"
-            >
-              Mở
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openDetail(row)">
+                <el-icon><View /></el-icon>
+                <span>Chi tiết</span>
+              </button>
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <el-dropdown
+                trigger="click"
+                @command="(cmd) => handleToggleStatus(row, cmd)"
+              >
+                <button class="action-btn action-more" title="Thao tác khác">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-if="row.status === 'ACTIVE'"
+                      command="INACTIVE"
+                      style="color: #ef4444"
+                    >
+                      ✕ Tạm khóa nhân viên
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-else
+                      command="ACTIVE"
+                    >
+                      ✓ Kích hoạt lại
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -235,7 +250,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Edit, MoreFilled } from '@element-plus/icons-vue'
 import { employeeService } from '@/services/employeeService'
 import { userService } from '@/services/userService'
 import { formatDate } from '@/utils/formatters'

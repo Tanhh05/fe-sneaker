@@ -57,19 +57,34 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="230" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="180" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">Chi tiết</el-button>
-            <el-button size="small" type="primary" plain @click="openEdit(row)">Sửa</el-button>
-            <el-button
-              v-if="row.status === 'ACTIVE'"
-              size="small"
-              type="danger"
-              plain
-              @click="handleDeactivate(row)"
-            >
-              Ngừng HT
-            </el-button>
+            <div class="row-actions">
+              <button class="action-btn" @click="openDetail(row)">
+                <el-icon><View /></el-icon>
+                <span>Chi tiết</span>
+              </button>
+              <button class="action-btn" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                <span>Sửa</span>
+              </button>
+              <el-dropdown
+                v-if="row.status === 'ACTIVE'"
+                trigger="click"
+                @command="(cmd) => handleSupplierAction(cmd, row)"
+              >
+                <button class="action-btn action-more" title="Thao tác khác">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="deactivate" style="color: #ef4444">
+                      ✕ Ngừng hợp tác
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -172,7 +187,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, View, Edit, MoreFilled } from '@element-plus/icons-vue'
 import { supplierService } from '@/services/supplierService'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 
@@ -285,6 +300,12 @@ async function submitForm() {
       saving.value = false
     }
   })
+}
+
+function handleSupplierAction(cmd, row) {
+  if (cmd === 'deactivate') {
+    handleDeactivate(row)
+  }
 }
 
 function handleDeactivate(row) {
