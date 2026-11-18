@@ -92,14 +92,6 @@
             <span>{{ loading ? 'ĐANG KẾT NỐI GOOGLE...' : 'TIẾP TỤC VỚI GOOGLE' }}</span>
           </button>
 
-          <div class="google-config-trigger" @click="googleConfigVisible = true">
-            <svg class="cfg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            <span>{{ currentGoogleClientId ? 'Cài đặt Google OAuth (Đã liên kết)' : 'Cấu hình Google Client ID / Token' }}</span>
-          </div>
-
           <div class="auth-divider">
             <span>HOẶC TIẾP TỤC VỚI TÀI KHOẢN</span>
           </div>
@@ -190,63 +182,6 @@
         </div>
       </div>
     </div>
-
-    <!-- GOOGLE OAUTH 2.0 REAL CONNECTION & CONFIG MODAL -->
-    <el-dialog
-      v-model="googleConfigVisible"
-      title="Cấu hình Google OAuth 2.0 (Xác thực Google API thật)"
-      width="480px"
-      append-to-body
-      class="google-picker-dialog"
-    >
-      <div class="google-picker-body">
-        <div class="google-info-card">
-          <div class="info-kicker">GOOGLE CLOUD OAUTH INTEGRATION</div>
-          <p class="info-text">
-            Hệ thống kết nối trực tiếp với <strong>Google Identity Services &amp; Google OAuth2 API</strong> thật.
-            Khi đăng nhập, mã xác thực sẽ được gửi tới máy chủ backend để kiểm tra trực tiếp với Google và tự động lưu/đồng bộ tài khoản thật vào cơ sở dữ liệu Oracle (bảng <code>USERS</code> &amp; <code>CUSTOMERS</code>).
-          </p>
-        </div>
-
-        <div class="cfg-group">
-          <label class="cfg-title">1. Nhập Google Client ID của bạn (Google Cloud Console):</label>
-          <el-input
-            v-model="inputClientId"
-            placeholder="VD: xxxxx.apps.googleusercontent.com"
-            clearable
-            style="margin-bottom: 8px"
-          />
-          <div class="cfg-subtext">
-            * Cần cấu hình Authorized JavaScript Origins: <code>http://localhost:5173</code> trong GCP Console.
-          </div>
-          <button class="google-action-btn primary" @click="saveAndStartGoogleOAuth">
-            LƯU CLIENT ID &amp; MỞ CỬA SỔ ĐĂNG NHẬP GOOGLE
-          </button>
-        </div>
-
-        <div class="cfg-separator">
-          <span>HOẶC XÁC THỰC TRỰC TIẾP VỚI TOKEN GOOGLE THẬT</span>
-        </div>
-
-        <div class="cfg-group">
-          <label class="cfg-title">2. Dán Google ID Token (JWT) hoặc Access Token thực tế:</label>
-          <el-input
-            v-model="inputGoogleToken"
-            type="textarea"
-            :rows="3"
-            placeholder="Dán mã ID Token (JWT bắt đầu bằng eyJ...) hoặc Access Token (ya29...)"
-            style="margin-bottom: 8px"
-          />
-          <button
-            class="google-action-btn secondary"
-            :disabled="!inputGoogleToken.trim() || loading"
-            @click="submitDirectGoogleToken"
-          >
-            {{ loading ? 'ĐANG XÁC THỰC GOOGLE VÀ LƯU DB...' : 'GỬI XÁC THỰC GOOGLE THẬT & LƯU CƠ SỞ DỮ LIỆU' }}
-          </button>
-        </div>
-      </div>
-    </el-dialog>
   </el-dialog>
 </template>
 
@@ -332,11 +267,10 @@ const regRules = {
   ]
 }
 
-// GOOGLE OAUTH STATE & API INTEGRATION
-const googleConfigVisible = ref(false)
-const inputClientId = ref(localStorage.getItem('sneaker_google_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '')
-const currentGoogleClientId = ref(localStorage.getItem('sneaker_google_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '')
-const inputGoogleToken = ref('')
+// GOOGLE OAUTH STATE & REAL API INTEGRATION
+const googleClientId =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '419627574811-tpt81mo08bmgj5i2mj8iodm7ijlk9kvj.apps.googleusercontent.com'
 
 let googleTokenClient = null
 
@@ -347,7 +281,7 @@ function initGoogleServices() {
     return
   }
 
-  const clientId = currentGoogleClientId.value?.trim()
+  const clientId = googleClientId?.trim()
   if (!clientId) return
 
   try {
@@ -389,13 +323,6 @@ async function handleGoogleCredentialResponse(response) {
 }
 
 async function handleGoogleSignInClick() {
-  const clientId = currentGoogleClientId.value?.trim()
-  if (!clientId) {
-    // Nếu chưa cấu hình Client ID, mở dialog hướng dẫn nhập Client ID hoặc dán Token thật
-    googleConfigVisible.value = true
-    return
-  }
-
   if (window.google?.accounts?.oauth2) {
     if (!googleTokenClient) {
       initGoogleServices()
@@ -409,36 +336,7 @@ async function handleGoogleSignInClick() {
   if (window.google?.accounts?.id) {
     window.google.accounts.id.prompt()
   } else {
-    googleConfigVisible.value = true
-  }
-}
-
-async function saveAndStartGoogleOAuth() {
-  const cleanId = inputClientId.value.trim()
-  if (!cleanId) {
-    ElMessage.warning('Vui lòng nhập Google Client ID')
-    return
-  }
-  localStorage.setItem('sneaker_google_client_id', cleanId)
-  currentGoogleClientId.value = cleanId
-  initGoogleServices()
-  googleConfigVisible.value = false
-  ElMessage.success('Đã lưu Google Client ID thành công!')
-
-  setTimeout(() => {
-    handleGoogleSignInClick()
-  }, 300)
-}
-
-async function submitDirectGoogleToken() {
-  const token = inputGoogleToken.value.trim()
-  if (!token) return
-
-  googleConfigVisible.value = false
-  if (token.startsWith('eyJ')) {
-    await authenticateWithGoogleBackend({ idToken: token })
-  } else {
-    await authenticateWithGoogleBackend({ accessToken: token })
+    ElMessage.info('Đang kết nối tới dịch vụ Google, vui lòng thử lại sau giây lát...')
   }
 }
 
@@ -448,8 +346,8 @@ async function authenticateWithGoogleBackend(payload) {
     const res = await authStore.loginWithGoogle(payload)
     const displayName = res.user?.fullName || res.user?.username || 'Thành viên Google'
     ElMessage.success({
-      message: `Đăng nhập Google thành công! Chào mừng ${displayName} đã được lưu vào hệ thống.`,
-      duration: 4000
+      message: `Đăng nhập Google thành công! Chào mừng ${displayName}.`,
+      duration: 3500
     })
     emit('update:modelValue', false)
     emit('authenticated', authStore.user)
@@ -615,33 +513,10 @@ function goToAdmin() {
     }
   }
 
-  .google-config-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 8px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #71717a;
-    cursor: pointer;
-    transition: color 0.15s ease;
-
-    .cfg-icon {
-      width: 12px;
-      height: 12px;
-    }
-
-    &:hover {
-      color: #000000;
-      text-decoration: underline;
-    }
-  }
-
   .auth-divider {
     display: flex;
     align-items: center;
-    margin: 16px 0 12px;
+    margin: 18px 0 12px;
     color: #a1a1aa;
     font-size: 10px;
     font-weight: 800;
@@ -873,125 +748,6 @@ function goToAdmin() {
           border-color: #dc2626;
         }
       }
-    }
-  }
-}
-
-/* GOOGLE PICKER DIALOG STYLES */
-.google-picker-body {
-  padding: 4px 0;
-
-  .google-info-card {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    padding: 12px;
-    margin-bottom: 16px;
-
-    .info-kicker {
-      font-size: 10px;
-      font-weight: 900;
-      color: #0284c7;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-
-    .info-text {
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.5;
-      color: #334155;
-
-      code {
-        background: #e2e8f0;
-        padding: 2px 4px;
-        font-weight: 700;
-      }
-    }
-  }
-
-  .cfg-group {
-    margin-bottom: 16px;
-
-    .cfg-title {
-      display: block;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #0f172a;
-      margin-bottom: 6px;
-    }
-
-    .cfg-subtext {
-      font-size: 11px;
-      color: #64748b;
-      margin-bottom: 8px;
-
-      code {
-        color: #0284c7;
-        font-weight: 700;
-      }
-    }
-
-    .google-action-btn {
-      width: 100%;
-      height: 38px;
-      border-radius: 0;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s ease;
-
-      &.primary {
-        background: #18181b;
-        color: #ffffff;
-        border: 1px solid #18181b;
-
-        &:hover {
-          background: #000000;
-        }
-      }
-
-      &.secondary {
-        background: #ffffff;
-        color: #0f172a;
-        border: 1.5px solid #0f172a;
-
-        &:hover:not(:disabled) {
-          background: #f1f5f9;
-        }
-
-        &:disabled {
-          background: #e2e8f0;
-          color: #94a3b8;
-          border-color: #cbd5e1;
-          cursor: not-allowed;
-        }
-      }
-    }
-  }
-
-  .cfg-separator {
-    display: flex;
-    align-items: center;
-    margin: 16px 0;
-    color: #94a3b8;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-
-    &::before,
-    &::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-
-    span {
-      padding: 0 10px;
     }
   }
 }
