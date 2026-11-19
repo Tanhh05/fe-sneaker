@@ -5,7 +5,10 @@
         <h2 class="page-title">Quản lý Biến thể Sản phẩm (SKU) &amp; Size / Màu sắc</h2>
         <p class="page-subtitle">Quản lý chi tiết từng SKU theo Size và Màu sắc (Ví dụ: AF1-39-W, AF1-40-W, AF1-41-B)</p>
       </div>
-      <div v-if="canManageCatalog">
+      <div v-if="canManageCatalog" style="display: flex; gap: 8px;">
+        <el-button v-if="activeTab === 'variants'" type="success" plain @click="printAllCurrentVariants">
+          <el-icon style="margin-right: 6px"><Printer /></el-icon> In tem nhãn mã vạch
+        </el-button>
         <el-button v-if="activeTab === 'variants'" type="primary" @click="openCreateVariant">
           <el-icon style="margin-right: 6px"><Plus /></el-icon> Thêm biến thể SKU
         </el-button>
@@ -91,9 +94,12 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column v-if="canManageCatalog" label="Thao tác" width="65" fixed="right" align="center">
+            <el-table-column v-if="canManageCatalog" label="Thao tác" width="95" fixed="right" align="center">
               <template #default="{ row }">
                 <div class="row-actions">
+                  <button class="action-btn" title="In tem mã vạch dán hộp giày" @click="printSingleVariant(row)">
+                    <el-icon><Printer /></el-icon>
+                  </button>
                   <button class="action-btn" title="Chỉnh sửa" @click="openEditVariant(row)">
                     <el-icon><Edit /></el-icon>
                   </button>
@@ -205,13 +211,19 @@
         <el-button type="primary" :loading="saving" @click="submitVariant">Lưu biến thể</el-button>
       </template>
     </el-dialog>
+
+    <!-- BARCODE PRINT MODAL -->
+    <BarcodeLabelPrintModal
+      v-model="printBarcodeVisible"
+      :items="printBarcodeItems"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit } from '@element-plus/icons-vue'
+import { Plus, Edit, Printer } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 import { productService } from '@/services/productService'
 import { formatCurrency } from '@/utils/formatters'
@@ -219,11 +231,45 @@ import { usePermission } from '@/composables/usePermission'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 import SizeManagerTab from './components/SizeManagerTab.vue'
 import ColorManagerTab from './components/ColorManagerTab.vue'
+import BarcodeLabelPrintModal from '@/components/common/BarcodeLabelPrintModal.vue'
 
 const { canManageCatalog } = usePermission()
 const activeTab = ref('variants')
 const loading = ref(false)
 const saving = ref(false)
+
+const printBarcodeVisible = ref(false)
+const printBarcodeItems = ref([])
+
+function printSingleVariant(row) {
+  printBarcodeItems.value = [{
+    sku: row.sku,
+    productName: row.productName,
+    sizeValue: row.sizeValue,
+    colorName: row.colorName,
+    salePrice: row.salePrice,
+    brandName: row.brandName || 'SNEAKERHUB',
+    printQuantity: row.availableQuantity > 0 ? Math.min(row.availableQuantity, 5) : 1
+  }]
+  printBarcodeVisible.value = true
+}
+
+function printAllCurrentVariants() {
+  if (!variants.value || variants.value.length === 0) {
+    ElMessage.info('Không có biến thể nào để in tem')
+    return
+  }
+  printBarcodeItems.value = variants.value.map(row => ({
+    sku: row.sku,
+    productName: row.productName,
+    sizeValue: row.sizeValue,
+    colorName: row.colorName,
+    salePrice: row.salePrice,
+    brandName: row.brandName || 'SNEAKERHUB',
+    printQuantity: 1
+  }))
+  printBarcodeVisible.value = true
+}
 
 const sizeTabRef = ref(null)
 const colorTabRef = ref(null)

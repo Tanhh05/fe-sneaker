@@ -17,6 +17,46 @@
       <!-- LEFT COLUMN: Product & Variant Picker -->
       <el-col :xs="24" :lg="14">
         <div class="table-card pos-catalog-card" v-loading="loading">
+          <!-- HIGH-SPEED BARCODE SCANNER BOX -->
+          <div class="pos-barcode-scanner-bar">
+            <div class="scanner-hero">
+              <div class="scanner-badge-laser">
+                <span class="laser-dot"></span>
+                <span class="scanner-label">MÁY QUÉT MÃ VẠCH (BARCODE SCANNER)</span>
+                <span class="scanner-tip">⚡ Hỗ trợ máy quét cầm tay USB / Bluetooth &amp; Camera</span>
+              </div>
+              <div class="scanner-row">
+                <el-input
+                  ref="barcodeInputRef"
+                  v-model="barcodeScanInput"
+                  placeholder="⚡ BẮN MÃ VẠCH TRÊN HỘP GIÀY (SKU) — Tự động thêm vào đơn trong 1 giây..."
+                  size="large"
+                  clearable
+                  class="barcode-quick-input"
+                  @keyup.enter="handleBarcodeScanned"
+                >
+                  <template #prefix>
+                    <el-icon class="input-scan-icon"><Tickets /></el-icon>
+                  </template>
+                  <template #append>
+                    <el-button type="primary" class="btn-scan-action" @click="handleBarcodeScanned">
+                      THÊM NGAY (ENTER)
+                    </el-button>
+                  </template>
+                </el-input>
+                <el-button
+                  type="success"
+                  plain
+                  size="large"
+                  class="btn-camera-scan"
+                  @click="openCameraScanner"
+                >
+                  📸 Camera Quét
+                </el-button>
+              </div>
+            </div>
+          </div>
+
           <!-- Search & Filter Bar -->
           <el-row :gutter="10" style="margin-bottom: 14px">
             <el-col :xs="24" :sm="10">
@@ -161,9 +201,16 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="Chọn" width="65" align="center">
+            <el-table-column label="Chọn" width="100" align="center">
               <template #default="{ row }">
                 <div class="row-actions">
+                  <button
+                    class="action-btn"
+                    title="In tem mã vạch dán hộp giày"
+                    @click="printSingleVariant(row)"
+                  >
+                    <el-icon><Printer /></el-icon>
+                  </button>
                   <button
                     class="action-btn primary"
                     :disabled="row.availableQuantity <= 0"
@@ -338,13 +385,58 @@
 
     <!-- Printable Invoice Modal -->
     <InvoicePrintModal v-model="invoiceVisible" :order="createdOrder" />
+
+    <!-- CAMERA BARCODE SCANNER MODAL -->
+    <el-dialog
+      v-model="cameraScannerVisible"
+      title="CAMERA QUÉT MÃ VẠCH HỘP GIÀY"
+      width="460px"
+      :before-close="closeCameraScanner"
+      class="camera-scanner-dialog"
+    >
+      <div class="camera-scanner-body">
+        <div class="camera-viewport-wrap">
+          <video ref="cameraVideoRef" autoplay playsinline muted class="camera-feed"></video>
+          <div class="camera-overlay">
+            <div class="scanner-aim-frame">
+              <div class="laser-line"></div>
+            </div>
+            <p class="camera-hint">Căn chỉnh mã vạch Code128 hoặc QR trên hộp giày vào giữa khung quét</p>
+          </div>
+        </div>
+        <div v-if="cameraError" class="camera-err-msg">
+          {{ cameraError }}
+        </div>
+        <div class="camera-manual-input">
+          <el-input
+            v-model="cameraFallbackInput"
+            placeholder="Hoặc gõ / paste mã SKU..."
+            size="small"
+            @keyup.enter="handleCameraFallbackSubmit"
+          >
+            <template #append>
+              <el-button @click="handleCameraFallbackSubmit">Nhập</el-button>
+            </template>
+          </el-input>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="closeCameraScanner">Đóng Camera</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- BARCODE PRINT MODAL -->
+    <BarcodeLabelPrintModal
+      v-model="printBarcodeVisible"
+      :items="printBarcodeItems"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Delete, Plus } from '@element-plus/icons-vue'
+import { Search, Delete, Plus, Printer, Tickets } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 import { productService } from '@/services/productService'
 import { customerService } from '@/services/customerService'
@@ -353,9 +445,23 @@ import { formatCurrency } from '@/utils/formatters'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 import InvoicePrintModal from '@/components/InvoicePrintModal.vue'
 import PosQuickCustomerDialog from './components/PosQuickCustomerDialog.vue'
+import BarcodeLabelPrintModal from '@/components/common/BarcodeLabelPrintModal.vue'
 
 const loading = ref(false)
 const submitting = ref(false)
+
+// High-speed Barcode Scanner State
+const barcodeScanInput = ref('')
+const barcodeInputRef = ref(null)
+const cameraScannerVisible = ref(false)
+const cameraVideoRef = ref(null)
+const cameraStream = ref(null)
+const cameraError = ref('')
+const cameraFallbackInput = ref('')
+
+// Barcode Print Label State
+const printBarcodeVisible = ref(false)
+const printBarcodeItems = ref([])
 
 const variants = ref([])
 const products = ref([])
@@ -546,8 +652,205 @@ async function submitSaleOrder() {
   }
 }
 
+// --- AUDIO SYNTHESIZER FOR SCAN BEEP ---
+const playScanBeep = (isSuccess = true) => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+    if (!AudioContext) return
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    if (isSuccess) {
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(1400, ctx.currentTime)
+      gain.gain.setValueAtTime(0.15, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.12)
+    } else {
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(250, ctx.currentTime)
+      gain.gain.setValueAtTime(0.2, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.22)
+    }
+  } catch (e) {
+    // Ignore audio error
+  }
+}
+
+// --- BARCODE SCAN PROCESSOR ---
+function handleBarcodeScanned() {
+  const code = barcodeScanInput.value.trim()
+  if (!code) return
+  processScannedSku(code)
+}
+
+function processScannedSku(code) {
+  if (!code) return
+  const cleanCode = code.trim().toLowerCase()
+  const matched = variants.value.find(
+    (v) =>
+      v.sku.toLowerCase() === cleanCode ||
+      (v.barcode && v.barcode.toLowerCase() === cleanCode) ||
+      String(v.id) === cleanCode ||
+      (v.productCode && v.productCode.toLowerCase() === cleanCode)
+  )
+
+  if (matched) {
+    if (matched.availableQuantity <= 0) {
+      playScanBeep(false)
+      ElMessage.error(`⚠️ Đôi ${matched.productName} (SKU: ${matched.sku}) đã hết hàng trong kho!`)
+      return
+    }
+    addVariantToCart(matched)
+    playScanBeep(true)
+    barcodeScanInput.value = ''
+    nextTick(() => {
+      barcodeInputRef.value?.focus()
+    })
+  } else {
+    playScanBeep(false)
+    ElMessage.warning(`❌ Không tìm thấy mã vạch / SKU: "${code}". Vui lòng thử lại!`)
+  }
+}
+
+// Global Hardware Scanner Listener
+let barcodeBuffer = ''
+let lastKeyTime = 0
+
+function handleGlobalKeydown(e) {
+  const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : ''
+  if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
+    return
+  }
+
+  const currentTime = Date.now()
+  if (currentTime - lastKeyTime > 150) {
+    barcodeBuffer = ''
+  }
+  lastKeyTime = currentTime
+
+  if (e.key === 'Enter') {
+    if (barcodeBuffer.length >= 3) {
+      processScannedSku(barcodeBuffer)
+      barcodeBuffer = ''
+      e.preventDefault()
+    }
+  } else if (e.key.length === 1) {
+    barcodeBuffer += e.key
+  }
+}
+
+// --- CAMERA BARCODE SCANNER ---
+let cameraAnimationId = null
+
+async function openCameraScanner() {
+  cameraScannerVisible.value = true
+  cameraError.value = ''
+  cameraFallbackInput.value = ''
+  await nextTick()
+
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraError.value = 'Trình duyệt không hỗ trợ truy cập camera trực tiếp.'
+      return
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    })
+    cameraStream.value = stream
+    if (cameraVideoRef.value) {
+      cameraVideoRef.value.srcObject = stream
+      await cameraVideoRef.value.play()
+      startCameraDetectionLoop()
+    }
+  } catch (err) {
+    console.warn('Camera access error:', err)
+    cameraError.value = 'Không thể mở Camera (Có thể do quyền bị từ chối hoặc máy không có camera).'
+  }
+}
+
+function startCameraDetectionLoop() {
+  if (!('BarcodeDetector' in window)) {
+    return
+  }
+
+  try {
+    const barcodeDetector = new window.BarcodeDetector({
+      formats: ['code_128', 'qr_code', 'ean_13', 'code_39']
+    })
+
+    const detectFrame = async () => {
+      if (!cameraScannerVisible.value || !cameraVideoRef.value) return
+      try {
+        if (cameraVideoRef.value.readyState >= 2) {
+          const barcodes = await barcodeDetector.detect(cameraVideoRef.value)
+          if (barcodes.length > 0) {
+            const rawValue = barcodes[0].rawValue
+            if (rawValue) {
+              processScannedSku(rawValue)
+              closeCameraScanner()
+              return
+            }
+          }
+        }
+      } catch (e) {
+        // Frame error
+      }
+      cameraAnimationId = requestAnimationFrame(detectFrame)
+    }
+
+    detectFrame()
+  } catch (e) {
+    console.warn('BarcodeDetector init error:', e)
+  }
+}
+
+function closeCameraScanner() {
+  if (cameraAnimationId) {
+    cancelAnimationFrame(cameraAnimationId)
+    cameraAnimationId = null
+  }
+  if (cameraStream.value) {
+    cameraStream.value.getTracks().forEach((t) => t.stop())
+    cameraStream.value = null
+  }
+  cameraScannerVisible.value = false
+}
+
+function handleCameraFallbackSubmit() {
+  if (cameraFallbackInput.value.trim()) {
+    processScannedSku(cameraFallbackInput.value.trim())
+    cameraFallbackInput.value = ''
+    closeCameraScanner()
+  }
+}
+
+function printSingleVariant(row) {
+  printBarcodeItems.value = [{
+    sku: row.sku,
+    productName: row.productName,
+    sizeValue: row.sizeValue,
+    colorName: row.colorName,
+    salePrice: row.salePrice,
+    brandName: row.brandName || 'SNEAKERHUB',
+    printQuantity: 1
+  }]
+  printBarcodeVisible.value = true
+}
+
 onMounted(() => {
   loadCatalog()
+  window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+  closeCameraScanner()
 })
 </script>
 
@@ -889,5 +1192,190 @@ onMounted(() => {
     border-color: #e4e4e7;
     cursor: not-allowed;
   }
+}
+
+/* BARCODE SCANNER HERO BAR */
+.pos-barcode-scanner-bar {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid #1e293b;
+
+  .scanner-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .scanner-badge-laser {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #38bdf8;
+
+      .laser-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+        animation: laserBlink 1.2s infinite;
+      }
+
+      .scanner-tip {
+        font-size: 10px;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-left: auto;
+      }
+    }
+
+    .scanner-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+
+      .barcode-quick-input {
+        flex: 1;
+
+        :deep(.el-input__wrapper) {
+          background: #1e293b;
+          box-shadow: 0 0 0 1px #334155 inset;
+          color: #ffffff;
+
+          &.is-focus {
+            box-shadow: 0 0 0 2px #38bdf8 inset;
+          }
+
+          input {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+
+            &::placeholder {
+              color: #64748b;
+              font-weight: 500;
+              font-size: 12.5px;
+            }
+          }
+        }
+
+        :deep(.el-input-group__append) {
+          background: #38bdf8;
+          border-color: #38bdf8;
+          color: #0f172a;
+          font-weight: 900;
+          cursor: pointer;
+
+          button {
+            color: #0f172a;
+            font-weight: 900;
+          }
+        }
+      }
+
+      .btn-camera-scan {
+        height: 40px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+@keyframes laserBlink {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* CAMERA SCANNER DIALOG */
+.camera-scanner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+
+  .camera-viewport-wrap {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    background: #000;
+    overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .camera-feed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+
+      .scanner-aim-frame {
+        width: 260px;
+        height: 160px;
+        border: 2px solid #10b981;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+
+        .laser-line {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: #ef4444;
+          box-shadow: 0 0 8px #ef4444;
+          animation: scanLineAnim 2s infinite ease-in-out;
+        }
+      }
+
+      .camera-hint {
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        margin-top: 14px;
+        text-align: center;
+        padding: 0 16px;
+      }
+    }
+  }
+
+  .camera-err-msg {
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .camera-manual-input {
+    width: 100%;
+  }
+}
+
+@keyframes scanLineAnim {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
 }
 </style>
