@@ -176,64 +176,6 @@
                   </button>
                 </div>
               </div>
-
-              <!-- Collapsible / Direct URL input fallback -->
-              <div class="url-manual-toggle">
-                <span class="manual-label">Hoặc sửa đường dẫn ảnh trực tiếp:</span>
-                <el-input
-                  v-model="form.thumbnailUrl"
-                  placeholder="http://localhost:9000/sneaker-products/..."
-                  clearable
-                  size="small"
-                  @input="imgError = false"
-                >
-                  <template #prefix>
-                    <el-icon><Link /></el-icon>
-                  </template>
-                </el-input>
-              </div>
-
-              <div class="presets-gallery">
-                <span class="gallery-hint">Hoặc chọn mẫu ảnh chụp studio có sẵn:</span>
-                <div class="preset-thumbs">
-                  <button
-                    v-for="(p, idx) in sampleImages"
-                    :key="idx"
-                    type="button"
-                    class="thumb-btn"
-                    :class="{ active: form.thumbnailUrl === p.url }"
-                    :title="p.name"
-                    @click="applyPreset(p.url)"
-                  >
-                    <img :src="p.url" :alt="p.name" />
-                    <span class="thumb-tag">{{ p.shortName }}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 3. Financial Profit & Margin Intelligence Widget -->
-            <div class="finance-intel-card" :class="{ warning: profit < 0 }">
-              <div class="intel-header">
-                <span class="intel-title">ĐỊNH LƯỢNG TÀI CHÍNH &amp; LỢI NHUẬN</span>
-                <span class="intel-badge" :class="marginClass">{{ marginText }}</span>
-              </div>
-              <div class="intel-stats-row">
-                <div class="stat-col">
-                  <span class="stat-lbl">Lợi nhuận gộp/đôi</span>
-                  <span class="stat-num" :class="{ negative: profit < 0 }">
-                    {{ profit >= 0 ? '+' : '' }}{{ formatCurrency(profit) }}
-                  </span>
-                </div>
-                <div class="stat-col align-right">
-                  <span class="stat-lbl">Tỷ suất sinh lời</span>
-                  <span class="stat-num highlight">{{ marginPercent }}</span>
-                </div>
-              </div>
-              <div v-if="profit < 0" class="intel-alert">
-                <el-icon><Warning /></el-icon>
-                <span>Cảnh báo: Giá bán đang thấp hơn giá nhập hàng!</span>
-              </div>
             </div>
           </aside>
 
@@ -511,30 +453,6 @@ const rules = {
   salePrice: [{ required: true, message: 'Vui lòng nhập giá bán niêm yết', trigger: 'blur' }]
 }
 
-// Preset Studio Images
-const sampleImages = [
-  {
-    name: 'Nike Dunk Low Panda',
-    shortName: 'Dunk Panda',
-    url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'
-  },
-  {
-    name: 'Air Jordan 1 High OG',
-    shortName: 'Jordan 1',
-    url: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=600'
-  },
-  {
-    name: 'New Balance 550 Retro',
-    shortName: 'NB 550',
-    url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600'
-  },
-  {
-    name: 'Adidas Ultraboost Light',
-    shortName: 'Ultraboost',
-    url: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600'
-  }
-]
-
 // Material Quick Chips
 const materialChips = [
   'Da thật cao cấp (Leather)',
@@ -544,42 +462,6 @@ const materialChips = [
   'Đế bọt trợ lực ZoomX',
   'Màng chống thấm nước GORE-TEX'
 ]
-
-// Computed Financial Intelligence
-const profit = computed(() => {
-  const sale = Number(form.salePrice) || 0
-  const cost = Number(form.importPrice) || 0
-  return sale - cost
-})
-
-const marginPercent = computed(() => {
-  const cost = Number(form.importPrice) || 0
-  if (cost <= 0) return '0%'
-  const p = profit.value
-  const pct = (p / cost) * 100
-  return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`
-})
-
-const marginText = computed(() => {
-  const cost = Number(form.importPrice) || 0
-  if (cost <= 0) return 'CHƯA ĐỊNH GIÁ'
-  const p = profit.value
-  const pct = (p / cost) * 100
-  if (pct < 0) return 'LỖ VỐN'
-  if (pct < 20) return 'BIÊN ĐỘ THẤP'
-  if (pct <= 60) return 'BIÊN ĐỘ TỐT'
-  return 'LỢI NHUẬN CAO'
-})
-
-const marginClass = computed(() => {
-  const cost = Number(form.importPrice) || 0
-  if (cost <= 0) return 'neutral'
-  const p = profit.value
-  const pct = (p / cost) * 100
-  if (pct < 0) return 'danger'
-  if (pct < 20) return 'warning'
-  return 'success'
-})
 
 function getBrandName(brandId) {
   if (!brandId) return 'SNEAKERHUB'
@@ -591,11 +473,6 @@ function getCategoryName(catId) {
   if (!catId) return 'ORIGINALS'
   const c = categories.value.find((item) => item.id === catId)
   return c ? c.categoryName : 'FOOTWEAR'
-}
-
-function applyPreset(url) {
-  form.thumbnailUrl = url
-  imgError.value = false
 }
 
 function triggerFileInput() {
@@ -1303,172 +1180,6 @@ onMounted(() => {
         }
       }
     }
-  }
-
-  .url-manual-toggle {
-    margin-bottom: 12px;
-
-    .manual-label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 4px;
-    }
-  }
-
-  .presets-gallery {
-    margin-top: 12px;
-
-    .gallery-hint {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 6px;
-    }
-
-    .preset-thumbs {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-
-      .thumb-btn {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 3px;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        border-radius: 0;
-        transition: all 0.15s ease;
-
-        img {
-          width: 100%;
-          aspect-ratio: 1;
-          object-fit: cover;
-          display: block;
-        }
-
-        .thumb-tag {
-          font-size: 8px;
-          font-weight: 700;
-          color: #475569;
-          margin-top: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
-        }
-
-        &:hover,
-        &.active {
-          border-color: #000000;
-          box-shadow: 0 0 0 1px #000000;
-        }
-      }
-    }
-  }
-}
-
-/* Financial Profit Intelligence Card */
-.finance-intel-card {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 14px 16px;
-  border: 1px solid #000000;
-
-  &.warning {
-    background: #450a0a;
-    border-color: #ef4444;
-  }
-
-  .intel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    padding-bottom: 8px;
-
-    .intel-title {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      color: #94a3b8;
-    }
-
-    .intel-badge {
-      font-size: 9px;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 0;
-      text-transform: uppercase;
-
-      &.success {
-        background: #10b981;
-        color: #ffffff;
-      }
-      &.warning {
-        background: #f59e0b;
-        color: #000000;
-      }
-      &.danger {
-        background: #ef4444;
-        color: #ffffff;
-      }
-      &.neutral {
-        background: #475569;
-        color: #ffffff;
-      }
-    }
-  }
-
-  .intel-stats-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .stat-col {
-      display: flex;
-      flex-direction: column;
-
-      &.align-right {
-        align-items: flex-end;
-      }
-
-      .stat-lbl {
-        font-size: 10px;
-        color: #94a3b8;
-        margin-bottom: 2px;
-      }
-
-      .stat-num {
-        font-size: 15px;
-        font-weight: 900;
-        font-family: var(--font-mono);
-        color: #10b981;
-
-        &.negative {
-          color: #ef4444;
-        }
-
-        &.highlight {
-          color: #38bdf8;
-        }
-      }
-    }
-  }
-
-  .intel-alert {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 10px;
-    font-size: 10px;
-    color: #fca5a5;
-    font-weight: 700;
   }
 }
 

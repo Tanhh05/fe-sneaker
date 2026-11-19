@@ -117,48 +117,6 @@
               </template>
             </el-input>
 
-            <!-- Gợi ý ảnh mẫu thực tế -->
-            <div class="image-presets-wrap">
-              <span class="presets-label">Gợi ý mẫu ảnh đẹp:</span>
-              <div class="preset-items">
-                <button
-                  v-for="(p, idx) in sampleImages"
-                  :key="idx"
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: form.thumbnailUrl === p.url }"
-                  :title="p.name"
-                  @click="applyPresetImage(p.url)"
-                >
-                  <img :src="p.url" :alt="p.name" />
-                  <span class="preset-tag">{{ p.shortName }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Financial Profit & Margin Intelligence Widget -->
-          <div class="profit-intelligence-card" :class="{ warning: profit < 0 }">
-            <div class="intel-header">
-              <span class="intel-title">LỢI NHUẬN &amp; TỶ SUẤT DỰ KIẾN</span>
-              <span class="intel-badge" :class="marginClass">{{ marginText }}</span>
-            </div>
-            <div class="intel-body">
-              <div class="intel-stat">
-                <span class="stat-label">Lợi nhuận gộp/đôi</span>
-                <span class="stat-value" :class="{ negative: profit < 0 }">
-                  {{ profit >= 0 ? '+' : '' }}{{ formatCurrency(profit) }}
-                </span>
-              </div>
-              <div class="intel-stat">
-                <span class="stat-label">Tỷ suất sinh lời</span>
-                <span class="stat-value highlight">{{ marginPercent }}</span>
-              </div>
-            </div>
-            <div v-if="profit < 0" class="intel-warning-note">
-              <el-icon><Warning /></el-icon>
-              <span>Cảnh báo: Giá bán đang thấp hơn giá nhập hàng!</span>
-            </div>
           </div>
         </div>
 
