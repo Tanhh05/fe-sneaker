@@ -33,8 +33,8 @@
         </el-col>
         <el-col :xs="12" :sm="6" :md="4">
           <el-select v-model="filters.status" placeholder="Trạng thái" clearable style="width: 100%" @change="loadData">
-            <el-option label="Đang kinh doanh (ACTIVE)" value="ACTIVE" />
-            <el-option label="Ngừng kinh doanh (INACTIVE)" value="INACTIVE" />
+            <el-option label="ACTIVE" value="ACTIVE" />
+            <el-option label="INACTIVE" value="INACTIVE" />
           </el-select>
         </el-col>
         <el-col :xs="12" :sm="24" :md="3">
@@ -78,10 +78,10 @@
             <span class="price-text">{{ formatCurrency(row.salePrice) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Trạng thái" width="130" align="center">
+        <el-table-column label="Trạng thái" width="115" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
-              {{ row.status === 'ACTIVE' ? 'Đang kinh doanh' : 'Ngừng KD' }}
+              {{ row.status }}
             </el-tag>
           </template>
         </el-table-column>
@@ -133,19 +133,7 @@
       </div>
     </div>
 
-    <!-- Modern Designer Product Form Dialog -->
-    <ProductFormDialog
-      v-model="dialogVisible"
-      :is-edit="isEdit"
-      :editing-id="editingId"
-      :initial-data="form"
-      :brands="brands"
-      :categories="categories"
-      :saving="saving"
-      @submit="handleSaveProduct"
-    />
-
-    <!-- Product Detail & Variants Dialog -->
+    <!-- Product Detail & Variants Quick View Dialog -->
     <ProductDetailDialog
       v-model="detailVisible"
       :product="selectedProduct"
@@ -166,13 +154,11 @@ import { formatCurrency } from '@/utils/formatters'
 import { usePermission } from '@/composables/usePermission'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 import ProductDetailDialog from './components/ProductDetailDialog.vue'
-import ProductFormDialog from './components/ProductFormDialog.vue'
 
 const router = useRouter()
 const { canManageCatalog } = usePermission()
 
 const loading = ref(false)
-const saving = ref(false)
 const items = ref([])
 const brands = ref([])
 const categories = ref([])
@@ -198,23 +184,6 @@ useDebouncedWatch(
   },
   350
 )
-
-const dialogVisible = ref(false)
-const isEdit = ref(false)
-const editingId = ref(null)
-
-const form = reactive({
-  productCode: '',
-  productName: '',
-  brandId: null,
-  categoryId: null,
-  material: '',
-  description: '',
-  thumbnailUrl: '',
-  importPrice: 1800000,
-  salePrice: 2950000,
-  status: 'ACTIVE'
-})
 
 const detailVisible = ref(false)
 const selectedProduct = ref(null)
@@ -256,35 +225,11 @@ function resetFilter() {
 }
 
 function openCreate() {
-  isEdit.value = false
-  editingId.value = null
-  form.productCode = `SP0${items.value.length + 11}`
-  form.productName = ''
-  form.brandId = brands.value[0]?.id || null
-  form.categoryId = categories.value[0]?.id || null
-  form.material = 'Da thật kết hợp đế cao su lưu hóa'
-  form.description = ''
-  form.thumbnailUrl = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'
-  form.importPrice = 1800000
-  form.salePrice = 2900000
-  form.status = 'ACTIVE'
-  dialogVisible.value = true
+  router.push('/products/create')
 }
 
 function openEdit(row) {
-  isEdit.value = true
-  editingId.value = row.id
-  form.productCode = row.productCode
-  form.productName = row.productName
-  form.brandId = row.brandId
-  form.categoryId = row.categoryId
-  form.material = row.material || ''
-  form.description = row.description || ''
-  form.thumbnailUrl = row.thumbnailUrl || ''
-  form.importPrice = Number(row.importPrice)
-  form.salePrice = Number(row.salePrice)
-  form.status = row.status
-  dialogVisible.value = true
+  router.push(`/products/${row.id}/edit`)
 }
 
 async function openDetail(row) {
@@ -296,27 +241,6 @@ async function openDetail(row) {
 function goToVariants() {
   detailVisible.value = false
   router.push('/variants')
-}
-
-async function handleSaveProduct(payload) {
-  saving.value = true
-  try {
-    const finalPayload = {
-      ...payload,
-      imageUrls: payload.thumbnailUrl ? [payload.thumbnailUrl] : []
-    }
-    if (isEdit.value) {
-      await productService.updateProduct(editingId.value, finalPayload)
-      ElMessage.success('Cập nhật thông tin sản phẩm thành công')
-    } else {
-      await productService.createProduct(finalPayload)
-      ElMessage.success('Khởi tạo sản phẩm Sneaker mới thành công')
-    }
-    dialogVisible.value = false
-    loadData()
-  } finally {
-    saving.value = false
-  }
 }
 
 function handleProductAction(cmd, row) {

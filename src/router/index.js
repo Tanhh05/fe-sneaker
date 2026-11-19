@@ -97,6 +97,18 @@ const routes = [
         meta: { title: 'Quản lý sản phẩm', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
       },
       {
+        path: 'products/create',
+        name: 'ProductCreate',
+        component: () => import('@/views/products/ProductFormView.vue'),
+        meta: { title: 'Thêm sản phẩm Sneaker mới', roles: ['ADMIN', 'MANAGER'] }
+      },
+      {
+        path: 'products/:id/edit',
+        name: 'ProductEdit',
+        component: () => import('@/views/products/ProductFormView.vue'),
+        meta: { title: 'Chỉnh sửa sản phẩm Sneaker', roles: ['ADMIN', 'MANAGER'] }
+      },
+      {
         path: 'variants',
         name: 'Variants',
         component: () => import('@/views/variants/VariantsView.vue'),

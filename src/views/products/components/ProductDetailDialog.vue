@@ -14,8 +14,11 @@
           class="detail-img"
         />
         <div class="detail-info">
-          <div class="code-badge" style="display: inline-block; margin-bottom: 6px">
-            {{ product.productCode }}
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
+            <span class="code-badge">{{ product.productCode }}</span>
+            <el-tag :type="product.status === 'ACTIVE' ? 'success' : 'info'" size="small">
+              {{ product.status }}
+            </el-tag>
           </div>
           <h3>{{ product.productName }}</h3>
           <p class="meta">
