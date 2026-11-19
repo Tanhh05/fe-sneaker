@@ -158,24 +158,6 @@
                   </button>
                 </div>
               </div>
-
-              <!-- Uploaded MinIO Information Box -->
-              <div v-if="form.thumbnailUrl" class="uploaded-minio-box">
-                <div class="minio-path-row">
-                  <span class="minio-lbl">ĐƯỜNG DẪN ẢNH HIỂN THỊ:</span>
-                  <span class="minio-url-display" :title="form.thumbnailUrl">{{ form.thumbnailUrl }}</span>
-                </div>
-                <div class="minio-actions-bar">
-                  <button type="button" class="btn-minio-action" @click="copyImageUrl" title="Sao chép đường dẫn">
-                    <el-icon><DocumentCopy /></el-icon>
-                    <span>Sao chép link</span>
-                  </button>
-                  <button type="button" class="btn-minio-action" @click="openImageInNewTab" title="Xem ảnh gốc">
-                    <el-icon><View /></el-icon>
-                    <span>Xem ảnh gốc</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </aside>
 
@@ -389,9 +371,7 @@ import {
   Link,
   Warning,
   Lightning,
-  UploadFilled,
-  DocumentCopy,
-  View
+  UploadFilled
 } from '@element-plus/icons-vue'
 import { productService } from '@/services/productService'
 import { brandService } from '@/services/brandService'
@@ -523,17 +503,6 @@ async function uploadSelectedFile(file) {
   } finally {
     uploadingImage.value = false
   }
-}
-
-function copyImageUrl() {
-  if (!form.thumbnailUrl) return
-  navigator.clipboard.writeText(form.thumbnailUrl)
-  ElMessage.success('Đã sao chép đường dẫn ảnh vào bộ nhớ tạm!')
-}
-
-function openImageInNewTab() {
-  if (!form.thumbnailUrl) return
-  window.open(form.thumbnailUrl, '_blank')
 }
 
 function clearImage() {
@@ -1118,64 +1087,6 @@ onMounted(() => {
 
         &:hover {
           background: #000000;
-          color: #ffffff;
-        }
-      }
-    }
-  }
-
-  .uploaded-minio-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-left: 3px solid #000000;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-
-    .minio-path-row {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin-bottom: 8px;
-
-      .minio-lbl {
-        font-size: 9px;
-        font-weight: 800;
-        color: #64748b;
-        letter-spacing: 0.05em;
-      }
-
-      .minio-url-display {
-        font-size: 11px;
-        font-family: var(--font-mono);
-        color: #0f172a;
-        word-break: break-all;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        padding: 4px 8px;
-        line-height: 1.35;
-      }
-    }
-
-    .minio-actions-bar {
-      display: flex;
-      gap: 8px;
-
-      .btn-minio-action {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #334155;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 4px 8px;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        transition: all 0.12s ease;
-
-        &:hover {
-          background: #000000;
-          border-color: #000000;
           color: #ffffff;
         }
       }
