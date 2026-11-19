@@ -47,54 +47,96 @@
           <!-- Left: Payment / Shipping -->
           <div class="receipt-left-col">
             <!-- VietQR Card if Bank Transfer -->
-            <div v-if="order.paymentMethod === 'BANK_TRANSFER'" class="card-box qr-card">
+            <div
+              v-if="order.paymentMethod === 'BANK_TRANSFER'"
+              class="card-box qr-card"
+              :class="{ 'is-paid': isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED' }"
+            >
               <div class="box-head">
-                <span class="box-eyebrow">PAYMENT GATEWAY</span>
-                <h3 class="box-title">THANH TOÁN CHUYỂN KHOẢN VIETQR</h3>
+                <span class="box-eyebrow" :class="{ 'paid-eyebrow': isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED' }">
+                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'SEPAY AUTO-CONFIRMED' : 'PAYMENT GATEWAY' }}
+                </span>
+                <h3 class="box-title">
+                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'THANH TOÁN THÀNH CÔNG 🎉' : 'THANH TOÁN CHUYỂN KHOẢN VIETQR' }}
+                </h3>
               </div>
 
-              <div class="qr-layout">
-                <div class="qr-media">
-                  <img
-                    v-if="order.qrPaymentUrl"
-                    :src="order.qrPaymentUrl"
-                    alt="VietQR"
-                    class="vietqr-img"
-                  />
-                  <p class="qr-scan-hint">Mở app Ngân hàng để quét mã QR</p>
+              <!-- Trạng thái ĐÃ THANH TOÁN THÀNH CÔNG -->
+              <div v-if="isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED'" class="paid-success-banner">
+                <div class="paid-success-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="paid-success-svg">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                 </div>
-
-                <div class="qr-specs">
-                  <div class="spec-line">
-                    <span class="lbl">Ngân hàng:</span>
-                    <span class="val strong">MB Bank (Quân Đội)</span>
-                  </div>
-                  <div class="spec-line">
-                    <span class="lbl">Chủ tài khoản:</span>
-                    <span class="val strong">SNEAKERHUB PRO</span>
-                  </div>
-                  <div class="spec-line">
-                    <span class="lbl">Số tài khoản:</span>
-                    <span class="val code-val" @click="copyText('0901000001', 'Số tài khoản')">
-                      0901000001 <span class="copy-hint">Sao chép</span>
-                    </span>
-                  </div>
-                  <div class="spec-line">
-                    <span class="lbl">Số tiền:</span>
-                    <span class="val price-val">{{ formatCurrency(order.totalAmount) }}</span>
-                  </div>
-                  <div class="spec-line">
-                    <span class="lbl">Nội dung CK:</span>
-                    <span class="val code-val highlight" @click="copyText(order.orderCode, 'Nội dung chuyển khoản')">
-                      {{ order.orderCode }} <span class="copy-hint">Sao chép</span>
-                    </span>
+                <div class="paid-success-content">
+                  <h4 class="paid-headline">ĐÃ GẠCH NỢ TỰ ĐỘNG THÀNH CÔNG!</h4>
+                  <p class="paid-text">
+                    Cổng SePay đã xác thực giao dịch chuyển khoản cho đơn hàng <strong>#{{ order.orderCode }}</strong>. Đơn hàng đã được tự động duyệt sang trạng thái <strong>ĐÃ XÁC NHẬN</strong>.
+                  </p>
+                  <div class="paid-meta-pills">
+                    <span class="paid-pill"><span class="dot-green"></span> Cổng: MBBank</span>
+                    <span class="paid-pill green"><span class="dot-green"></span> Trạng thái: ĐÃ XÁC NHẬN</span>
+                    <span class="paid-pill"><span class="dot-green"></span> Số tiền: {{ formatCurrency(order.finalAmount || order.totalAmount) }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="qr-warning">
-                <span>⚠️ Lưu ý: Giữ nguyên nội dung chuyển khoản <strong>{{ order.orderCode }}</strong> để hệ thống tự động gạch nợ đơn hàng.</span>
-              </div>
+              <!-- Trạng thái CHỜ THANH TOÁN (Có live radar) -->
+              <template v-else>
+                <div class="qr-layout">
+                  <div class="qr-media">
+                    <img
+                      v-if="order.qrPaymentUrl"
+                      :src="order.qrPaymentUrl"
+                      alt="VietQR"
+                      class="vietqr-img"
+                    />
+                    <p class="qr-scan-hint">Mở app Ngân hàng để quét mã QR</p>
+                  </div>
+
+                  <div class="qr-specs">
+                    <div class="spec-line">
+                      <span class="lbl">Ngân hàng:</span>
+                      <span class="val strong">MB Bank (Quân Đội)</span>
+                    </div>
+                    <div class="spec-line">
+                      <span class="lbl">Chủ tài khoản:</span>
+                      <span class="val strong">SNEAKERHUB PRO</span>
+                    </div>
+                    <div class="spec-line">
+                      <span class="lbl">Số tài khoản:</span>
+                      <span class="val code-val" @click="copyText('0901000001', 'Số tài khoản')">
+                        0901000001 <span class="copy-hint">Sao chép</span>
+                      </span>
+                    </div>
+                    <div class="spec-line">
+                      <span class="lbl">Số tiền:</span>
+                      <span class="val price-val">{{ formatCurrency(order.totalAmount) }}</span>
+                    </div>
+                    <div class="spec-line">
+                      <span class="lbl">Nội dung CK:</span>
+                      <span class="val code-val highlight" @click="copyText(order.orderCode, 'Nội dung chuyển khoản')">
+                        {{ order.orderCode }} <span class="copy-hint">Sao chép</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="qr-live-status">
+                  <div class="pulse-beacon">
+                    <span class="beacon-ring"></span>
+                    <span class="beacon-dot"></span>
+                  </div>
+                  <div class="live-text-wrap">
+                    <span class="live-title">TỰ ĐỘNG GẠCH NỢ REALTIME QUA SEPAY</span>
+                    <span class="live-desc">Hệ thống đang kết nối SePay để lắng nghe giao dịch chuyển khoản. Ngay khi chuyển khoản thành công, màn hình sẽ tự động cập nhật ngay lập tức.</span>
+                  </div>
+                </div>
+
+                <div class="qr-warning">
+                  <span>⚠️ Lưu ý: Giữ nguyên nội dung chuyển khoản <strong>{{ order.orderCode }}</strong> để hệ thống tự động gạch nợ đơn hàng.</span>
+                </div>
+              </template>
             </div>
 
             <!-- COD Card -->
@@ -206,7 +248,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
@@ -217,6 +259,40 @@ const router = useRouter()
 
 const loading = ref(true)
 const order = ref(null)
+const isPaidSuccess = ref(false)
+const isPolling = ref(false)
+let pollTimer = null
+
+const startPollingPayment = (orderCode) => {
+  if (!orderCode || pollTimer) return
+  isPolling.value = true
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await storeService.trackOrder(orderCode)
+      if (res?.data) {
+        if (res.data.status === 'CONFIRMED' || res.data.status === 'COMPLETED') {
+          order.value = res.data
+          isPaidSuccess.value = true
+          stopPollingPayment()
+          ElMessage.success({
+            message: '🎉 SePay đã tự động xác nhận thanh toán! Đơn hàng của bạn đã chuyển sang trạng thái ĐÃ XÁC NHẬN.',
+            duration: 6000
+          })
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi kiểm tra thanh toán realtime:', e)
+    }
+  }, 2500)
+}
+
+const stopPollingPayment = () => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+  isPolling.value = false
+}
 
 onMounted(async () => {
   const code = route.params.orderCode
@@ -229,6 +305,9 @@ onMounted(async () => {
       if (cached && (cached.orderCode === code || !code)) {
         order.value = cached
         loading.value = false
+        if (order.value.paymentMethod === 'BANK_TRANSFER' && order.value.status === 'PENDING') {
+          startPollingPayment(order.value.orderCode)
+        }
         return
       }
     } catch (e) {
@@ -242,6 +321,9 @@ onMounted(async () => {
       const res = await storeService.trackOrder(code)
       if (res?.data) {
         order.value = res.data
+        if (order.value.paymentMethod === 'BANK_TRANSFER' && order.value.status === 'PENDING') {
+          startPollingPayment(order.value.orderCode)
+        }
       }
     } catch (err) {
       console.error('Không tìm thấy đơn hàng:', err)
@@ -251,6 +333,10 @@ onMounted(async () => {
   } else {
     loading.value = false
   }
+})
+
+onUnmounted(() => {
+  stopPollingPayment()
 })
 
 const copyOrderCode = () => {
@@ -584,6 +670,154 @@ const goToTracking = () => {
     font-size: 11px;
     color: #525252;
     line-height: 1.4;
+  }
+
+  &.is-paid {
+    border-color: #10b981 !important;
+    background: #f0fdf4 !important;
+  }
+
+  .paid-eyebrow {
+    color: #059669 !important;
+    font-weight: 800;
+  }
+
+  .paid-success-banner {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 12px 0;
+
+    .paid-success-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+
+      .paid-success-svg {
+        width: 26px;
+        height: 26px;
+        stroke: #ffffff;
+      }
+    }
+
+    .paid-success-content {
+      flex: 1;
+
+      .paid-headline {
+        margin: 0 0 6px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #065f46;
+        letter-spacing: -0.01em;
+      }
+
+      .paid-text {
+        margin: 0 0 12px;
+        font-size: 12px;
+        color: #047857;
+        line-height: 1.5;
+      }
+
+      .paid-meta-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .paid-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 700;
+          background: #e6fcf5;
+          color: #099268;
+          border: 1px solid #c3fae8;
+
+          .dot-green {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+          }
+        }
+      }
+    }
+  }
+
+  .qr-live-status {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .pulse-beacon {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+
+      .beacon-dot {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+      }
+
+      .beacon-ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.4);
+        animation: beaconPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+      }
+    }
+
+    .live-text-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .live-title {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: 0.04em;
+      }
+
+      .live-desc {
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.35;
+      }
+    }
+  }
+
+  @keyframes beaconPing {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
   }
 }
 

@@ -384,57 +384,81 @@
       :show-close="true"
     >
       <div v-if="qrOrder" class="qr-dialog-content">
-        <div class="qr-notice-box">
-          <span class="qr-notice-kicker">MBBANK CHÍNH HÃNG</span>
-          <p class="qr-notice-text">
-            Mở App ngân hàng bất kỳ, chọn <strong>Quét mã QR</strong> để chuyển khoản tự động khớp chính xác số tiền &amp; nội dung.
+        <!-- ĐÃ GẠCH NỢ THÀNH CÔNG -->
+        <div v-if="qrOrder.status === 'CONFIRMED' || isQrOrderPaid" class="qr-paid-success-box">
+          <div class="paid-check-circle">✓</div>
+          <h4 class="paid-title">ĐÃ GẠCH NỢ TỰ ĐỘNG THÀNH CÔNG!</h4>
+          <p class="paid-sub">
+            Giao dịch chuyển khoản cho đơn hàng <strong>#{{ qrOrder.orderCode }}</strong> đã được cổng SePay khớp lệnh thành công. Đơn hàng đã chuyển sang trạng thái <strong>ĐÃ XÁC NHẬN</strong>.
           </p>
+          <div class="paid-amount-row">
+            <span>Số tiền đã thanh toán:</span>
+            <strong>{{ formatCurrency(qrOrder.finalAmount || qrOrder.totalAmount) }}</strong>
+          </div>
+          <button type="button" class="btn-close-qr success" @click="qrModalVisible = false">
+            HOÀN TẤT &amp; ĐÓNG CỬA SỔ
+          </button>
         </div>
 
-        <div class="qr-image-wrapper">
-          <img
-            v-if="qrOrder.qrPaymentUrl"
-            :src="qrOrder.qrPaymentUrl"
-            alt="Mã VietQR MBBank"
-            class="vietqr-img"
-          />
-          <div v-else class="qr-fallback-box">
-            Đang tải mã QR chuyển khoản...
+        <!-- CHỜ THANH TOÁN -->
+        <template v-else>
+          <div class="qr-notice-box">
+            <span class="qr-notice-kicker">MBBANK CHÍNH HÃNG</span>
+            <p class="qr-notice-text">
+              Mở App ngân hàng bất kỳ, chọn <strong>Quét mã QR</strong> để chuyển khoản tự động khớp chính xác số tiền &amp; nội dung.
+            </p>
           </div>
-        </div>
 
-        <div class="bank-details-card">
-          <div class="bank-row">
-            <span class="bank-lbl">Ngân hàng:</span>
-            <strong class="bank-val">MBBank (Ngân hàng Quân Đội)</strong>
+          <div class="qr-image-wrapper">
+            <img
+              v-if="qrOrder.qrPaymentUrl"
+              :src="qrOrder.qrPaymentUrl"
+              alt="Mã VietQR MBBank"
+              class="vietqr-img"
+            />
+            <div v-else class="qr-fallback-box">
+              Đang tải mã QR chuyển khoản...
+            </div>
           </div>
-          <div class="bank-row">
-            <span class="bank-lbl">Số tài khoản:</span>
-            <strong class="bank-val mono" @click="copyText('0901000001', 'Đã chép số tài khoản MBBank!')">
-              0901000001
-              <el-icon class="copy-ic"><DocumentCopy /></el-icon>
-            </strong>
-          </div>
-          <div class="bank-row">
-            <span class="bank-lbl">Chủ tài khoản:</span>
-            <strong class="bank-val">SNEAKERHUB PRO</strong>
-          </div>
-          <div class="bank-row">
-            <span class="bank-lbl">Số tiền:</span>
-            <strong class="bank-val price">{{ formatCurrency(qrOrder.finalAmount || qrOrder.totalAmount) }}</strong>
-          </div>
-          <div class="bank-row">
-            <span class="bank-lbl">Nội dung CK:</span>
-            <strong class="bank-val memo mono" @click="copyText(qrOrder.orderCode, 'Đã chép nội dung chuyển khoản!')">
-              {{ qrOrder.orderCode }}
-              <el-icon class="copy-ic"><DocumentCopy /></el-icon>
-            </strong>
-          </div>
-        </div>
 
-        <button type="button" class="btn-close-qr" @click="qrModalVisible = false">
-          ĐÃ HOÀN TẤT CHUYỂN KHOẢN
-        </button>
+          <div class="qr-modal-radar">
+            <span class="radar-ping"></span>
+            <span class="radar-text">Đang lắng nghe chuyển khoản từ SePay theo thời gian thực...</span>
+          </div>
+
+          <div class="bank-details-card">
+            <div class="bank-row">
+              <span class="bank-lbl">Ngân hàng:</span>
+              <strong class="bank-val">MBBank (Ngân hàng Quân Đội)</strong>
+            </div>
+            <div class="bank-row">
+              <span class="bank-lbl">Số tài khoản:</span>
+              <strong class="bank-val mono" @click="copyText('0901000001', 'Đã chép số tài khoản MBBank!')">
+                0901000001
+                <el-icon class="copy-ic"><DocumentCopy /></el-icon>
+              </strong>
+            </div>
+            <div class="bank-row">
+              <span class="bank-lbl">Chủ tài khoản:</span>
+              <strong class="bank-val">SNEAKERHUB PRO</strong>
+            </div>
+            <div class="bank-row">
+              <span class="bank-lbl">Số tiền:</span>
+              <strong class="bank-val price">{{ formatCurrency(qrOrder.finalAmount || qrOrder.totalAmount) }}</strong>
+            </div>
+            <div class="bank-row">
+              <span class="bank-lbl">Nội dung CK:</span>
+              <strong class="bank-val memo mono" @click="copyText(qrOrder.orderCode, 'Đã chép nội dung chuyển khoản!')">
+                {{ qrOrder.orderCode }}
+                <el-icon class="copy-ic"><DocumentCopy /></el-icon>
+              </strong>
+            </div>
+          </div>
+
+          <button type="button" class="btn-close-qr" @click="qrModalVisible = false">
+            ĐÃ HOÀN TẤT CHUYỂN KHOẢN
+          </button>
+        </template>
       </div>
     </el-dialog>
 
@@ -494,7 +518,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -655,9 +679,55 @@ const openOrderDetailDrawer = (order) => {
   drawerVisible.value = true
 }
 
+// QR REALTIME POLLING VIA SEPAY
+const isQrOrderPaid = ref(false)
+let qrPollTimer = null
+
+const startQrPolling = (orderCode) => {
+  stopQrPolling()
+  isQrOrderPaid.value = false
+  if (!orderCode) return
+  qrPollTimer = setInterval(async () => {
+    try {
+      const res = await storeService.trackOrder(orderCode)
+      if (res?.data && (res.data.status === 'CONFIRMED' || res.data.status === 'COMPLETED')) {
+        isQrOrderPaid.value = true
+        if (qrOrder.value) {
+          qrOrder.value.status = res.data.status
+        }
+        stopQrPolling()
+        ElMessage.success('🎉 SePay đã tự động xác nhận chuyển khoản thành công!')
+        fetchOrders()
+      }
+    } catch (e) {
+      console.warn('Lỗi polling QR order:', e)
+    }
+  }, 2500)
+}
+
+const stopQrPolling = () => {
+  if (qrPollTimer) {
+    clearInterval(qrPollTimer)
+    qrPollTimer = null
+  }
+}
+
+watch(qrModalVisible, (visible) => {
+  if (visible && qrOrder.value && qrOrder.value.status === 'PENDING') {
+    startQrPolling(qrOrder.value.orderCode)
+  } else {
+    stopQrPolling()
+  }
+})
+
+onUnmounted(() => {
+  stopQrPolling()
+})
+
 // OPEN QR PAY MODAL
 const openQrPayModal = (order) => {
   qrOrder.value = order
+  isQrOrderPaid.value = order.status === 'CONFIRMED' || order.status === 'COMPLETED'
   qrModalVisible.value = true
 }
 
@@ -2052,6 +2122,103 @@ onMounted(() => {
         background: #10b981;
         border-color: #10b981;
       }
+
+      &.success {
+        background: #10b981;
+        border-color: #10b981;
+        &:hover {
+          background: #059669;
+          border-color: #059669;
+        }
+      }
+    }
+
+    .qr-paid-success-box {
+      width: 100%;
+      background: #f0fdf4;
+      border: 1px solid #10b981;
+      padding: 24px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+
+      .paid-check-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #10b981;
+        color: #ffffff;
+        font-size: 26px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      }
+
+      .paid-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #065f46;
+      }
+
+      .paid-sub {
+        margin: 0;
+        font-size: 12px;
+        color: #047857;
+        line-height: 1.5;
+        max-width: 320px;
+      }
+
+      .paid-amount-row {
+        background: #d1fae5;
+        border: 1px dashed #34d399;
+        padding: 6px 14px;
+        border-radius: 4px;
+        display: flex;
+        gap: 8px;
+        font-size: 13px;
+        color: #065f46;
+
+        strong {
+          font-weight: 800;
+          color: #047857;
+        }
+      }
+    }
+
+    .qr-modal-radar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      padding: 6px 12px;
+      border-radius: 4px;
+      width: 100%;
+
+      .radar-ping {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: radarPulse 1.5s infinite;
+      }
+
+      .radar-text {
+        font-size: 11px;
+        color: #475569;
+        font-weight: 600;
+      }
+    }
+
+    @keyframes radarPulse {
+      0% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.3); }
+      100% { opacity: 0.3; transform: scale(0.9); }
     }
   }
 }
