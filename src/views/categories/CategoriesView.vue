@@ -58,16 +58,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageCatalog" label="Thao tác" width="160" fixed="right" align="center">
+        <el-table-column v-if="canManageCatalog" label="Thao tác" width="85" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openEdit(row)">
+              <button class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
-                <span>Sửa</span>
               </button>
-              <button class="action-btn danger" @click="handleDelete(row)">
+              <button class="action-btn danger" title="Xóa" @click="handleDelete(row)">
                 <el-icon><Delete /></el-icon>
-                <span>Xóa</span>
               </button>
             </div>
           </template>

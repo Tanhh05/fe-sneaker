@@ -38,7 +38,16 @@
         </div>
 
         <div class="auth-actions-group">
-          <button class="auth-btn primary" @click="goToTracking">
+          <button class="auth-btn primary" @click="goToMyOrders">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+              <path d="m3.3 7 8.7 5 8.7-5"></path>
+              <path d="M12 22V12"></path>
+            </svg>
+            QUẢN LÝ ĐƠN HÀNG CỦA TÔI
+          </button>
+
+          <button class="auth-btn secondary" @click="goToTracking">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="1" y="3" width="15" height="13"></rect>
               <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
@@ -407,6 +416,11 @@ async function handleLogout() {
   await authStore.logout()
   ElMessage.info('Bạn đã đăng xuất tài khoản thành công.')
   emit('update:modelValue', false)
+}
+
+function goToMyOrders() {
+  emit('update:modelValue', false)
+  router.push('/my-orders')
 }
 
 function goToTracking() {

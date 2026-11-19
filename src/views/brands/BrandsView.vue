@@ -56,12 +56,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageCatalog" label="Thao tác" width="140" fixed="right" align="center">
+        <el-table-column v-if="canManageCatalog" label="Thao tác" width="85" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openEdit(row)">
+              <button class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
-                <span>Sửa</span>
               </button>
               <el-dropdown
                 trigger="click"

@@ -65,16 +65,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="115" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openDetail(row)">
+              <button class="action-btn" title="Xem chi tiết" @click="openDetail(row)">
                 <el-icon><View /></el-icon>
-                <span>Chi tiết</span>
               </button>
-              <button class="action-btn" @click="openEdit(row)">
+              <button class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
-                <span>Sửa</span>
               </button>
               <el-dropdown
                 trigger="click"

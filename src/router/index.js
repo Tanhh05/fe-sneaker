@@ -47,6 +47,12 @@ const routes = [
         name: 'StoreTrackOrder',
         component: () => import('@/views/store/StoreTrackOrderView.vue'),
         meta: { title: 'Tra cứu đơn hàng', public: true }
+      },
+      {
+        path: 'my-orders',
+        name: 'StoreMyOrders',
+        component: () => import('@/views/store/StoreMyOrdersView.vue'),
+        meta: { title: 'Quản lý đơn hàng của tôi', public: true }
       }
     ]
   },
@@ -89,6 +95,12 @@ const routes = [
         name: 'Orders',
         component: () => import('@/views/orders/OrdersView.vue'),
         meta: { title: 'Quản lý đơn hàng', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
+      },
+      {
+        path: 'orders/:id',
+        name: 'OrderDetail',
+        component: () => import('@/views/orders/OrderDetailView.vue'),
+        meta: { title: 'Chi tiết đơn hàng', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
       },
       {
         path: 'products',

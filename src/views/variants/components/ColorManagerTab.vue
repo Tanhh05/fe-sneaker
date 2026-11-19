@@ -19,12 +19,11 @@
           <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="canManageCatalog" label="Thao tác" width="100" align="center">
+      <el-table-column v-if="canManageCatalog" label="Thao tác" width="65" align="center">
         <template #default="{ row }">
           <div class="row-actions">
-            <button class="action-btn" @click="openEditColor(row)">
+            <button class="action-btn" title="Chỉnh sửa" @click="openEditColor(row)">
               <el-icon><Edit /></el-icon>
-              <span>Sửa</span>
             </button>
           </div>
         </template>

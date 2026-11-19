@@ -100,16 +100,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="220" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="115" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openDetail(row)">
+              <button class="action-btn" title="Xem chi tiết đơn hàng" @click="openDetail(row)">
                 <el-icon><View /></el-icon>
-                <span>Chi tiết</span>
               </button>
-              <button class="action-btn" @click="openPrint(row)">
+              <button class="action-btn" title="In hóa đơn bán lẻ" @click="openPrint(row)">
                 <el-icon><Printer /></el-icon>
-                <span>In HĐ</span>
               </button>
               <el-dropdown
                 v-if="row.status !== 'COMPLETED' && row.status !== 'CANCELLED'"
@@ -156,6 +154,15 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
+              <button
+                v-else
+                type="button"
+                class="action-btn action-more is-disabled"
+                disabled
+                title="Đơn hàng đã hoàn tất hoặc đã hủy, không thể chuyển trạng thái"
+              >
+                <el-icon><MoreFilled /></el-icon>
+              </button>
             </div>
           </template>
         </el-table-column>
@@ -174,14 +181,6 @@
       </div>
     </div>
 
-    <!-- Order Detail & Status History Modal -->
-    <OrderDetailDialog
-      v-model="detailVisible"
-      :order="selectedOrder"
-      @print="openPrintFromDetail"
-      @status-change="handleStatusChangeFromDetail"
-    />
-
     <!-- Printable Invoice Modal -->
     <InvoicePrintModal v-model="invoiceVisible" :order="selectedOrder" />
   </div>
@@ -189,6 +188,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, View, Printer, MoreFilled } from '@element-plus/icons-vue'
 import { orderService } from '@/services/orderService'
@@ -196,8 +196,8 @@ import { formatCurrency, formatDateTime } from '@/utils/formatters'
 import { ORDER_STATUS_MAP, PAYMENT_METHOD_MAP } from '@/constants'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 import InvoicePrintModal from '@/components/InvoicePrintModal.vue'
-import OrderDetailDialog from './components/OrderDetailDialog.vue'
 
+const router = useRouter()
 const loading = ref(false)
 const items = ref([])
 
@@ -219,7 +219,6 @@ useDebouncedWatch(
   350
 )
 
-const detailVisible = ref(false)
 const invoiceVisible = ref(false)
 const selectedOrder = ref(null)
 
@@ -250,20 +249,13 @@ function resetFilter() {
   loadData()
 }
 
-async function openDetail(row) {
-  const res = await orderService.getOrderById(row.id)
-  selectedOrder.value = res.data
-  detailVisible.value = true
+function openDetail(row) {
+  router.push(`/orders/${row.id}`)
 }
 
 async function openPrint(row) {
   const res = await orderService.getOrderById(row.id)
   selectedOrder.value = res.data
-  invoiceVisible.value = true
-}
-
-function openPrintFromDetail() {
-  detailVisible.value = false
   invoiceVisible.value = true
 }
 
@@ -301,13 +293,6 @@ function handleStatusCommand(row, targetStatus) {
     CANCELLED: 'Hủy đơn hàng'
   }
   changeStatus(row, targetStatus, map[targetStatus] || targetStatus)
-}
-
-function handleStatusChangeFromDetail(targetStatus, actionTitle) {
-  if (!selectedOrder.value) return
-  changeStatus(selectedOrder.value, targetStatus, actionTitle, (updatedOrder) => {
-    selectedOrder.value = updatedOrder
-  })
 }
 
 onMounted(() => {

@@ -91,12 +91,11 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column v-if="canManageCatalog" label="Thao tác" width="90" fixed="right" align="center">
+            <el-table-column v-if="canManageCatalog" label="Thao tác" width="65" fixed="right" align="center">
               <template #default="{ row }">
                 <div class="row-actions">
-                  <button class="action-btn" @click="openEditVariant(row)">
+                  <button class="action-btn" title="Chỉnh sửa" @click="openEditVariant(row)">
                     <el-icon><Edit /></el-icon>
-                    <span>Sửa</span>
                   </button>
                 </div>
               </template>

@@ -259,6 +259,10 @@ onMounted(() => {
   background: #fafafa;
   border-bottom: 1px solid #ebebeb;
 
+  @media (max-width: 768px) {
+    padding: 30px 0 40px;
+  }
+
   .hero-grid {
     display: grid;
     grid-template-columns: 1.15fr 1fr;
@@ -267,7 +271,7 @@ onMounted(() => {
 
     @media (max-width: 992px) {
       grid-template-columns: 1fr;
-      gap: 40px;
+      gap: 36px;
     }
   }
 
@@ -296,8 +300,17 @@ onMounted(() => {
     color: #000000;
     margin: 0 0 20px;
 
+    @media (max-width: 992px) {
+      font-size: 38px;
+    }
+
     @media (max-width: 600px) {
-      font-size: 36px;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    @media (max-width: 400px) {
+      font-size: 24px;
     }
   }
 
@@ -307,6 +320,11 @@ onMounted(() => {
     color: #525252;
     max-width: 520px;
     margin: 0 0 36px;
+
+    @media (max-width: 600px) {
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
   }
 
   .hero-actions {
@@ -315,6 +333,19 @@ onMounted(() => {
     align-items: center;
     margin-bottom: 48px;
     flex-wrap: wrap;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      width: 100%;
+      gap: 12px;
+      margin-bottom: 32px;
+
+      .btn-primary-action,
+      .btn-outline-action {
+        width: 100%;
+        justify-content: center;
+      }
+    }
 
     .btn-primary-action {
       display: inline-flex;
@@ -370,6 +401,21 @@ onMounted(() => {
     padding-top: 28px;
     border-top: 1px solid #e5e5e5;
 
+    @media (max-width: 600px) {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding-top: 20px;
+
+      .stat-divider {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      grid-template-columns: 1fr;
+    }
+
     .stat-item {
       display: flex;
       flex-direction: column;
@@ -403,6 +449,10 @@ onMounted(() => {
     border: 1px solid #e5e5e5;
     padding: 24px;
 
+    @media (max-width: 600px) {
+      padding: 12px;
+    }
+
     .hero-img {
       width: 100%;
       height: 480px;
@@ -410,8 +460,12 @@ onMounted(() => {
       display: block;
       filter: contrast(1.02);
 
+      @media (max-width: 992px) {
+        height: 380px;
+      }
+
       @media (max-width: 600px) {
-        height: 320px;
+        height: 260px;
       }
     }
 
@@ -426,6 +480,13 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+      @media (max-width: 600px) {
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        padding: 12px 14px;
+      }
 
       .grail-label {
         font-size: 9px;
@@ -562,9 +623,13 @@ onMounted(() => {
     }
     @media (max-width: 800px) {
       grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
+      gap: 16px;
     }
     @media (max-width: 500px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 360px) {
       grid-template-columns: 1fr;
     }
   }

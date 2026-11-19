@@ -44,6 +44,9 @@ html,
 body,
 #app {
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   font-family: var(--font-sans);
   background-color: #fafafa;
   color: var(--snk-text);
@@ -413,21 +416,16 @@ body,
   flex-wrap: nowrap;
 
   .action-btn {
+    width: 28px;
+    min-width: 28px;
     height: 28px;
-    padding: 0 8px;
+    padding: 0;
     background: #ffffff;
     border: 1px solid #000000;
     color: #000000;
-    font-family: var(--font-sans);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     cursor: pointer;
     transition: all 0.12s ease;
     border-radius: 0;
@@ -436,12 +434,27 @@ body,
     user-select: none;
 
     .el-icon {
-      font-size: 12px;
+      font-size: 13px;
+      margin: 0 !important;
     }
 
     &:hover {
       background: #000000;
       color: #ffffff;
+    }
+
+    &:disabled,
+    &.is-disabled {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+      cursor: not-allowed;
+
+      &:hover {
+        background: #f8fafc;
+        color: #94a3b8;
+        border-color: #cbd5e1;
+      }
     }
 
     &.primary {

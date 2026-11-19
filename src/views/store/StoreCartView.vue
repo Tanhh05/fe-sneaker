@@ -44,9 +44,13 @@
               >
                 <div class="item-visual" @click="router.push(`/product/${item.productId}`)">
                   <img
-                    :src="item.imageUrl || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=400&q=80'"
+                    v-if="item.thumbnailUrl || item.imageUrl || (item.imageUrls && item.imageUrls[0])"
+                    :src="item.thumbnailUrl || item.imageUrl || (item.imageUrls && item.imageUrls[0])"
                     :alt="item.productName"
                   />
+                  <div v-else class="item-visual-placeholder">
+                    <span>SNK</span>
+                  </div>
                 </div>
 
                 <div class="item-content">
@@ -119,12 +123,85 @@
                 </el-form-item>
               </div>
 
-              <el-form-item label="Địa chỉ nhận hàng chi tiết (*)" prop="shippingAddress">
+              <!-- TỈNH / THÀNH PHỐ, QUẬN / HUYỆN, PHƯỜNG / XÃ (VIETNAM API) -->
+              <div class="form-row-3 address-cascade-row">
+                <el-form-item label="Tỉnh / Thành phố (*)" prop="provinceCode">
+                  <el-select
+                    v-model="form.provinceCode"
+                    placeholder="Chọn Tỉnh / TP"
+                    filterable
+                    clearable
+                    :loading="loadingProvinces"
+                    style="width: 100%"
+                    @change="handleProvinceChange"
+                  >
+                    <el-option
+                      v-for="p in provinces"
+                      :key="p.code"
+                      :label="p.name"
+                      :value="p.code"
+                    />
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="Quận / Huyện (*)" prop="districtCode">
+                  <el-select
+                    v-model="form.districtCode"
+                    placeholder="Chọn Quận / Huyện"
+                    filterable
+                    clearable
+                    :disabled="!form.provinceCode"
+                    :loading="loadingDistricts"
+                    style="width: 100%"
+                    @change="handleDistrictChange"
+                  >
+                    <el-option
+                      v-for="d in districts"
+                      :key="d.code"
+                      :label="d.name"
+                      :value="d.code"
+                    />
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="Phường / Xã (*)" prop="wardCode">
+                  <el-select
+                    v-model="form.wardCode"
+                    placeholder="Chọn Phường / Xã"
+                    filterable
+                    clearable
+                    :disabled="!form.districtCode"
+                    :loading="loadingWards"
+                    style="width: 100%"
+                    @change="handleWardChange"
+                  >
+                    <el-option
+                      v-for="w in wards"
+                      :key="w.code"
+                      :label="w.name"
+                      :value="w.code"
+                    />
+                  </el-select>
+                </el-form-item>
+              </div>
+
+              <!-- SỐ NHÀ, TÊN ĐƯỜNG CỤ THỂ -->
+              <el-form-item label="Số nhà, tên đường, tòa nhà (*)" prop="streetAddress">
                 <el-input
-                  v-model="form.shippingAddress"
-                  placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
+                  v-model="form.streetAddress"
+                  placeholder="VD: Số 45 Ngõ 12 Đường Cầu Giấy, Tòa Landmark..."
+                  @input="updateFullShippingAddress"
                 />
               </el-form-item>
+
+              <!-- LIVE FORMATTED ADDRESS PREVIEW -->
+              <div v-if="formattedShippingAddress" class="address-preview-banner">
+                <span class="preview-icon">📍</span>
+                <div class="preview-content">
+                  <span class="preview-label">Địa chỉ nhận hàng hoàn chỉnh:</span>
+                  <strong class="preview-address">{{ formattedShippingAddress }}</strong>
+                </div>
+              </div>
 
               <div class="form-row-2">
                 <el-form-item label="Email (để nhận hóa đơn & vận đơn)" prop="customerEmail">
@@ -241,6 +318,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import storeService from '@/services/storeService'
+import vnAddressService from '@/services/vnAddressService'
 import { formatCurrency } from '@/utils/formatters'
 import ClientAuthModal from '@/components/store/ClientAuthModal.vue'
 
@@ -252,25 +330,149 @@ const authModalVisible = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
 
+// Administrative division states (API)
+const provinces = ref([])
+const districts = ref([])
+const wards = ref([])
+const loadingProvinces = ref(false)
+const loadingDistricts = ref(false)
+const loadingWards = ref(false)
+
 const form = reactive({
   customerName: '',
   customerPhone: '',
   customerEmail: '',
+  provinceCode: null,
+  districtCode: null,
+  wardCode: null,
+  provinceName: '',
+  districtName: '',
+  wardName: '',
+  streetAddress: '',
   shippingAddress: '',
   paymentMethod: 'BANK_TRANSFER',
   note: ''
 })
+
+// Formatted full address preview
+const formattedShippingAddress = computed(() => {
+  const parts = []
+  if (form.streetAddress && form.streetAddress.trim()) {
+    parts.push(form.streetAddress.trim())
+  }
+  if (form.wardName) parts.push(form.wardName)
+  if (form.districtName) parts.push(form.districtName)
+  if (form.provinceName) parts.push(form.provinceName)
+  return parts.join(', ')
+})
+
+const updateFullShippingAddress = () => {
+  form.shippingAddress = formattedShippingAddress.value
+}
+
+// Fetch Vietnam provinces on mount
+const loadProvinces = async () => {
+  loadingProvinces.value = true
+  try {
+    provinces.value = await vnAddressService.getProvinces()
+  } catch (err) {
+    console.error('Lỗi khi tải danh sách Tỉnh/Thành phố:', err)
+  } finally {
+    loadingProvinces.value = false
+  }
+}
+
+// Cascade handlers
+const handleProvinceChange = async (val) => {
+  form.districtCode = null
+  form.wardCode = null
+  form.districtName = ''
+  form.wardName = ''
+  districts.value = []
+  wards.value = []
+
+  const selected = provinces.value.find(p => p.code === val)
+  form.provinceName = selected ? selected.name : ''
+  updateFullShippingAddress()
+
+  if (val) {
+    loadingDistricts.value = true
+    try {
+      districts.value = await vnAddressService.getDistricts(val)
+    } catch (err) {
+      console.error('Lỗi tải danh sách Quận/Huyện:', err)
+    } finally {
+      loadingDistricts.value = false
+    }
+  }
+}
+
+const handleDistrictChange = async (val) => {
+  form.wardCode = null
+  form.wardName = ''
+  wards.value = []
+
+  const selected = districts.value.find(d => d.code === val)
+  form.districtName = selected ? selected.name : ''
+  updateFullShippingAddress()
+
+  if (val) {
+    loadingWards.value = true
+    try {
+      wards.value = await vnAddressService.getWards(val)
+    } catch (err) {
+      console.error('Lỗi tải danh sách Phường/Xã:', err)
+    } finally {
+      loadingWards.value = false
+    }
+  }
+}
+
+const handleWardChange = (val) => {
+  const selected = wards.value.find(w => w.code === val)
+  form.wardName = selected ? selected.name : ''
+  updateFullShippingAddress()
+}
 
 const fillCustomerFromAuth = () => {
   if (authStore.isAuthenticated && authStore.user) {
     if (authStore.user.fullName && !form.customerName) form.customerName = authStore.user.fullName
     if (authStore.user.phone && !form.customerPhone) form.customerPhone = authStore.user.phone
     if (authStore.user.email && !form.customerEmail) form.customerEmail = authStore.user.email
+    if (authStore.user.address && !form.streetAddress && !form.provinceCode) {
+      form.streetAddress = authStore.user.address
+      form.shippingAddress = authStore.user.address
+    }
+  }
+}
+
+const enrichCartThumbnails = async () => {
+  let changed = false
+  for (const item of cartStore.items) {
+    if ((!item.thumbnailUrl && !item.imageUrl) && item.productId) {
+      try {
+        const res = await storeService.getProductDetail(item.productId)
+        const p = res?.data
+        const img = p?.thumbnailUrl || (p?.imageUrls && p.imageUrls[0]) || ''
+        if (img) {
+          item.thumbnailUrl = img
+          item.imageUrl = img
+          changed = true
+        }
+      } catch (err) {
+        console.error('Không thể đồng bộ ảnh sản phẩm:', item.productId, err)
+      }
+    }
+  }
+  if (changed) {
+    localStorage.setItem('sneakerhub_cart', JSON.stringify(cartStore.items))
   }
 }
 
 onMounted(() => {
+  loadProvinces()
   fillCustomerFromAuth()
+  enrichCartThumbnails()
 })
 
 watch(() => authStore.isAuthenticated, () => {
@@ -283,7 +485,10 @@ const rules = {
     { required: true, message: 'Vui lòng nhập số điện thoại', trigger: 'blur' },
     { pattern: /^[0-9]{9,11}$/, message: 'Số điện thoại không đúng định dạng', trigger: 'blur' }
   ],
-  shippingAddress: [{ required: true, message: 'Vui lòng nhập địa chỉ nhận hàng', trigger: 'blur' }]
+  provinceCode: [{ required: true, message: 'Vui lòng chọn Tỉnh / Thành phố', trigger: 'change' }],
+  districtCode: [{ required: true, message: 'Vui lòng chọn Quận / Huyện', trigger: 'change' }],
+  wardCode: [{ required: true, message: 'Vui lòng chọn Phường / Xã', trigger: 'change' }],
+  streetAddress: [{ required: true, message: 'Vui lòng nhập số nhà, tên đường cụ thể', trigger: 'blur' }]
 }
 
 const finalTotal = computed(() => {
@@ -314,13 +519,20 @@ const submitOrder = async () => {
       return
     }
 
+    updateFullShippingAddress()
+    const finalAddress = formattedShippingAddress.value || form.shippingAddress
+
     submitting.value = true
     try {
       const payload = {
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         customerEmail: form.customerEmail || null,
-        shippingAddress: form.shippingAddress,
+        shippingAddress: finalAddress,
+        provinceName: form.provinceName || null,
+        districtName: form.districtName || null,
+        wardName: form.wardName || null,
+        streetAddress: form.streetAddress || null,
         paymentMethod: form.paymentMethod,
         note: form.note || null,
         items: cartStore.items.map(item => ({
@@ -450,6 +662,11 @@ const submitOrder = async () => {
   padding: 28px;
   margin-bottom: 28px;
 
+  @media (max-width: 600px) {
+    padding: 18px 14px;
+    margin-bottom: 20px;
+  }
+
   .box-header {
     display: flex;
     justify-content: space-between;
@@ -577,6 +794,18 @@ const submitOrder = async () => {
         width: 100%;
         height: 100%;
         object-fit: contain;
+      }
+
+      .item-visual-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #94a3b8;
+        font-weight: 800;
+        font-size: 13px;
       }
     }
 
@@ -708,6 +937,54 @@ const submitOrder = async () => {
     }
   }
 
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+
+  .address-preview-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #000000;
+    margin-bottom: 22px;
+
+    .preview-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .preview-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+
+      .preview-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+      }
+
+      .preview-address {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.4;
+      }
+    }
+  }
+
   .payment-selection {
     margin-top: 24px;
     padding-top: 20px;
@@ -804,6 +1081,11 @@ const submitOrder = async () => {
   background: #fafafa;
   border: 1px solid #ebebeb;
   padding: 30px 28px;
+
+  @media (max-width: 600px) {
+    padding: 20px 16px;
+    position: static;
+  }
 
   .summary-heading {
     font-size: 14px;

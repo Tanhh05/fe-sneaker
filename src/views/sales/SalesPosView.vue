@@ -161,15 +161,18 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="Chọn" width="75" align="center">
+            <el-table-column label="Chọn" width="65" align="center">
               <template #default="{ row }">
-                <button
-                  class="pos-add-btn"
-                  :disabled="row.availableQuantity <= 0"
-                  @click="addVariantToCart(row)"
-                >
-                  + Chọn
-                </button>
+                <div class="row-actions">
+                  <button
+                    class="action-btn primary"
+                    :disabled="row.availableQuantity <= 0"
+                    title="Thêm vào đơn hàng"
+                    @click="addVariantToCart(row)"
+                  >
+                    <el-icon><Plus /></el-icon>
+                  </button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -341,7 +344,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Delete } from '@element-plus/icons-vue'
+import { Search, Delete, Plus } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 import { productService } from '@/services/productService'
 import { customerService } from '@/services/customerService'

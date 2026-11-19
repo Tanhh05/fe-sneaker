@@ -86,12 +86,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canManageUsers" label="Thao tác" width="150" fixed="right" align="center">
+        <el-table-column v-if="canManageUsers" label="Thao tác" width="85" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openEdit(row)">
+              <button class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
-                <span>Sửa</span>
               </button>
               <button
                 v-if="row.status === 'ACTIVE'"
@@ -101,15 +100,14 @@
                 @click="handleToggleStatus(row, 'LOCKED')"
               >
                 <el-icon><Lock /></el-icon>
-                <span>Khóa</span>
               </button>
               <button
                 v-else
                 class="action-btn"
+                title="Mở khóa tài khoản"
                 @click="handleToggleStatus(row, 'ACTIVE')"
               >
                 <el-icon><Unlock /></el-icon>
-                <span>Mở</span>
               </button>
             </div>
           </template>

@@ -8,6 +8,15 @@
           <span class="ticker-text">CAM KẾT 100% CHÍNH HÃNG • MIỄN PHÍ VẬN CHUYỂN ĐƠN TỪ 1.000.000₫ • ĐỔI TRẢ TRONG 7 NGÀY</span>
         </div>
         <div class="announcement-links">
+          <router-link to="/my-orders" class="top-nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+              <path d="m3.3 7 8.7 5 8.7-5"></path>
+              <path d="M12 22V12"></path>
+            </svg>
+            Đơn của tôi
+          </router-link>
+          <span class="top-nav-sep">•</span>
           <router-link to="/tracking" class="top-nav-link">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="1" y="3" width="15" height="13"></rect>
@@ -37,22 +46,36 @@
     <!-- Main Navigation Header -->
     <header class="store-header" :class="{ 'scrolled': isScrolled }">
       <div class="layout-container header-container">
-        <!-- Brand Logo -->
-        <router-link to="/" class="store-logo">
-          <span class="logo-mark">S</span>
-          <div class="logo-text">
-            <span class="brand-title">SNEAKERHUB</span>
-            <span class="brand-sub">ARCHIVE & STREETWEAR</span>
-          </div>
-        </router-link>
+        <!-- Left: Hamburger (Mobile/Tablet) + Brand Logo -->
+        <div class="header-left">
+          <button class="mobile-menu-btn" @click="mobileMenuOpen = true" aria-label="Mở menu">
+            <svg class="hamburger-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
 
-        <!-- Center Nav Links -->
+          <!-- Brand Logo -->
+          <router-link to="/" class="store-logo">
+            <span class="logo-mark">S</span>
+            <div class="logo-text">
+              <span class="brand-title">SNEAKERHUB</span>
+              <span class="brand-sub">ARCHIVE & STREETWEAR</span>
+            </div>
+          </router-link>
+        </div>
+
+        <!-- Center Nav Links (Desktop) -->
         <nav class="nav-links">
           <router-link to="/" class="nav-item" exact-active-class="active">
             Trang chủ
           </router-link>
           <router-link to="/shop" class="nav-item" active-class="active">
             Bộ sưu tập
+          </router-link>
+          <router-link to="/my-orders" class="nav-item my-orders-nav-btn" active-class="active">
+            Đơn hàng của tôi
           </router-link>
           <button class="nav-item wishlist-nav-btn" @click="showWishlist = true">
             Yêu thích
@@ -68,8 +91,8 @@
 
         <!-- Right Utilities -->
         <div class="header-actions">
-          <!-- Search Bar -->
-          <div class="search-wrap">
+          <!-- Desktop Search Bar -->
+          <div class="search-wrap desktop-search">
             <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -82,6 +105,14 @@
               class="search-input"
             />
           </div>
+
+          <!-- Mobile Search Trigger Button -->
+          <button class="mobile-search-trigger" @click="mobileSearchOpen = !mobileSearchOpen" aria-label="Tìm kiếm">
+            <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
 
           <!-- Wishlist Trigger -->
           <button class="wishlist-trigger" @click="showWishlist = true" aria-label="Sản phẩm yêu thích" title="Danh sách yêu thích">
@@ -97,20 +128,51 @@
           </button>
 
           <!-- Account / User Auth Trigger -->
-          <button class="account-trigger" @click="openAuthModal('login')" aria-label="Tài khoản">
-            <template v-if="authStore.isAuthenticated">
+          <el-dropdown v-if="authStore.isAuthenticated" trigger="click" @command="handleUserMenuCommand">
+            <button class="account-trigger" aria-label="Tài khoản">
               <span class="user-avatar-mini">{{ userInitials }}</span>
               <span class="user-name-short">{{ authStore.user?.fullName?.split(' ').slice(-1)[0] || authStore.user?.username }}</span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu class="store-user-dropdown">
+                <div class="dropdown-user-header">
+                  <strong>{{ authStore.user?.fullName || authStore.user?.username }}</strong>
+                  <span class="dropdown-user-sub">{{ authStore.user?.phone || authStore.user?.email || "Thành viên SneakerHub" }}</span>
+                </div>
+                <el-dropdown-item command="my-orders" divided>
+                  <el-icon><Tickets /></el-icon>
+                  <span>Đơn hàng của tôi</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="wishlist">
+                  <el-icon><Star /></el-icon>
+                  <span>Sản phẩm yêu thích ({{ wishlistStore.count }})</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="tracking">
+                  <el-icon><Search /></el-icon>
+                  <span>Tra cứu mã vận đơn</span>
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isStaffOrAdmin" command="admin">
+                  <el-icon><Setting /></el-icon>
+                  <span>Kênh quản trị (Admin / POS)</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>
+                  <span>Thông tin tài khoản</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="logout" divided class="text-danger">
+                  <el-icon><SwitchButton /></el-icon>
+                  <span>Đăng xuất</span>
+                </el-dropdown-item>
+              </el-dropdown-menu>
             </template>
-            <template v-else>
-              <svg class="account-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <span class="account-lbl">TÀI KHOẢN</span>
-            </template>
+          </el-dropdown>
+          <button v-else class="account-trigger" @click="openAuthModal('login')" aria-label="Tài khoản">
+            <svg class="account-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="account-lbl">TÀI KHOẢN</span>
           </button>
-
           <!-- Bag / Cart -->
           <router-link to="/cart" class="cart-trigger" aria-label="Giỏ hàng">
             <div class="bag-icon-box">
@@ -127,6 +189,26 @@
               <span class="bag-price">{{ formatCurrency(cartStore.totalPrice) }}</span>
             </div>
           </router-link>
+        </div>
+      </div>
+
+      <!-- Expandable Mobile Search Bar -->
+      <div v-if="mobileSearchOpen" class="mobile-search-dropdown">
+        <div class="layout-container mobile-search-row">
+          <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            v-model="searchKeyword"
+            placeholder="Tìm Nike, Jordan, Samba..."
+            @keyup.enter="handleSearch"
+            class="mobile-search-input"
+            autofocus
+          />
+          <button class="btn-search-exec" @click="handleSearch">TÌM</button>
+          <button class="btn-close-search" @click="mobileSearchOpen = false">✕</button>
         </div>
       </div>
     </header>
@@ -229,6 +311,83 @@
 
     <!-- Wishlist Drawer -->
     <WishlistDrawer v-model="showWishlist" />
+
+    <!-- Mobile Navigation Drawer -->
+    <el-drawer
+      v-model="mobileMenuOpen"
+      direction="left"
+      size="300px"
+      :with-header="false"
+      class="mobile-nav-drawer"
+    >
+      <div class="mobile-drawer-inner">
+        <div class="drawer-header">
+          <div class="store-logo">
+            <span class="logo-mark">S</span>
+            <div class="logo-text">
+              <span class="brand-title">SNEAKERHUB</span>
+              <span class="brand-sub">ARCHIVE & STREETWEAR</span>
+            </div>
+          </div>
+          <button class="btn-drawer-close" @click="mobileMenuOpen = false">✕</button>
+        </div>
+
+        <!-- User info or login banner -->
+        <div v-if="authStore.isAuthenticated" class="drawer-user-box">
+          <div class="user-chip-avatar">{{ userInitials }}</div>
+          <div class="user-chip-info">
+            <strong>{{ authStore.user?.fullName || authStore.user?.username }}</strong>
+            <span>{{ authStore.user?.phone || authStore.user?.email || 'Thành viên SneakerHub' }}</span>
+          </div>
+        </div>
+        <div v-else class="drawer-guest-box" @click="openAuthModal('login'); mobileMenuOpen = false">
+          <div>
+            <strong>Đăng nhập / Đăng ký</strong>
+            <span>Tích điểm & quản lý đơn hàng</span>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+
+        <!-- Links List -->
+        <nav class="drawer-nav-items">
+          <router-link to="/" class="drawer-item" @click="mobileMenuOpen = false">
+            <span>Trang chủ</span>
+            <span class="arrow">→</span>
+          </router-link>
+          <router-link to="/shop" class="drawer-item" @click="mobileMenuOpen = false">
+            <span>Bộ sưu tập Sneaker</span>
+            <span class="arrow">→</span>
+          </router-link>
+          <router-link to="/my-orders" class="drawer-item" @click="mobileMenuOpen = false">
+            <span>Đơn hàng của tôi</span>
+            <span class="arrow">→</span>
+          </router-link>
+          <button class="drawer-item as-button" @click="showWishlist = true; mobileMenuOpen = false">
+            <span>Sản phẩm yêu thích</span>
+            <span class="badge" v-if="wishlistStore.count > 0">{{ wishlistStore.count }}</span>
+          </button>
+          <router-link to="/tracking" class="drawer-item" @click="mobileMenuOpen = false">
+            <span>Tra cứu vận đơn</span>
+            <span class="arrow">→</span>
+          </router-link>
+          <button class="drawer-item as-button" @click="showSizeGuide = true; mobileMenuOpen = false">
+            <span>Bảng quy đổi Size giày</span>
+            <span class="arrow">→</span>
+          </button>
+          <router-link v-if="isStaffOrAdmin" to="/dashboard" class="drawer-item admin" @click="mobileMenuOpen = false">
+            <span>⚡ Kênh Quản trị (Admin / POS)</span>
+            <span class="arrow">→</span>
+          </router-link>
+        </nav>
+
+        <div class="drawer-footer-row" v-if="authStore.isAuthenticated">
+          <button class="btn-drawer-logout" @click="authStore.logout(); mobileMenuOpen = false">
+            <el-icon><SwitchButton /></el-icon>
+            <span>Đăng xuất tài khoản</span>
+          </button>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -239,6 +398,8 @@ import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import { useWishlistStore } from '@/stores/wishlist'
 import { formatCurrency } from '@/utils/formatters'
+import { ElMessage } from 'element-plus'
+import { Tickets, Star, Search, Setting, User, SwitchButton } from '@element-plus/icons-vue'
 import ClientAuthModal from '@/components/store/ClientAuthModal.vue'
 import WishlistDrawer from '@/components/store/WishlistDrawer.vue'
 
@@ -251,6 +412,8 @@ const searchKeyword = ref('')
 const isScrolled = ref(false)
 const showSizeGuide = ref(false)
 const showWishlist = ref(false)
+const mobileMenuOpen = ref(false)
+const mobileSearchOpen = ref(false)
 const authModalVisible = ref(false)
 const authModalTab = ref('login')
 
@@ -264,6 +427,23 @@ const userInitials = computed(() => {
 const openAuthModal = (tab = 'login') => {
   authModalTab.value = tab
   authModalVisible.value = true
+}
+
+const handleUserMenuCommand = (command) => {
+  if (command === 'my-orders') {
+    router.push('/my-orders')
+  } else if (command === 'wishlist') {
+    showWishlist.value = true
+  } else if (command === 'tracking') {
+    router.push('/tracking')
+  } else if (command === 'admin') {
+    router.push('/dashboard')
+  } else if (command === 'profile') {
+    openAuthModal('login')
+  } else if (command === 'logout') {
+    authStore.logout()
+    ElMessage.success('Đã đăng xuất tài khoản')
+  }
 }
 
 const sizeGuideData = [
@@ -309,12 +489,20 @@ onUnmounted(() => {
   color: #0a0a0a;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .layout-container {
   max-width: 1360px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 28px;
+
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
 }
 
 /* Announcement Ticker */
@@ -325,6 +513,7 @@ onUnmounted(() => {
   letter-spacing: 0.04em;
   padding: 8px 0;
   border-bottom: 1px solid #1a1a1a;
+  width: 100%;
 
   .announcement-content {
     display: flex;
@@ -345,6 +534,7 @@ onUnmounted(() => {
       padding: 2px 6px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
 
     .ticker-text {
@@ -407,6 +597,7 @@ onUnmounted(() => {
   background: #ffffff;
   border-bottom: 1px solid #ebebeb;
   transition: all 0.25s ease;
+  width: 100%;
 
   &.scrolled {
     background: rgba(255, 255, 255, 0.95);
@@ -423,6 +614,122 @@ onUnmounted(() => {
   }
 }
 
+/* Header Left: Hamburger + Logo */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: 1px solid #e5e5e5;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #000000;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  .hamburger-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+}
+
+.mobile-search-trigger {
+  display: none;
+  background: none;
+  border: 1px solid #e5e5e5;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #000000;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  .search-svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+}
+
+/* Mobile search dropdown */
+.mobile-search-dropdown {
+  background: #ffffff;
+  border-top: 1px solid #ebebeb;
+  border-bottom: 1px solid #000000;
+  padding: 10px 0;
+
+  .mobile-search-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .search-svg {
+      width: 16px;
+      height: 16px;
+      color: #737373;
+      flex-shrink: 0;
+    }
+
+    .mobile-search-input {
+      flex: 1;
+      height: 36px;
+      border: 1px solid #e5e5e5;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+
+      &:focus {
+        border-color: #000000;
+      }
+    }
+
+    .btn-search-exec {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #000000;
+      height: 36px;
+      padding: 0 14px;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    .btn-close-search {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #737373;
+      cursor: pointer;
+      padding: 0 4px;
+      &:hover {
+        color: #000000;
+      }
+    }
+  }
+}
+
 /* Brand Logo */
 .store-logo {
   display: flex;
@@ -430,6 +737,7 @@ onUnmounted(() => {
   gap: 10px;
   text-decoration: none;
   color: #000000;
+  flex-shrink: 0;
 
   .logo-mark {
     width: 34px;
@@ -442,6 +750,7 @@ onUnmounted(() => {
     font-weight: 900;
     font-size: 18px;
     letter-spacing: -0.05em;
+    flex-shrink: 0;
   }
 
   .logo-text {
@@ -925,4 +1234,375 @@ onUnmounted(() => {
     }
   }
 }
+
+.store-user-dropdown {
+  min-width: 230px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 6px 0;
+
+  .dropdown-user-header {
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 4px;
+
+    strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+
+    .dropdown-user-sub {
+      display: block;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      font-family: monospace;
+    }
+  }
+
+  :deep(.el-dropdown-menu__item) {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    gap: 8px;
+    color: #1e293b;
+
+    &:hover {
+      background: #000;
+      color: #fff;
+    }
+
+    &.text-danger {
+      color: #e11d48;
+      &:hover {
+        background: #e11d48;
+        color: #fff;
+      }
+    }
+  }
+}
+
+/* Mobile Nav Drawer */
+:deep(.mobile-nav-drawer) {
+  .el-drawer__body {
+    padding: 0 !important;
+  }
+}
+
+.mobile-drawer-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  color: #000000;
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #ebebeb;
+
+    .btn-drawer-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #737373;
+      padding: 4px;
+      &:hover {
+        color: #000000;
+      }
+    }
+  }
+
+  .drawer-user-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #fafafa;
+    border-bottom: 1px solid #ebebeb;
+
+    .user-chip-avatar {
+      width: 36px;
+      height: 36px;
+      background: #000000;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .user-chip-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+
+      strong {
+        font-size: 13px;
+        font-weight: 800;
+        color: #000000;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      span {
+        font-size: 11px;
+        color: #737373;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .drawer-guest-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #000000;
+    color: #ffffff;
+    cursor: pointer;
+
+    strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    span {
+      display: block;
+      font-size: 11px;
+      color: #a3a3a3;
+      margin-top: 2px;
+    }
+
+    .arrow {
+      font-size: 16px;
+      font-weight: 800;
+    }
+  }
+
+  .drawer-nav-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 20px;
+      text-decoration: none;
+      color: #171717;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #f5f5f5;
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+
+      .arrow {
+        color: #a3a3a3;
+        font-weight: 700;
+      }
+
+      .badge {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 10px;
+      }
+
+      &:hover,
+      &.router-link-active {
+        background: #f5f5f5;
+        color: #000000;
+        .arrow {
+          color: #000000;
+        }
+      }
+
+      &.admin {
+        color: #047857;
+        background: #ecfdf5;
+        margin-top: 6px;
+      }
+    }
+  }
+
+  .drawer-footer-row {
+    padding: 14px 20px;
+    border-top: 1px solid #ebebeb;
+
+    .btn-drawer-logout {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background: #ffffff;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+
+      &:hover {
+        background: #ef4444;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+/* RESPONSIVE MEDIA QUERIES (TABLET & MOBILE) */
+@media (max-width: 1024px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 10px;
+
+    .desktop-search {
+      .search-input {
+        width: 170px;
+        &:focus {
+          width: 200px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    padding: 0 16px;
+  }
+
+  .store-announcement {
+    padding: 6px 0;
+
+    .announcement-content {
+      justify-content: center;
+    }
+
+    .announcement-links {
+      display: none !important;
+    }
+
+    .announcement-ticker {
+      gap: 8px;
+
+      .ticker-text {
+        font-size: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 260px;
+      }
+    }
+  }
+
+  .store-header {
+    .header-container {
+      height: 56px;
+      gap: 8px;
+    }
+  }
+
+  .store-logo {
+    gap: 8px;
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      .brand-title {
+        font-size: 13px;
+        letter-spacing: 0.04em;
+      }
+      .brand-sub {
+        font-size: 8px;
+        letter-spacing: 0.1em;
+      }
+    }
+  }
+
+  .header-actions {
+    gap: 6px;
+
+    .desktop-search {
+      display: none !important;
+    }
+
+    .mobile-search-trigger {
+      display: flex;
+    }
+
+    .wishlist-trigger {
+      padding: 0;
+      width: 34px;
+      height: 34px;
+      justify-content: center;
+
+      .wishlist-lbl {
+        display: none !important;
+      }
+    }
+
+    .account-trigger {
+      padding: 0;
+      width: 34px;
+      height: 34px;
+      justify-content: center;
+
+      .account-lbl,
+      .user-name-short {
+        display: none !important;
+      }
+    }
+
+    .cart-trigger {
+      padding: 4px;
+
+      .bag-info {
+        display: none !important;
+      }
+    }
+  }
+}
+
 </style>

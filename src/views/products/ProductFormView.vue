@@ -84,16 +84,16 @@
               </div>
 
               <!-- Mini gallery thumbnail strip under big preview -->
-              <div v-if="form.imageUrls && form.imageUrls.length > 1" class="preview-thumbs-strip">
+              <div v-if="imageItems && imageItems.length > 1" class="preview-thumbs-strip">
                 <div
-                  v-for="(img, idx) in form.imageUrls"
-                  :key="idx"
+                  v-for="(item, idx) in imageItems"
+                  :key="item.id || idx"
                   class="strip-thumb"
-                  :class="{ active: currentPreviewUrl === img }"
-                  @click="activePreviewImage = img"
+                  :class="{ active: currentPreviewUrl === item.previewUrl }"
+                  @click="activePreviewImage = item.previewUrl"
                   :title="idx === 0 ? 'Ảnh đại diện chính' : `Ảnh góc chụp #${idx + 1}`"
                 >
-                  <img :src="img" alt="thumb" />
+                  <img :src="item.previewUrl" alt="thumb" />
                   <span v-if="idx === 0" class="strip-star-badge">★</span>
                 </div>
               </div>
@@ -125,12 +125,12 @@
               <div class="card-subtitle-row">
                 <div class="sub-label-with-badge">
                   <label class="card-sub-label">DANH SÁCH ẢNH SẢN PHẨM</label>
-                  <span v-if="form.imageUrls.length" class="minio-cloud-pill">
-                    {{ form.imageUrls.length }} ẢNH ĐÃ LƯU
+                  <span v-if="imageItems.length" class="minio-cloud-pill">
+                    {{ imageItems.length }} ẢNH {{ pendingCount > 0 ? `(${pendingCount} CHỜ LƯU)` : 'ĐÃ LƯU' }}
                   </span>
                 </div>
                 <button
-                  v-if="form.imageUrls.length"
+                  v-if="imageItems.length"
                   type="button"
                   class="btn-clear-img"
                   @click="clearAllImages"
@@ -169,7 +169,7 @@
                   </div>
                   <div class="dropzone-texts">
                     <strong class="dz-main">CHỌN ẢNH TỪ MÁY (NHIỀU ẢNH)</strong>
-                    <span class="dz-hint">Click hoặc kéo thả 1 hay nhiều ảnh cùng lúc</span>
+                    <span class="dz-hint">Click hoặc kéo thả 1 hay nhiều ảnh (chỉ upload MinIO khi ấn Lưu)</span>
                   </div>
                   <button type="button" class="btn-browse-file" @click.stop="triggerFileInput">
                     + THÊM ẢNH
@@ -178,18 +178,19 @@
               </div>
 
               <!-- Gallery Grid of Uploaded Images -->
-              <div v-if="form.imageUrls && form.imageUrls.length" class="uploaded-gallery-grid">
+              <div v-if="imageItems && imageItems.length" class="uploaded-gallery-grid">
                 <div
-                  v-for="(url, idx) in form.imageUrls"
-                  :key="idx"
+                  v-for="(item, idx) in imageItems"
+                  :key="item.id || idx"
                   class="gallery-item-card"
-                  :class="{ 'is-primary': idx === 0, 'is-viewing': currentPreviewUrl === url }"
+                  :class="{ 'is-primary': idx === 0, 'is-viewing': currentPreviewUrl === item.previewUrl }"
                 >
-                  <img :src="url" alt="shoe angle" class="gallery-item-img" @click="activePreviewImage = url" />
+                  <img :src="item.previewUrl" alt="shoe angle" class="gallery-item-img" @click="activePreviewImage = item.previewUrl" />
                   
                   <div class="gallery-item-badges">
                     <span v-if="idx === 0" class="primary-badge">★ ẢNH CHÍNH</span>
                     <span v-else class="index-badge">#{{ idx + 1 }}</span>
+                    <span v-if="item.isNew" class="pending-badge">CHỜ LƯU</span>
                   </div>
 
                   <div class="gallery-item-actions">
@@ -449,14 +450,17 @@ const fileInputRef = ref(null)
 const uploadingImage = ref(false)
 const isDragOver = ref(false)
 const activePreviewImage = ref('')
+const imageItems = ref([])
+
+const pendingCount = computed(() => imageItems.value.filter((i) => i.isNew).length)
 
 const isMinioUrl = computed(() => {
-  const url = form.thumbnailUrl || ''
+  const url = currentPreviewUrl.value || ''
   return url.includes(':9000') || url.includes('sneaker-products') || url.includes('/api/files')
 })
 
 const currentPreviewUrl = computed(() => {
-  return activePreviewImage.value || form.thumbnailUrl || (form.imageUrls && form.imageUrls[0]) || ''
+  return activePreviewImage.value || (imageItems.value[0] && imageItems.value[0].previewUrl) || ''
 })
 
 const isEdit = computed(() => !!route.params.id)
@@ -524,7 +528,7 @@ function triggerFileInput() {
 function handleFileInputChange(e) {
   const files = e.target?.files
   if (files && files.length > 0) {
-    uploadSelectedFiles(files)
+    queueSelectedFiles(files)
   }
   if (e.target) e.target.value = ''
 }
@@ -533,11 +537,11 @@ function handleDropFile(e) {
   isDragOver.value = false
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
-    uploadSelectedFiles(files)
+    queueSelectedFiles(files)
   }
 }
 
-async function uploadSelectedFiles(files) {
+function queueSelectedFiles(files) {
   if (!files || !files.length) return
   const validFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
   if (!validFiles.length) {
@@ -551,50 +555,50 @@ async function uploadSelectedFiles(files) {
     }
   }
 
-  uploadingImage.value = true
-  try {
-    const res = await fileService.uploadImages(validFiles)
-    const newUrls = (res || []).map((r) => r.url).filter(Boolean)
-    if (newUrls.length) {
-      form.imageUrls = [...form.imageUrls, ...newUrls]
-      if (!form.thumbnailUrl) {
-        form.thumbnailUrl = form.imageUrls[0]
-      }
-      activePreviewImage.value = newUrls[newUrls.length - 1]
-      imgError.value = false
-      ElMessage.success(`Đã lưu ${newUrls.length} ảnh vào MinIO thành công!`)
-    }
-  } catch (err) {
-    const msg = err.response?.data?.message || 'Không thể tải ảnh lên MinIO. Vui lòng kiểm tra lại kết nối!'
-    ElMessage.error(msg)
-  } finally {
-    uploadingImage.value = false
+  const newItems = validFiles.map((f) => ({
+    id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    file: f,
+    previewUrl: URL.createObjectURL(f),
+    isNew: true
+  }))
+
+  imageItems.value.push(...newItems)
+  if (!activePreviewImage.value && imageItems.value.length > 0) {
+    activePreviewImage.value = imageItems.value[0].previewUrl
+  } else if (newItems.length > 0) {
+    activePreviewImage.value = newItems[newItems.length - 1].previewUrl
   }
+  imgError.value = false
+  ElMessage.success(`Đã thêm ${newItems.length} ảnh xem trước (chỉ upload MinIO khi ấn Lưu)!`)
 }
 
 function setAsPrimary(index) {
-  if (index <= 0 || index >= form.imageUrls.length) return
-  const item = form.imageUrls.splice(index, 1)[0]
-  form.imageUrls.unshift(item)
-  form.thumbnailUrl = item
-  activePreviewImage.value = item
+  if (index <= 0 || index >= imageItems.value.length) return
+  const item = imageItems.value.splice(index, 1)[0]
+  imageItems.value.unshift(item)
+  activePreviewImage.value = item.previewUrl
   ElMessage.success('Đã đặt làm ảnh chính sản phẩm!')
 }
 
 function removeImage(index) {
-  const removed = form.imageUrls.splice(index, 1)[0]
-  if (form.thumbnailUrl === removed) {
-    form.thumbnailUrl = form.imageUrls[0] || ''
+  if (index < 0 || index >= imageItems.value.length) return
+  const removed = imageItems.value.splice(index, 1)[0]
+  if (removed.isNew && removed.previewUrl.startsWith('blob:')) {
+    URL.revokeObjectURL(removed.previewUrl)
   }
-  if (activePreviewImage.value === removed) {
-    activePreviewImage.value = form.thumbnailUrl || ''
+  if (activePreviewImage.value === removed.previewUrl) {
+    activePreviewImage.value = (imageItems.value[0] && imageItems.value[0].previewUrl) || ''
   }
   ElMessage.info('Đã xóa 1 ảnh')
 }
 
 function clearAllImages() {
-  form.imageUrls = []
-  form.thumbnailUrl = ''
+  imageItems.value.forEach((item) => {
+    if (item.isNew && item.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(item.previewUrl)
+    }
+  })
+  imageItems.value = []
   activePreviewImage.value = ''
   imgError.value = false
   ElMessage.info('Đã xóa toàn bộ ảnh sản phẩm')
@@ -642,15 +646,14 @@ async function loadInitialData() {
       form.description = p.description || ''
       
       // Load multiple images
-      if (p.imageUrls && p.imageUrls.length) {
-        form.imageUrls = [...p.imageUrls]
-      } else if (p.thumbnailUrl) {
-        form.imageUrls = [p.thumbnailUrl]
-      } else {
-        form.imageUrls = []
-      }
-      form.thumbnailUrl = p.thumbnailUrl || (form.imageUrls[0] || '')
-      activePreviewImage.value = form.thumbnailUrl
+      const rawImages = (p.imageUrls && p.imageUrls.length) ? p.imageUrls : (p.thumbnailUrl ? [p.thumbnailUrl] : [])
+      imageItems.value = rawImages.map((url, i) => ({
+        id: `existing-${i}-${Date.now()}`,
+        file: null,
+        previewUrl: url,
+        isNew: false
+      }))
+      activePreviewImage.value = imageItems.value[0]?.previewUrl || ''
 
       form.importPrice = Number(p.importPrice) || 0
       form.salePrice = Number(p.salePrice) || 0
@@ -678,11 +681,40 @@ async function submitForm() {
 
     saving.value = true
     try {
-      const finalThumb = form.thumbnailUrl || (form.imageUrls && form.imageUrls[0]) || ''
+      // Step 1: Upload pending local files to MinIO
+      const pendingItems = imageItems.value.filter((i) => i.isNew && i.file)
+      if (pendingItems.length > 0) {
+        uploadingImage.value = true
+        ElMessage.info(`Đang tải ${pendingItems.length} ảnh lên máy chủ MinIO S3...`)
+        const filesToUpload = pendingItems.map((i) => i.file)
+        const uploadResults = await fileService.uploadImages(filesToUpload)
+        
+        let resIdx = 0
+        for (const item of imageItems.value) {
+          if (item.isNew && item.file) {
+            const uploaded = uploadResults[resIdx]
+            if (uploaded && uploaded.url) {
+              if (item.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(item.previewUrl)
+              }
+              item.previewUrl = uploaded.url
+              item.isNew = false
+              item.file = null
+            }
+            resIdx++
+          }
+        }
+        uploadingImage.value = false
+      }
+
+      // Step 2: Extract final MinIO URLs
+      const finalImageUrls = imageItems.value.map((i) => i.previewUrl).filter(Boolean)
+      const finalThumb = finalImageUrls[0] || ''
+
       const payload = {
         ...form,
         thumbnailUrl: finalThumb,
-        imageUrls: form.imageUrls && form.imageUrls.length ? form.imageUrls : (finalThumb ? [finalThumb] : [])
+        imageUrls: finalImageUrls
       }
 
       if (isEdit.value) {
@@ -695,8 +727,10 @@ async function submitForm() {
 
       router.push('/products')
     } catch (err) {
-      // Error handled by api interceptor
+      const msg = err.response?.data?.message || 'Có lỗi xảy ra trong quá trình lưu sản phẩm!'
+      ElMessage.error(msg)
     } finally {
+      uploadingImage.value = false
       saving.value = false
     }
   })
@@ -1268,6 +1302,9 @@ onMounted(() => {
         top: 4px;
         left: 4px;
         z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 3px;
 
         .primary-badge {
           background: #000000;
@@ -1283,6 +1320,15 @@ onMounted(() => {
           color: #ffffff;
           font-size: 8px;
           font-weight: 700;
+          padding: 1px 4px;
+        }
+
+        .pending-badge {
+          background: #f59e0b;
+          color: #000000;
+          font-size: 8px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
           padding: 1px 4px;
         }
       }

@@ -21,6 +21,15 @@ export const storeService = {
   },
   trackOrder(code, phone) {
     return api.get('/store/orders/track', { params: { code, phone } })
+  },
+  getMyOrders(params = {}) {
+    return api.get('/store/my-orders', { params })
+  },
+  getMyOrderDetail(orderCode, phone) {
+    return api.get(`/store/my-orders/${orderCode}`, { params: { phone } })
+  },
+  cancelMyOrder(orderCode, payload = {}) {
+    return api.post(`/store/my-orders/${orderCode}/cancel`, payload)
   }
 }
 

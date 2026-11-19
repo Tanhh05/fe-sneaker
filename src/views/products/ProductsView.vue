@@ -85,16 +85,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="115" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openDetail(row)">
+              <button class="action-btn" title="Xem chi tiết" @click="openDetail(row)">
                 <el-icon><View /></el-icon>
-                <span>Chi tiết</span>
               </button>
-              <button v-if="canManageCatalog" class="action-btn" @click="openEdit(row)">
+              <button v-if="canManageCatalog" class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                 <el-icon><Edit /></el-icon>
-                <span>Sửa</span>
               </button>
               <el-dropdown
                 v-if="canManageCatalog && row.status === 'ACTIVE'"
@@ -115,6 +113,15 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
+              <button
+                v-else-if="canManageCatalog"
+                type="button"
+                class="action-btn action-more is-disabled"
+                disabled
+                title="Sản phẩm đã ngừng kinh doanh"
+              >
+                <el-icon><MoreFilled /></el-icon>
+              </button>
             </div>
           </template>
         </el-table-column>

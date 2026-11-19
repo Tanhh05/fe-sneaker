@@ -81,17 +81,15 @@
           </template>
         </el-table-column>
         <el-table-column prop="note" label="Ghi chú" min-width="180" show-overflow-tooltip />
-        <el-table-column label="Thao tác" width="210" fixed="right" align="center">
+        <el-table-column label="Thao tác" width="115" fixed="right" align="center">
           <template #default="{ row }">
             <div class="row-actions">
-              <button class="action-btn" @click="openDetail(row)">
+              <button class="action-btn" title="Xem chi tiết" @click="openDetail(row)">
                 <el-icon><View /></el-icon>
-                <span>Chi tiết</span>
               </button>
               <template v-if="row.status === 'DRAFT'">
-                <button class="action-btn" @click="openEdit(row)">
+                <button class="action-btn" title="Chỉnh sửa" @click="openEdit(row)">
                   <el-icon><Edit /></el-icon>
-                  <span>Sửa</span>
                 </button>
                 <el-dropdown
                   trigger="click"
@@ -111,6 +109,14 @@
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
+              </template>
+              <template v-else>
+                <button class="action-btn is-disabled" disabled title="Phiếu đã xác nhận hoặc đã hủy, không thể chỉnh sửa">
+                  <el-icon><Edit /></el-icon>
+                </button>
+                <button class="action-btn action-more is-disabled" disabled title="Không có thao tác khả dụng">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
               </template>
             </div>
           </template>
