@@ -62,23 +62,54 @@
             </div>
           </div>
 
-          <!-- Quick Image URL Input & Presets -->
+          <!-- File Upload to MinIO & Image Input -->
           <div class="media-input-box">
             <div class="field-title-row">
-              <label class="field-label">URL Ảnh đại diện</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label class="field-label">Ảnh đại diện sản phẩm</label>
+                <el-tag v-if="isMinioUrl" size="small" type="success" effect="dark" style="font-size: 9px; height: 18px; padding: 0 4px;">MINIO</el-tag>
+              </div>
               <button
                 v-if="form.thumbnailUrl"
                 type="button"
                 class="text-action-btn"
-                @click="form.thumbnailUrl = ''; imgError = false"
+                @click="clearImage"
               >
                 Xóa ảnh
               </button>
             </div>
+
+            <!-- Upload Dropzone -->
+            <div
+              class="dialog-upload-box"
+              :class="{ 'is-dragover': isDragOver, 'is-uploading': uploadingImage }"
+              @dragover.prevent="isDragOver = true"
+              @dragleave.prevent="isDragOver = false"
+              @drop.prevent="handleDropFile"
+              @click="triggerFileInput"
+            >
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleFileInputChange"
+              />
+              <div v-if="uploadingImage" style="padding: 6px 0; text-align: center;">
+                <el-icon class="is-loading" :size="20"><Loading /></el-icon>
+                <span style="font-size: 11px; font-weight: bold; margin-left: 6px;">Đang lưu ảnh vào MinIO...</span>
+              </div>
+              <div v-else style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <el-icon :size="18"><UploadFilled /></el-icon>
+                <span style="font-size: 11px; font-weight: 700;">CHỌN ẢNH TỪ MÁY HOẶC KÉO THẢ VÀO ĐÂY</span>
+              </div>
+            </div>
+
             <el-input
               v-model="form.thumbnailUrl"
-              placeholder="https://images.unsplash.com/..."
+              placeholder="http://localhost:9000/sneaker-products/..."
               clearable
+              size="small"
               @input="imgError = false"
             >
               <template #prefix>
@@ -299,8 +330,10 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { Picture, Link, Warning, Lightning, Check } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { Picture, Link, Warning, Lightning, Check, UploadFilled, Loading } from '@element-plus/icons-vue'
 import { formatCurrency } from '@/utils/formatters'
+import { fileService } from '@/services/fileService'
 
 const props = defineProps({
   modelValue: {
@@ -337,6 +370,60 @@ const emit = defineEmits(['update:modelValue', 'submit'])
 
 const formRef = ref(null)
 const imgError = ref(false)
+
+// MinIO upload state
+const fileInputRef = ref(null)
+const uploadingImage = ref(false)
+const isDragOver = ref(false)
+
+const isMinioUrl = computed(() => {
+  const url = form.thumbnailUrl || ''
+  return url.includes(':9000') || url.includes('sneaker-products') || url.includes('/api/files')
+})
+
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+function handleFileInputChange(e) {
+  const files = e.target?.files
+  if (files && files.length > 0) {
+    uploadSelectedFile(files[0])
+  }
+  if (e.target) e.target.value = ''
+}
+
+function handleDropFile(e) {
+  isDragOver.value = false
+  const files = e.dataTransfer?.files
+  if (files && files.length > 0) {
+    uploadSelectedFile(files[0])
+  }
+}
+
+async function uploadSelectedFile(file) {
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('Vui lòng chỉ chọn tệp hình ảnh (PNG, JPG, WEBP, GIF, SVG)!')
+    return
+  }
+  uploadingImage.value = true
+  try {
+    const res = await fileService.uploadImage(file)
+    form.thumbnailUrl = res.url
+    imgError.value = false
+    ElMessage.success(`Đã lưu ảnh "${file.name}" vào MinIO thành công!`)
+  } catch (err) {
+    ElMessage.error('Không thể tải ảnh lên MinIO')
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+function clearImage() {
+  form.thumbnailUrl = ''
+  imgError.value = false
+}
 
 const form = reactive({
   productCode: '',
@@ -715,6 +802,24 @@ async function handleSubmit() {
       &:hover {
         text-decoration: underline;
       }
+    }
+  }
+
+  .dialog-upload-box {
+    border: 1.5px dashed #000000;
+    background: #f8fafc;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+
+    &.is-dragover {
+      background: #e2e8f0;
+      border-style: solid;
     }
   }
 

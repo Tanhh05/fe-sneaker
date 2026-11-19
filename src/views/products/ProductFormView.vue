@@ -105,33 +105,96 @@
               </div>
             </div>
 
-            <!-- 2. Image URL Input & Studio Presets -->
+            <!-- 2. Image Upload from Computer to MinIO & Studio Presets -->
             <div class="presets-card">
               <div class="card-subtitle-row">
-                <label class="card-sub-label">ẢNH ĐẠI DIỆN SẢN PHẨM</label>
+                <div class="sub-label-with-badge">
+                  <label class="card-sub-label">ẢNH ĐẠI DIỆN SẢN PHẨM</label>
+                  <span v-if="isMinioUrl" class="minio-cloud-pill">MINIO S3 STORAGE</span>
+                </div>
                 <button
                   v-if="form.thumbnailUrl"
                   type="button"
                   class="btn-clear-img"
-                  @click="form.thumbnailUrl = ''; imgError = false"
+                  @click="clearImage"
                 >
                   Xóa ảnh
                 </button>
               </div>
 
-              <el-input
-                v-model="form.thumbnailUrl"
-                placeholder="https://images.unsplash.com/..."
-                clearable
-                @input="imgError = false"
+              <!-- Sleek Brutalist File Upload Dropzone -->
+              <div
+                class="upload-dropzone"
+                :class="{ 'is-dragover': isDragOver, 'is-uploading': uploadingImage }"
+                @dragover.prevent="isDragOver = true"
+                @dragleave.prevent="isDragOver = false"
+                @drop.prevent="handleDropFile"
+                @click="triggerFileInput"
               >
-                <template #prefix>
-                  <el-icon><Link /></el-icon>
-                </template>
-              </el-input>
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                  class="file-input-hidden"
+                  @change="handleFileInputChange"
+                />
+
+                <div v-if="uploadingImage" class="uploading-state">
+                  <el-icon class="is-loading" :size="30"><Loading /></el-icon>
+                  <span class="uploading-text">ĐANG TẢI ẢNH LÊN MINIO S3...</span>
+                  <span class="uploading-sub">Tự động khởi tạo &amp; lưu trữ đám mây</span>
+                </div>
+
+                <div v-else class="dropzone-idle">
+                  <div class="dropzone-icon-box">
+                    <el-icon :size="26"><UploadFilled /></el-icon>
+                  </div>
+                  <div class="dropzone-texts">
+                    <strong class="dz-main">CHỌN ẢNH TỪ TỆP MÁY TÍNH</strong>
+                    <span class="dz-hint">Kéo thả ảnh vào đây hoặc click để duyệt tệp</span>
+                  </div>
+                  <button type="button" class="btn-browse-file" @click.stop="triggerFileInput">
+                    DUYỆT TỆP
+                  </button>
+                </div>
+              </div>
+
+              <!-- Uploaded MinIO Information Box -->
+              <div v-if="form.thumbnailUrl" class="uploaded-minio-box">
+                <div class="minio-path-row">
+                  <span class="minio-lbl">ĐƯỜNG DẪN ẢNH HIỂN THỊ:</span>
+                  <span class="minio-url-display" :title="form.thumbnailUrl">{{ form.thumbnailUrl }}</span>
+                </div>
+                <div class="minio-actions-bar">
+                  <button type="button" class="btn-minio-action" @click="copyImageUrl" title="Sao chép đường dẫn">
+                    <el-icon><DocumentCopy /></el-icon>
+                    <span>Sao chép link</span>
+                  </button>
+                  <button type="button" class="btn-minio-action" @click="openImageInNewTab" title="Xem ảnh gốc">
+                    <el-icon><View /></el-icon>
+                    <span>Xem ảnh gốc</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Collapsible / Direct URL input fallback -->
+              <div class="url-manual-toggle">
+                <span class="manual-label">Hoặc sửa đường dẫn ảnh trực tiếp:</span>
+                <el-input
+                  v-model="form.thumbnailUrl"
+                  placeholder="http://localhost:9000/sneaker-products/..."
+                  clearable
+                  size="small"
+                  @input="imgError = false"
+                >
+                  <template #prefix>
+                    <el-icon><Link /></el-icon>
+                  </template>
+                </el-input>
+              </div>
 
               <div class="presets-gallery">
-                <span class="gallery-hint">Mẫu ảnh chụp studio có sẵn:</span>
+                <span class="gallery-hint">Hoặc chọn mẫu ảnh chụp studio có sẵn:</span>
                 <div class="preset-thumbs">
                   <button
                     v-for="(p, idx) in sampleImages"
@@ -383,11 +446,15 @@ import {
   Picture,
   Link,
   Warning,
-  Lightning
+  Lightning,
+  UploadFilled,
+  DocumentCopy,
+  View
 } from '@element-plus/icons-vue'
 import { productService } from '@/services/productService'
 import { brandService } from '@/services/brandService'
 import { categoryService } from '@/services/categoryService'
+import { fileService } from '@/services/fileService'
 import { formatCurrency } from '@/utils/formatters'
 
 const route = useRoute()
@@ -397,6 +464,17 @@ const formRef = ref(null)
 const loadingPage = ref(false)
 const saving = ref(false)
 const imgError = ref(false)
+
+// MinIO Image Upload state
+const fileInputRef = ref(null)
+const uploadingImage = ref(false)
+const isDragOver = ref(false)
+const uploadedFileInfo = ref(null)
+
+const isMinioUrl = computed(() => {
+  const url = form.thumbnailUrl || ''
+  return url.includes(':9000') || url.includes('sneaker-products') || url.includes('/api/files')
+})
 
 const isEdit = computed(() => !!route.params.id)
 const productId = computed(() => route.params.id)
@@ -518,6 +596,74 @@ function getCategoryName(catId) {
 function applyPreset(url) {
   form.thumbnailUrl = url
   imgError.value = false
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+function handleFileInputChange(e) {
+  const files = e.target?.files
+  if (files && files.length > 0) {
+    uploadSelectedFile(files[0])
+  }
+  if (e.target) e.target.value = ''
+}
+
+function handleDropFile(e) {
+  isDragOver.value = false
+  const files = e.dataTransfer?.files
+  if (files && files.length > 0) {
+    uploadSelectedFile(files[0])
+  }
+}
+
+async function uploadSelectedFile(file) {
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('Vui lòng chỉ chọn tệp hình ảnh (PNG, JPG, WEBP, GIF, SVG)!')
+    return
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    ElMessage.error('Kích thước ảnh vượt quá giới hạn 20MB!')
+    return
+  }
+
+  uploadingImage.value = true
+  try {
+    const res = await fileService.uploadImage(file)
+    form.thumbnailUrl = res.url
+    uploadedFileInfo.value = {
+      fileName: res.fileName,
+      originalName: file.name,
+      size: (file.size / 1024).toFixed(1) + ' KB'
+    }
+    imgError.value = false
+    ElMessage.success(`Đã lưu ảnh "${file.name}" vào MinIO thành công!`)
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Không thể tải ảnh lên MinIO. Vui lòng kiểm tra lại kết nối!'
+    ElMessage.error(msg)
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+function copyImageUrl() {
+  if (!form.thumbnailUrl) return
+  navigator.clipboard.writeText(form.thumbnailUrl)
+  ElMessage.success('Đã sao chép đường dẫn ảnh vào bộ nhớ tạm!')
+}
+
+function openImageInNewTab() {
+  if (!form.thumbnailUrl) return
+  window.open(form.thumbnailUrl, '_blank')
+}
+
+function clearImage() {
+  form.thumbnailUrl = ''
+  uploadedFileInfo.value = null
+  imgError.value = false
+  ElMessage.info('Đã xóa hình ảnh')
 }
 
 function appendMaterial(chip) {
@@ -951,14 +1097,30 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 
-    .card-sub-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+    .sub-label-with-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .card-sub-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .minio-cloud-pill {
+        background: #0f172a;
+        color: #38bdf8;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 2px 6px;
+        border-radius: 2px;
+      }
     }
 
     .btn-clear-img {
@@ -973,6 +1135,185 @@ onMounted(() => {
       &:hover {
         text-decoration: underline;
       }
+    }
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  .upload-dropzone {
+    border: 1.5px dashed #000000;
+    background: #f8fafc;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 12px;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #000000;
+    }
+
+    &.is-dragover {
+      background: #e2e8f0;
+      border-color: #000000;
+      border-style: solid;
+      transform: scale(1.01);
+    }
+
+    &.is-uploading {
+      cursor: wait;
+      background: #f8fafc;
+    }
+
+    .uploading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      text-align: center;
+
+      .uploading-text {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: 0.05em;
+        margin-top: 8px;
+      }
+
+      .uploading-sub {
+        font-size: 10px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+    }
+
+    .dropzone-idle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .dropzone-icon-box {
+        width: 42px;
+        height: 42px;
+        background: #000000;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .dropzone-texts {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+
+        .dz-main {
+          font-size: 11px;
+          font-weight: 900;
+          color: #000000;
+          letter-spacing: 0.03em;
+        }
+
+        .dz-hint {
+          font-size: 10px;
+          color: #64748b;
+          margin-top: 2px;
+          line-height: 1.3;
+        }
+      }
+
+      .btn-browse-file {
+        background: #ffffff;
+        border: 1px solid #000000;
+        color: #000000;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 5px 9px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.12s ease;
+
+        &:hover {
+          background: #000000;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .uploaded-minio-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #000000;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+
+    .minio-path-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 8px;
+
+      .minio-lbl {
+        font-size: 9px;
+        font-weight: 800;
+        color: #64748b;
+        letter-spacing: 0.05em;
+      }
+
+      .minio-url-display {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        color: #0f172a;
+        word-break: break-all;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        padding: 4px 8px;
+        line-height: 1.35;
+      }
+    }
+
+    .minio-actions-bar {
+      display: flex;
+      gap: 8px;
+
+      .btn-minio-action {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #334155;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        transition: all 0.12s ease;
+
+        &:hover {
+          background: #000000;
+          border-color: #000000;
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .url-manual-toggle {
+    margin-bottom: 12px;
+
+    .manual-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 4px;
     }
   }
 
