@@ -133,85 +133,17 @@
       </div>
     </div>
 
-    <!-- Modal Add / Edit Product -->
-    <el-dialog
+    <!-- Modern Designer Product Form Dialog -->
+    <ProductFormDialog
       v-model="dialogVisible"
-      :title="isEdit ? 'Cập nhật sản phẩm Sneaker' : 'Thêm sản phẩm Sneaker mới'"
-      width="680px"
-    >
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-        <el-row :gutter="14">
-          <el-col :span="8">
-            <el-form-item label="Mã sản phẩm" prop="productCode">
-              <el-input v-model="form.productCode" placeholder="VD: SP011" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="16">
-            <el-form-item label="Tên sản phẩm Sneaker" prop="productName">
-              <el-input v-model="form.productName" placeholder="VD: Nike Dunk Low Panda" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="14">
-          <el-col :span="12">
-            <el-form-item label="Thương hiệu" prop="brandId">
-              <el-select v-model="form.brandId" placeholder="Chọn thương hiệu" style="width: 100%">
-                <el-option v-for="b in brands" :key="b.id" :label="b.brandName" :value="b.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Danh mục" prop="categoryId">
-              <el-select v-model="form.categoryId" placeholder="Chọn danh mục" style="width: 100%">
-                <el-option v-for="c in categories" :key="c.id" :label="c.categoryName" :value="c.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="14">
-          <el-col :span="12">
-            <el-form-item label="Giá nhập cơ sở (VNĐ)" prop="importPrice">
-              <el-input-number v-model="form.importPrice" :min="0" :step="50000" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Giá bán niêm yết (VNĐ)" prop="salePrice">
-              <el-input-number v-model="form.salePrice" :min="0" :step="50000" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="14">
-          <el-col :span="16">
-            <el-form-item label="Chất liệu" prop="material">
-              <el-input v-model="form.material" placeholder="VD: Da thật cao cấp kết hợp đế cao su Air" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="Trạng thái kinh doanh" prop="status">
-              <el-select v-model="form.status" style="width: 100%">
-                <el-option label="Đang kinh doanh (ACTIVE)" value="ACTIVE" />
-                <el-option label="Ngừng kinh doanh (INACTIVE)" value="INACTIVE" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="URL Hình ảnh đại diện" prop="thumbnailUrl">
-          <el-input v-model="form.thumbnailUrl" placeholder="https://images.unsplash.com/..." />
-        </el-form-item>
-
-        <el-form-item label="Mô tả chi tiết" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="Mô tả phom dáng, công nghệ đệm, phối màu..." />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">Hủy</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm">Lưu sản phẩm</el-button>
-      </template>
-    </el-dialog>
+      :is-edit="isEdit"
+      :editing-id="editingId"
+      :initial-data="form"
+      :brands="brands"
+      :categories="categories"
+      :saving="saving"
+      @submit="handleSaveProduct"
+    />
 
     <!-- Product Detail & Variants Dialog -->
     <ProductDetailDialog
@@ -234,6 +166,7 @@ import { formatCurrency } from '@/utils/formatters'
 import { usePermission } from '@/composables/usePermission'
 import { useDebouncedWatch } from '@/composables/useDebounce'
 import ProductDetailDialog from './components/ProductDetailDialog.vue'
+import ProductFormDialog from './components/ProductFormDialog.vue'
 
 const router = useRouter()
 const { canManageCatalog } = usePermission()
@@ -269,7 +202,6 @@ useDebouncedWatch(
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref(null)
-const formRef = ref(null)
 
 const form = reactive({
   productCode: '',
@@ -283,15 +215,6 @@ const form = reactive({
   salePrice: 2950000,
   status: 'ACTIVE'
 })
-
-const rules = {
-  productCode: [{ required: true, message: 'Vui lòng nhập mã sản phẩm', trigger: 'blur' }],
-  productName: [{ required: true, message: 'Vui lòng nhập tên sản phẩm', trigger: 'blur' }],
-  brandId: [{ required: true, message: 'Vui lòng chọn thương hiệu', trigger: 'change' }],
-  categoryId: [{ required: true, message: 'Vui lòng chọn danh mục', trigger: 'change' }],
-  importPrice: [{ required: true, message: 'Vui lòng nhập giá nhập', trigger: 'blur' }],
-  salePrice: [{ required: true, message: 'Vui lòng nhập giá bán', trigger: 'blur' }]
-}
 
 const detailVisible = ref(false)
 const selectedProduct = ref(null)
@@ -375,29 +298,25 @@ function goToVariants() {
   router.push('/variants')
 }
 
-async function submitForm() {
-  if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-    saving.value = true
-    try {
-      const payload = {
-        ...form,
-        imageUrls: form.thumbnailUrl ? [form.thumbnailUrl] : []
-      }
-      if (isEdit.value) {
-        await productService.updateProduct(editingId.value, payload)
-        ElMessage.success('Cập nhật sản phẩm thành công')
-      } else {
-        await productService.createProduct(payload)
-        ElMessage.success('Thêm sản phẩm mới thành công')
-      }
-      dialogVisible.value = false
-      loadData()
-    } finally {
-      saving.value = false
+async function handleSaveProduct(payload) {
+  saving.value = true
+  try {
+    const finalPayload = {
+      ...payload,
+      imageUrls: payload.thumbnailUrl ? [payload.thumbnailUrl] : []
     }
-  })
+    if (isEdit.value) {
+      await productService.updateProduct(editingId.value, finalPayload)
+      ElMessage.success('Cập nhật thông tin sản phẩm thành công')
+    } else {
+      await productService.createProduct(finalPayload)
+      ElMessage.success('Khởi tạo sản phẩm Sneaker mới thành công')
+    }
+    dialogVisible.value = false
+    loadData()
+  } finally {
+    saving.value = false
+  }
 }
 
 function handleProductAction(cmd, row) {
