@@ -270,7 +270,7 @@ const regRules = {
 // GOOGLE OAUTH STATE & REAL API INTEGRATION
 const googleClientId =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '419627574811-tpt81mo08bmgj5i2mj8iodm7ijlk9kvj.apps.googleusercontent.com'
+  '419627574811-tpt81mo08bmgj5i2mj8iodm7jlk9kvj.apps.googleusercontent.com'
 
 let googleTokenClient = null
 
