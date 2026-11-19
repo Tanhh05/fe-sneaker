@@ -69,8 +69,8 @@
 
               <div class="showcase-media-box">
                 <img
-                  v-if="form.thumbnailUrl && !imgError"
-                  :src="form.thumbnailUrl"
+                  v-if="currentPreviewUrl && !imgError"
+                  :src="currentPreviewUrl"
                   alt="Sneaker preview"
                   class="showcase-img"
                   @error="imgError = true"
@@ -79,7 +79,22 @@
                 <div v-else class="showcase-placeholder">
                   <el-icon :size="48" class="ph-icon"><Picture /></el-icon>
                   <span class="ph-title">CHƯA CÓ HÌNH ẢNH</span>
-                  <span class="ph-desc">Dán URL ảnh hoặc chọn mẫu ảnh nhanh bên dưới</span>
+                  <span class="ph-desc">Chọn 1 hay nhiều tệp ảnh từ máy tính bên dưới</span>
+                </div>
+              </div>
+
+              <!-- Mini gallery thumbnail strip under big preview -->
+              <div v-if="form.imageUrls && form.imageUrls.length > 1" class="preview-thumbs-strip">
+                <div
+                  v-for="(img, idx) in form.imageUrls"
+                  :key="idx"
+                  class="strip-thumb"
+                  :class="{ active: currentPreviewUrl === img }"
+                  @click="activePreviewImage = img"
+                  :title="idx === 0 ? 'Ảnh đại diện chính' : `Ảnh góc chụp #${idx + 1}`"
+                >
+                  <img :src="img" alt="thumb" />
+                  <span v-if="idx === 0" class="strip-star-badge">★</span>
                 </div>
               </div>
 
@@ -105,24 +120,26 @@
               </div>
             </div>
 
-            <!-- 2. Image Upload from Computer to MinIO & Studio Presets -->
+            <!-- 2. Multiple Images Upload from Computer to MinIO -->
             <div class="presets-card">
               <div class="card-subtitle-row">
                 <div class="sub-label-with-badge">
-                  <label class="card-sub-label">ẢNH ĐẠI DIỆN SẢN PHẨM</label>
-                  <span v-if="isMinioUrl" class="minio-cloud-pill">MINIO S3 STORAGE</span>
+                  <label class="card-sub-label">DANH SÁCH ẢNH SẢN PHẨM</label>
+                  <span v-if="form.imageUrls.length" class="minio-cloud-pill">
+                    {{ form.imageUrls.length }} ẢNH ĐÃ LƯU
+                  </span>
                 </div>
                 <button
-                  v-if="form.thumbnailUrl"
+                  v-if="form.imageUrls.length"
                   type="button"
                   class="btn-clear-img"
-                  @click="clearImage"
+                  @click="clearAllImages"
                 >
-                  Xóa ảnh
+                  Xóa tất cả
                 </button>
               </div>
 
-              <!-- Sleek Brutalist File Upload Dropzone -->
+              <!-- Sleek Brutalist File Upload Dropzone (Supports Multiple) -->
               <div
                 class="upload-dropzone"
                 :class="{ 'is-dragover': isDragOver, 'is-uploading': uploadingImage }"
@@ -134,6 +151,7 @@
                 <input
                   ref="fileInputRef"
                   type="file"
+                  multiple
                   accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                   class="file-input-hidden"
                   @change="handleFileInputChange"
@@ -141,7 +159,7 @@
 
                 <div v-if="uploadingImage" class="uploading-state">
                   <el-icon class="is-loading" :size="30"><Loading /></el-icon>
-                  <span class="uploading-text">ĐANG TẢI ẢNH LÊN MINIO S3...</span>
+                  <span class="uploading-text">ĐANG TẢI CÁC ẢNH LÊN MINIO S3...</span>
                   <span class="uploading-sub">Tự động khởi tạo &amp; lưu trữ đám mây</span>
                 </div>
 
@@ -150,12 +168,49 @@
                     <el-icon :size="26"><UploadFilled /></el-icon>
                   </div>
                   <div class="dropzone-texts">
-                    <strong class="dz-main">CHỌN ẢNH TỪ TỆP MÁY TÍNH</strong>
-                    <span class="dz-hint">Kéo thả ảnh vào đây hoặc click để duyệt tệp</span>
+                    <strong class="dz-main">CHỌN ẢNH TỪ MÁY (NHIỀU ẢNH)</strong>
+                    <span class="dz-hint">Click hoặc kéo thả 1 hay nhiều ảnh cùng lúc</span>
                   </div>
                   <button type="button" class="btn-browse-file" @click.stop="triggerFileInput">
-                    DUYỆT TỆP
+                    + THÊM ẢNH
                   </button>
+                </div>
+              </div>
+
+              <!-- Gallery Grid of Uploaded Images -->
+              <div v-if="form.imageUrls && form.imageUrls.length" class="uploaded-gallery-grid">
+                <div
+                  v-for="(url, idx) in form.imageUrls"
+                  :key="idx"
+                  class="gallery-item-card"
+                  :class="{ 'is-primary': idx === 0, 'is-viewing': currentPreviewUrl === url }"
+                >
+                  <img :src="url" alt="shoe angle" class="gallery-item-img" @click="activePreviewImage = url" />
+                  
+                  <div class="gallery-item-badges">
+                    <span v-if="idx === 0" class="primary-badge">★ ẢNH CHÍNH</span>
+                    <span v-else class="index-badge">#{{ idx + 1 }}</span>
+                  </div>
+
+                  <div class="gallery-item-actions">
+                    <button
+                      v-if="idx !== 0"
+                      type="button"
+                      class="btn-item-action make-primary"
+                      title="Đặt làm ảnh chính"
+                      @click.stop="setAsPrimary(idx)"
+                    >
+                      <el-icon><Star /></el-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-item-action delete-img"
+                      title="Xóa ảnh này"
+                      @click.stop="removeImage(idx)"
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -371,7 +426,9 @@ import {
   Link,
   Warning,
   Lightning,
-  UploadFilled
+  UploadFilled,
+  Star,
+  Delete
 } from '@element-plus/icons-vue'
 import { productService } from '@/services/productService'
 import { brandService } from '@/services/brandService'
@@ -391,11 +448,15 @@ const imgError = ref(false)
 const fileInputRef = ref(null)
 const uploadingImage = ref(false)
 const isDragOver = ref(false)
-const uploadedFileInfo = ref(null)
+const activePreviewImage = ref('')
 
 const isMinioUrl = computed(() => {
   const url = form.thumbnailUrl || ''
   return url.includes(':9000') || url.includes('sneaker-products') || url.includes('/api/files')
+})
+
+const currentPreviewUrl = computed(() => {
+  return activePreviewImage.value || form.thumbnailUrl || (form.imageUrls && form.imageUrls[0]) || ''
 })
 
 const isEdit = computed(() => !!route.params.id)
@@ -412,7 +473,8 @@ const form = reactive({
   categoryId: null,
   material: 'Da thật cao cấp kết hợp đế cao su đúc lưu hóa',
   description: '',
-  thumbnailUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600',
+  thumbnailUrl: '',
+  imageUrls: [],
   importPrice: 1800000,
   salePrice: 2950000,
   status: 'ACTIVE'
@@ -462,7 +524,7 @@ function triggerFileInput() {
 function handleFileInputChange(e) {
   const files = e.target?.files
   if (files && files.length > 0) {
-    uploadSelectedFile(files[0])
+    uploadSelectedFiles(files)
   }
   if (e.target) e.target.value = ''
 }
@@ -471,32 +533,37 @@ function handleDropFile(e) {
   isDragOver.value = false
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
-    uploadSelectedFile(files[0])
+    uploadSelectedFiles(files)
   }
 }
 
-async function uploadSelectedFile(file) {
-  if (!file) return
-  if (!file.type.startsWith('image/')) {
-    ElMessage.error('Vui lòng chỉ chọn tệp hình ảnh (PNG, JPG, WEBP, GIF, SVG)!')
+async function uploadSelectedFiles(files) {
+  if (!files || !files.length) return
+  const validFiles = Array.from(files).filter((f) => f.type.startsWith('image/'))
+  if (!validFiles.length) {
+    ElMessage.error('Vui lòng chỉ chọn các tệp hình ảnh (PNG, JPG, WEBP, GIF, SVG)!')
     return
   }
-  if (file.size > 20 * 1024 * 1024) {
-    ElMessage.error('Kích thước ảnh vượt quá giới hạn 20MB!')
-    return
+  for (const f of validFiles) {
+    if (f.size > 20 * 1024 * 1024) {
+      ElMessage.error(`Ảnh "${f.name}" vượt quá giới hạn 20MB!`)
+      return
+    }
   }
 
   uploadingImage.value = true
   try {
-    const res = await fileService.uploadImage(file)
-    form.thumbnailUrl = res.url
-    uploadedFileInfo.value = {
-      fileName: res.fileName,
-      originalName: file.name,
-      size: (file.size / 1024).toFixed(1) + ' KB'
+    const res = await fileService.uploadImages(validFiles)
+    const newUrls = (res || []).map((r) => r.url).filter(Boolean)
+    if (newUrls.length) {
+      form.imageUrls = [...form.imageUrls, ...newUrls]
+      if (!form.thumbnailUrl) {
+        form.thumbnailUrl = form.imageUrls[0]
+      }
+      activePreviewImage.value = newUrls[newUrls.length - 1]
+      imgError.value = false
+      ElMessage.success(`Đã lưu ${newUrls.length} ảnh vào MinIO thành công!`)
     }
-    imgError.value = false
-    ElMessage.success(`Đã lưu ảnh "${file.name}" vào MinIO thành công!`)
   } catch (err) {
     const msg = err.response?.data?.message || 'Không thể tải ảnh lên MinIO. Vui lòng kiểm tra lại kết nối!'
     ElMessage.error(msg)
@@ -505,11 +572,32 @@ async function uploadSelectedFile(file) {
   }
 }
 
-function clearImage() {
+function setAsPrimary(index) {
+  if (index <= 0 || index >= form.imageUrls.length) return
+  const item = form.imageUrls.splice(index, 1)[0]
+  form.imageUrls.unshift(item)
+  form.thumbnailUrl = item
+  activePreviewImage.value = item
+  ElMessage.success('Đã đặt làm ảnh chính sản phẩm!')
+}
+
+function removeImage(index) {
+  const removed = form.imageUrls.splice(index, 1)[0]
+  if (form.thumbnailUrl === removed) {
+    form.thumbnailUrl = form.imageUrls[0] || ''
+  }
+  if (activePreviewImage.value === removed) {
+    activePreviewImage.value = form.thumbnailUrl || ''
+  }
+  ElMessage.info('Đã xóa 1 ảnh')
+}
+
+function clearAllImages() {
+  form.imageUrls = []
   form.thumbnailUrl = ''
-  uploadedFileInfo.value = null
+  activePreviewImage.value = ''
   imgError.value = false
-  ElMessage.info('Đã xóa hình ảnh')
+  ElMessage.info('Đã xóa toàn bộ ảnh sản phẩm')
 }
 
 function appendMaterial(chip) {
@@ -552,7 +640,18 @@ async function loadInitialData() {
       form.categoryId = p.categoryId || null
       form.material = p.material || ''
       form.description = p.description || ''
-      form.thumbnailUrl = p.thumbnailUrl || ''
+      
+      // Load multiple images
+      if (p.imageUrls && p.imageUrls.length) {
+        form.imageUrls = [...p.imageUrls]
+      } else if (p.thumbnailUrl) {
+        form.imageUrls = [p.thumbnailUrl]
+      } else {
+        form.imageUrls = []
+      }
+      form.thumbnailUrl = p.thumbnailUrl || (form.imageUrls[0] || '')
+      activePreviewImage.value = form.thumbnailUrl
+
       form.importPrice = Number(p.importPrice) || 0
       form.salePrice = Number(p.salePrice) || 0
       form.status = p.status || 'ACTIVE'
@@ -579,9 +678,11 @@ async function submitForm() {
 
     saving.value = true
     try {
+      const finalThumb = form.thumbnailUrl || (form.imageUrls && form.imageUrls[0]) || ''
       const payload = {
         ...form,
-        imageUrls: form.thumbnailUrl ? [form.thumbnailUrl] : []
+        thumbnailUrl: finalThumb,
+        imageUrls: form.imageUrls && form.imageUrls.length ? form.imageUrls : (finalThumb ? [finalThumb] : [])
       }
 
       if (isEdit.value) {
@@ -854,6 +955,52 @@ onMounted(() => {
     }
   }
 
+  .preview-thumbs-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    overflow-x: auto;
+
+    .strip-thumb {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid #cbd5e1;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      background: #ffffff;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .strip-star-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #000000;
+        color: #fbbf24;
+        font-size: 8px;
+        padding: 1px 3px;
+        line-height: 1;
+      }
+
+      &:hover,
+      &.active {
+        border-color: #000000;
+        box-shadow: 0 0 0 1px #000000;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
   .showcase-info {
     padding: 14px 16px;
     border-top: 1px solid #e2e8f0;
@@ -1089,6 +1236,114 @@ onMounted(() => {
           background: #000000;
           color: #ffffff;
         }
+      }
+    }
+  }
+
+  .uploaded-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+
+    .gallery-item-card {
+      position: relative;
+      aspect-ratio: 1;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      .gallery-item-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.2s ease;
+      }
+
+      .gallery-item-badges {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        z-index: 2;
+
+        .primary-badge {
+          background: #000000;
+          color: #ffffff;
+          font-size: 8px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          padding: 2px 4px;
+        }
+
+        .index-badge {
+          background: rgba(0, 0, 0, 0.6);
+          color: #ffffff;
+          font-size: 8px;
+          font-weight: 700;
+          padding: 1px 4px;
+        }
+      }
+
+      .gallery-item-actions {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: flex;
+        gap: 3px;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        z-index: 3;
+
+        .btn-item-action {
+          width: 22px;
+          height: 22px;
+          border-radius: 0;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #ffffff;
+
+          &.make-primary {
+            background: #000000;
+            &:hover {
+              background: #eab308;
+              color: #000000;
+            }
+          }
+
+          &.delete-img {
+            background: #ef4444;
+            &:hover {
+              background: #b91c1c;
+            }
+          }
+        }
+      }
+
+      &:hover {
+        border-color: #000000;
+
+        .gallery-item-img {
+          transform: scale(1.05);
+        }
+
+        .gallery-item-actions {
+          opacity: 1;
+        }
+      }
+
+      &.is-primary {
+        border-color: #000000;
+        border-width: 2px;
+      }
+
+      &.is-viewing {
+        box-shadow: 0 0 0 2px #000000;
       }
     }
   }

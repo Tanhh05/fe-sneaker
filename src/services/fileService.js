@@ -15,5 +15,23 @@ export const fileService = {
       }
     })
     return res.data
+  },
+
+  /**
+   * Upload multiple image files from user device to MinIO
+   * @param {File[]|FileList} files
+   * @returns {Promise<Array<{url: string, fileName: string, originalName: string}>>}
+   */
+  async uploadImages(files) {
+    const formData = new FormData()
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i])
+    }
+    const res = await apiClient.post('/files/upload-multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return res.data
   }
 }

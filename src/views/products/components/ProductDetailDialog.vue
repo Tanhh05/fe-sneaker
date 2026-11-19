@@ -7,12 +7,24 @@
   >
     <div v-if="product" class="product-detail-box">
       <div class="detail-top">
-        <img
-          v-if="product.thumbnailUrl"
-          :src="product.thumbnailUrl"
-          alt="shoe"
-          class="detail-img"
-        />
+        <div class="detail-gallery-col">
+          <img
+            v-if="currentImg"
+            :src="currentImg"
+            alt="shoe"
+            class="detail-img"
+          />
+          <div v-if="product.imageUrls && product.imageUrls.length > 1" class="dialog-thumbs-strip">
+            <img
+              v-for="(img, idx) in product.imageUrls"
+              :key="idx"
+              :src="img"
+              class="d-thumb"
+              :class="{ active: currentImg === img }"
+              @click="activeImg = img"
+            />
+          </div>
+        </div>
         <div class="detail-info">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
             <span class="code-badge">{{ product.productCode }}</span>
@@ -69,9 +81,10 @@
 </template>
 
 <script setup>
+import { ref, computed, watch } from 'vue'
 import { formatCurrency } from '@/utils/formatters'
 
-defineProps({
+const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false
@@ -83,6 +96,15 @@ defineProps({
 })
 
 defineEmits(['update:modelValue', 'manage-variants'])
+
+const activeImg = ref('')
+const currentImg = computed(() => {
+  return activeImg.value || props.product?.thumbnailUrl || (props.product?.imageUrls && props.product.imageUrls[0]) || ''
+})
+
+watch(() => props.product, () => {
+  activeImg.value = ''
+})
 </script>
 
 <style scoped lang="scss">
@@ -94,12 +116,45 @@ defineEmits(['update:modelValue', 'manage-variants'])
     padding: 16px;
     border-radius: 0;
     border: 1px solid #e5e5e5;
-    .detail-img {
+
+    .detail-gallery-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 0;
-      border: 1px solid #e5e5e5;
+      flex-shrink: 0;
+
+      .detail-img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 0;
+        border: 1px solid #e5e5e5;
+        background: #ffffff;
+      }
+
+      .dialog-thumbs-strip {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+
+        .d-thumb {
+          width: 34px;
+          height: 34px;
+          object-fit: cover;
+          border: 1px solid #cbd5e1;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: all 0.15s ease;
+
+          &:hover,
+          &.active {
+            border-color: #000000;
+            box-shadow: 0 0 0 1px #000000;
+          }
+        }
+      }
     }
     .detail-info {
       flex: 1;
