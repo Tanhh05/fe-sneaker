@@ -40,7 +40,7 @@
         <template #empty>
           <el-empty description="Không tìm thấy nhân viên phù hợp" :image-size="84" />
         </template>
-        <el-table-column label="Mã NV" width="90" align="center">
+        <el-table-column label="Mã NV" width="115" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.employeeCode }}</span>
           </template>

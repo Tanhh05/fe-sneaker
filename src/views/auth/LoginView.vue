@@ -112,7 +112,7 @@ async function handleLogin() {
     try {
       await authStore.login(form.username, form.password)
       ElMessage.success(`Đăng nhập thành công: ${authStore.user?.fullName || form.username}!`)
-      router.push('/dashboard')
+      router.push('/admin/dashboard')
     } finally {
       loading.value = false
     }

@@ -613,16 +613,16 @@ function appendMaterial(chip) {
 }
 
 function autoGenerateCode() {
-  const rand = Math.floor(100 + Math.random() * 900)
+  const rand = Math.floor(10000 + Math.random() * 90000)
   form.productCode = `SP${rand}`
 }
 
 function handleCancel() {
-  router.push('/products')
+  router.push('/admin/products')
 }
 
 function goToVariants() {
-  router.push('/variants')
+  router.push('/admin/variants')
 }
 
 async function loadInitialData() {
@@ -725,7 +725,7 @@ async function submitForm() {
         ElMessage.success('Khởi tạo sản phẩm Sneaker mới thành công!')
       }
 
-      router.push('/products')
+      router.push('/admin/products')
     } catch (err) {
       const msg = err.response?.data?.message || 'Có lỗi xảy ra trong quá trình lưu sản phẩm!'
       ElMessage.error(msg)

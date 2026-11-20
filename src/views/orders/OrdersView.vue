@@ -5,9 +5,14 @@
         <h2 class="page-title">Quản lý Đơn hàng Bán lẻ</h2>
         <p class="page-subtitle">Theo dõi danh sách đơn hàng, luồng chuyển trạng thái (Chờ xác nhận &rarr; Đã xác nhận &rarr; Đang giao hàng &rarr; Hoàn thành / Hủy) và in hóa đơn</p>
       </div>
-      <el-button type="primary" @click="$router.push('/sales')">
-        <el-icon style="margin-right: 6px"><Plus /></el-icon> Tạo đơn mới tại POS
-      </el-button>
+      <div class="header-actions">
+        <el-button :loading="loading" @click="loadData">
+          <el-icon style="margin-right: 6px"><Refresh /></el-icon> Làm mới dữ liệu
+        </el-button>
+        <el-button type="primary" @click="$router.push('/pos')">
+          <el-icon style="margin-right: 6px"><Plus /></el-icon> Tạo đơn mới tại POS
+        </el-button>
+      </div>
     </div>
 
     <!-- Filter -->
@@ -65,7 +70,7 @@
         <template #empty>
           <el-empty description="Không tìm thấy đơn hàng phù hợp" :image-size="84" />
         </template>
-        <el-table-column label="Mã đơn hàng" width="95" align="center">
+        <el-table-column label="Mã đơn hàng" width="130" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.orderCode }}</span>
           </template>
@@ -88,9 +93,14 @@
             <span class="price-text">{{ formatCurrency(row.finalAmount) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="Phương thức TT" width="130">
+        <el-table-column label="Phương thức TT" width="145">
           <template #default="{ row }">
-            {{ PAYMENT_METHOD_MAP[row.paymentMethod] || row.paymentMethod }}
+            <div>{{ PAYMENT_METHOD_MAP[row.paymentMethod] || row.paymentMethod }}</div>
+            <div v-if="row.paymentMethod === 'BANK_TRANSFER' && (row.status === 'CONFIRMED' || row.status === 'COMPLETED')">
+              <el-tag size="small" type="success" effect="dark" style="font-size: 10px; height: 18px; line-height: 18px; margin-top: 3px; font-weight: 700">
+                SePay Khớp Lệnh
+              </el-tag>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="Trạng thái" width="135" align="center">
@@ -187,10 +197,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, View, Printer, MoreFilled } from '@element-plus/icons-vue'
+import { Plus, View, Printer, MoreFilled, Refresh } from '@element-plus/icons-vue'
 import { orderService } from '@/services/orderService'
 import { formatCurrency, formatDateTime } from '@/utils/formatters'
 import { ORDER_STATUS_MAP, PAYMENT_METHOD_MAP } from '@/constants'
@@ -250,7 +260,7 @@ function resetFilter() {
 }
 
 function openDetail(row) {
-  router.push(`/orders/${row.id}`)
+  router.push(`/admin/orders/${row.id}`)
 }
 
 async function openPrint(row) {
@@ -295,7 +305,38 @@ function handleStatusCommand(row, targetStatus) {
   changeStatus(row, targetStatus, map[targetStatus] || targetStatus)
 }
 
+async function silentRefresh() {
+  try {
+    const res = await orderService.getOrders({
+      keyword: filters.keyword,
+      status: filters.status,
+      fromDate: filters.fromDate || undefined,
+      toDate: filters.toDate || undefined,
+      page: pagination.page - 1,
+      size: pagination.size
+    })
+    items.value = res.data.content || []
+    pagination.total = res.data.totalElements || 0
+  } catch (e) {
+    // silent background polling
+  }
+}
+
+let autoRefreshTimer = null
+
 onMounted(() => {
   loadData()
+  autoRefreshTimer = setInterval(() => {
+    if (!loading.value && !invoiceVisible.value) {
+      silentRefresh()
+    }
+  }, 4000)
+})
+
+onUnmounted(() => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
 })
 </script>

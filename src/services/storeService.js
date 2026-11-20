@@ -13,6 +13,9 @@ export const storeService = {
   getFeaturedProducts() {
     return api.get('/store/products/featured')
   },
+  getBestSellerProduct() {
+    return api.get('/store/products/best-seller')
+  },
   getProductDetail(id) {
     return api.get(`/store/products/${id}`)
   },
@@ -30,6 +33,12 @@ export const storeService = {
   },
   cancelMyOrder(orderCode, payload = {}) {
     return api.post(`/store/my-orders/${orderCode}/cancel`, payload)
+  },
+  getProductReviews(productId) {
+    return api.get(`/store/products/${productId}/reviews`)
+  },
+  submitProductReview(productId, data) {
+    return api.post(`/store/products/${productId}/reviews`, data)
   }
 }
 

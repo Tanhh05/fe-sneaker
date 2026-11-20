@@ -35,7 +35,7 @@
           </button>
           <template v-if="isStaffOrAdmin">
             <span class="top-nav-sep">•</span>
-            <router-link to="/dashboard" class="top-nav-link portal-link">
+            <router-link to="/admin/dashboard" class="top-nav-link portal-link">
               Kênh Quản Trị
             </router-link>
           </template>
@@ -437,9 +437,9 @@ const handleUserMenuCommand = (command) => {
   } else if (command === 'tracking') {
     router.push('/tracking')
   } else if (command === 'admin') {
-    router.push('/dashboard')
+    router.push('/admin/dashboard')
   } else if (command === 'profile') {
-    openAuthModal('login')
+    openAuthModal('profile')
   } else if (command === 'logout') {
     authStore.logout()
     ElMessage.success('Đã đăng xuất tài khoản')

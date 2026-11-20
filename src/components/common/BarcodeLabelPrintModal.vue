@@ -33,13 +33,22 @@
 
       <!-- Preview container -->
       <div class="preview-scroll-area">
+        <component :is="'style'">
+          @media print {
+            @page {
+              size: {{ labelSize === '50x30' ? '50mm 30mm' : (labelSize === '75x50' ? '75mm 50mm' : 'A4 portrait') }};
+              margin: {{ labelSize === 'A4' ? '8mm' : '0' }};
+            }
+          }
+        </component>
+
         <div class="preview-notice no-print">
           <span>💡 Xem trước bản in: Mã vạch chuẩn Code128, máy quét cầm tay hoặc camera có thể đọc tức thì trong 1 giây.</span>
         </div>
 
         <!-- PRINTABLE LABELS CONTAINER -->
         <div id="printable-labels-container" class="printable-labels-container" :class="`layout-${labelSize}`">
-          <template v-for="(item, idx) in expandedItems" :key="idx">
+          <template v-for="(item, idx) in expandedItems" :key="`${item.sku}-${idx}-${labelSize}`">
             <div class="shoe-box-label" :class="`size-${labelSize}`">
               <!-- Label Header -->
               <div class="lbl-header">
@@ -70,7 +79,7 @@
 
               <!-- Barcode SVG Rendered by JsBarcode -->
               <div class="lbl-barcode-wrapper">
-                <svg :ref="(el) => renderBarcode(el, item.sku)" class="barcode-svg"></svg>
+                <svg :ref="(el) => renderBarcode(el, item.sku)" :data-sku="item.sku" class="barcode-svg"></svg>
               </div>
 
               <!-- Label Footer -->
@@ -172,10 +181,13 @@ watch(
   () => {
     if (dialogVisible.value) {
       nextTick(() => {
-        renderAllBarcodes()
+        setTimeout(() => {
+          renderAllBarcodes()
+        }, 40)
       })
     }
-  }
+  },
+  { deep: true }
 )
 
 const barcodeRefs = ref([])
@@ -187,13 +199,14 @@ function renderBarcode(el, sku) {
     JsBarcode(el, String(sku).trim().toUpperCase(), {
       format: 'CODE128',
       lineColor: '#000000',
-      width: isSmall ? 1.4 : 1.9,
-      height: isSmall ? 28 : 42,
+      width: isSmall ? 1.15 : 1.8,
+      height: isSmall ? 20 : 38,
       displayValue: true,
-      fontSize: isSmall ? 11 : 13,
+      fontSize: isSmall ? 9 : 12,
       font: 'monospace',
       fontOptions: 'bold',
-      margin: 2
+      margin: isSmall ? 1 : 2,
+      textMargin: 1
     })
   } catch (e) {
     console.warn('JsBarcode render error:', e)
@@ -300,16 +313,77 @@ const handlePrint = () => {
     }
 
     &.size-50x30 {
-      width: 220px;
-      height: 140px;
-      padding: 6px 8px;
+      width: 225px;
+      height: 145px;
+      padding: 5px 8px;
+
+      .lbl-header {
+        border-bottom-width: 1px;
+        padding-bottom: 2px;
+        margin-bottom: 3px;
+
+        .lbl-brand {
+          font-size: 11px;
+        }
+        .lbl-kicker {
+          font-size: 8px;
+        }
+      }
 
       .lbl-product-name {
-        font-size: 11px !important;
-        max-height: 28px !important;
+        font-size: 10.5px !important;
+        line-height: 1.25 !important;
+        height: auto !important;
+        max-height: 15px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+        -webkit-line-clamp: unset !important;
+        margin-bottom: 3px !important;
       }
-      .spec-v {
-        font-size: 12px !important;
+
+      .lbl-specs {
+        padding: 2px 5px !important;
+        margin-bottom: 2px !important;
+
+        .spec-col {
+          .spec-k {
+            font-size: 7px !important;
+            line-height: 1 !important;
+          }
+          .spec-v {
+            font-size: 10.5px !important;
+            line-height: 1.1 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+
+            &.size-highlight {
+              font-size: 12.5px !important;
+            }
+            &.price-highlight {
+              font-size: 10.5px !important;
+            }
+          }
+
+          &:nth-child(2) {
+            max-width: 78px;
+          }
+        }
+      }
+
+      .lbl-barcode-wrapper {
+        margin: 1px 0 !important;
+
+        .barcode-svg {
+          max-height: 36px;
+        }
+      }
+
+      .lbl-footer {
+        padding-top: 2px !important;
+        font-size: 7px !important;
       }
     }
 
@@ -319,6 +393,7 @@ const handlePrint = () => {
     }
 
     .lbl-header {
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -342,6 +417,7 @@ const handlePrint = () => {
     }
 
     .lbl-product-name {
+      flex-shrink: 0;
       font-size: 12px;
       font-weight: 800;
       color: #000000;
@@ -356,6 +432,7 @@ const handlePrint = () => {
     }
 
     .lbl-specs {
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -400,6 +477,7 @@ const handlePrint = () => {
     }
 
     .lbl-barcode-wrapper {
+      flex-shrink: 0;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -413,6 +491,7 @@ const handlePrint = () => {
     }
 
     .lbl-footer {
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       border-top: 1px dashed #9ca3af;
@@ -473,6 +552,30 @@ const handlePrint = () => {
       page-break-after: always;
       break-after: page;
       margin: 0 auto;
+
+      &.size-50x30 {
+        width: 50mm !important;
+        height: 30mm !important;
+        max-width: 50mm !important;
+        max-height: 30mm !important;
+        padding: 1.5mm 2.5mm !important;
+        box-sizing: border-box !important;
+        border: 1px solid #000000 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      &.size-75x50 {
+        width: 75mm !important;
+        height: 50mm !important;
+        max-width: 75mm !important;
+        max-height: 50mm !important;
+        padding: 2.5mm 3.5mm !important;
+        box-sizing: border-box !important;
+        border: 1.5px solid #000000 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
     }
   }
 }

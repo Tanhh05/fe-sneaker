@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ collapsed: isCollapsed }">
       <!-- Brand Logo -->
-      <div class="brand-logo" @click="$router.push('/dashboard')">
+      <div class="brand-logo" @click="$router.push('/admin/dashboard')">
         <div class="logo-mark">S</div>
         <div v-if="!isCollapsed" class="logo-text">
           <span class="title">SNEAKERHUB</span>
@@ -58,7 +58,7 @@
           </button>
 
           <el-breadcrumb separator="/" class="admin-breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/dashboard' }">QUẢN TRỊ</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/admin/dashboard' }">QUẢN TRỊ</el-breadcrumb-item>
             <el-breadcrumb-item>{{ $route.meta?.title ? $route.meta.title.toUpperCase() : 'TỔNG QUAN' }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -70,10 +70,10 @@
             <span>XEM WEBSITE</span>
           </router-link>
 
-          <!-- POS Quick Button -->
+          <!-- POS Quick Button (Model 1) -->
           <button
             class="header-action-btn btn-pos"
-            @click="$router.push('/sales')"
+            @click="$router.push('/pos')"
           >
             <el-icon><ShoppingCart /></el-icon>
             <span>BÁN HÀNG POS</span>
@@ -103,6 +103,9 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu class="user-dropdown-menu">
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon> Thông tin tài khoản
+                </el-dropdown-item>
                 <el-dropdown-item command="password">
                   <el-icon><Key /></el-icon> Đổi mật khẩu
                 </el-dropdown-item>
@@ -121,6 +124,9 @@
       </main>
     </div>
 
+    <!-- User Profile Modal -->
+    <UserProfileDialog v-model="profileDialogVisible" />
+
     <!-- Change Password Modal -->
     <ChangePasswordDialog v-model="pwdDialogVisible" />
   </div>
@@ -136,16 +142,19 @@ import {
   Fold,
   Expand,
   ArrowDown,
+  User,
   Key,
   SwitchButton
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { MENU_GROUPS } from '@/constants/navigation'
 import ChangePasswordDialog from './components/ChangePasswordDialog.vue'
+import UserProfileDialog from './components/UserProfileDialog.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const isCollapsed = ref(false)
+const profileDialogVisible = ref(false)
 const pwdDialogVisible = ref(false)
 
 const visibleMenuGroups = computed(() => {
@@ -158,7 +167,9 @@ const visibleMenuGroups = computed(() => {
 })
 
 function handleCommand(cmd) {
-  if (cmd === 'password') {
+  if (cmd === 'profile') {
+    profileDialogVisible.value = true
+  } else if (cmd === 'password') {
     pwdDialogVisible.value = true
   } else if (cmd === 'logout') {
     ElMessageBox.confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống quản lý?', 'Xác nhận đăng xuất', {

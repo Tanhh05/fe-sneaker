@@ -53,6 +53,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function updateProfile(payload) {
+    const res = await authService.updateProfile(payload)
+    user.value = res.data
+    localStorage.setItem('sneaker_user', JSON.stringify(user.value))
+    return res.data
+  }
+
+  async function fetchCurrentUser() {
+    if (!token.value) return null
+    try {
+      const res = await authService.getCurrentUser()
+      user.value = res.data
+      localStorage.setItem('sneaker_user', JSON.stringify(user.value))
+      return res.data
+    } catch (_) {
+      return null
+    }
+  }
+
   function hasAnyRole(allowedRoles) {
     if (!allowedRoles || allowedRoles.length === 0) return true
     return allowedRoles.some((r) => roles.value.includes(r))
@@ -71,6 +90,8 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     loginWithGoogle,
     logout,
+    updateProfile,
+    fetchCurrentUser,
     hasAnyRole
   }
 })

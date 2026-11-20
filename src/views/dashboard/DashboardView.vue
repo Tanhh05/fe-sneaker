@@ -10,7 +10,7 @@
         <el-button @click="loadDashboard" class="btn-refresh">
           <el-icon style="margin-right: 6px"><Refresh /></el-icon> CẬP NHẬT
         </el-button>
-        <button class="btn-primary-header" @click="$router.push('/sales')">
+        <button class="btn-primary-header" @click="$router.push('/pos')">
           <el-icon style="margin-right: 6px"><ShoppingCart /></el-icon> MỞ MÀN HÌNH POS
         </button>
       </div>
@@ -186,7 +186,7 @@
           <h3 class="section-title">TOP SẢN PHẨM BÁN CHẠY NHẤT</h3>
           <p class="section-sub">Xếp hạng theo số lượng đôi giày bán ra thực tế</p>
         </div>
-        <el-button size="small" @click="$router.push('/reports')">XEM BÁO CÁO CHI TIẾT →</el-button>
+        <el-button size="small" @click="$router.push('/admin/reports')">XEM BÁO CÁO CHI TIẾT →</el-button>
       </div>
 
       <el-table :data="data.topSellingProducts" stripe style="width: 100%">
@@ -198,7 +198,7 @@
         </el-table-column>
         <el-table-column prop="productName" label="Tên sản phẩm Sneaker" min-width="200">
           <template #default="{ row }">
-            <span class="product-link" @click="$router.push('/products')">{{ row.productName }}</span>
+            <span class="product-link" @click="$router.push('/admin/products')">{{ row.productName }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="quantitySold" label="Số lượng bán" width="130" align="right">

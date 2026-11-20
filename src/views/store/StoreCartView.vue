@@ -102,9 +102,19 @@
             <div v-else class="auth-suggest-banner logged-in">
               <div class="banner-text">
                 <strong>Thành viên: {{ authStore.user?.fullName || authStore.user?.username }}</strong>
-                <span>Thông tin giao hàng đã được liên kết tự động với tài khoản của bạn.</span>
+                <span>Thông tin giao hàng được cập nhật tự động từ tài khoản của bạn.</span>
               </div>
-              <span class="member-tag">✓ ĐÃ ĐĂNG NHẬP</span>
+              <div class="banner-actions">
+                <button
+                  type="button"
+                  class="btn-sync-profile"
+                  @click="fillCustomerFromAuth(true); ElMessage.success('Đã điền nhanh thông tin nhận hàng từ tài khoản!')"
+                  title="Điền lại thông tin mới nhất từ tài khoản"
+                >
+                  ⚡ Điền nhanh từ tài khoản
+                </button>
+                <span class="member-tag">✓ ĐÃ ĐĂNG NHẬP</span>
+              </div>
             </div>
 
             <el-form
@@ -224,10 +234,10 @@
                     <div class="card-radio"></div>
                     <div class="card-text">
                       <div class="card-headline">
-                        <strong>Chuyển khoản VietQR</strong>
+                        <strong>Chuyển khoản SePay QR (MBBank)</strong>
                         <span class="recommend-tag">KHUYÊN DÙNG</span>
                       </div>
-                      <p>Quét mã QR tự động qua ứng dụng ngân hàng hoặc MoMo. Gạch nợ đơn hàng lập tức.</p>
+                      <p>Quét mã QR tự động qua ứng dụng ngân hàng hoặc MoMo. Tự động gạch nợ đơn hàng lập tức.</p>
                     </div>
                   </div>
 
@@ -434,14 +444,104 @@ const handleWardChange = (val) => {
   updateFullShippingAddress()
 }
 
-const fillCustomerFromAuth = () => {
+const parseAndFillAddress = async (rawAddress) => {
+  if (!rawAddress) return
+  form.streetAddress = rawAddress
+  form.shippingAddress = rawAddress
+
+  // Ensure provinces are loaded
+  if (!provinces.value || provinces.value.length === 0) {
+    await loadProvinces()
+  }
+
+  // Check if rawAddress has comma-separated structure (street, ward, district, province)
+  const segments = rawAddress.split(',').map(s => s.trim()).filter(Boolean)
+  if (segments.length >= 2 && provinces.value.length) {
+    // 1. Try finding Province (from the last segment)
+    const lastSeg = segments[segments.length - 1].toLowerCase()
+    const matchedProv = provinces.value.find(p => {
+      const pName = p.name.toLowerCase()
+      const cleanPName = pName.replace('thành phố ', '').replace('tỉnh ', '')
+      return lastSeg.includes(cleanPName) || cleanPName.includes(lastSeg)
+    })
+
+    if (matchedProv) {
+      form.provinceCode = matchedProv.code
+      form.provinceName = matchedProv.name
+
+      // Load districts for this province
+      loadingDistricts.value = true
+      try {
+        districts.value = await vnAddressService.getDistricts(matchedProv.code)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        loadingDistricts.value = false
+      }
+
+      // 2. Try finding District (from segment second to last)
+      if (segments.length >= 3 && districts.value.length) {
+        const distSeg = segments[segments.length - 2].toLowerCase()
+        const matchedDist = districts.value.find(d => {
+          const dName = d.name.toLowerCase()
+          const cleanDName = dName.replace('quận ', '').replace('huyện ', '').replace('thị xã ', '').replace('thành phố ', '')
+          return distSeg.includes(cleanDName) || cleanDName.includes(distSeg)
+        })
+
+        if (matchedDist) {
+          form.districtCode = matchedDist.code
+          form.districtName = matchedDist.name
+
+          // Load wards for this district
+          loadingWards.value = true
+          try {
+            wards.value = await vnAddressService.getWards(matchedDist.code)
+          } catch (e) {
+            console.error(e)
+          } finally {
+            loadingWards.value = false
+          }
+
+          // 3. Try finding Ward (from segment third to last)
+          if (segments.length >= 4 && wards.value.length) {
+            const wardSeg = segments[segments.length - 3].toLowerCase()
+            const matchedWard = wards.value.find(w => {
+              const wName = w.name.toLowerCase()
+              const cleanWName = wName.replace('phường ', '').replace('xã ', '').replace('thị trấn ', '')
+              return wardSeg.includes(cleanWName) || cleanWName.includes(wardSeg)
+            })
+
+            if (matchedWard) {
+              form.wardCode = matchedWard.code
+              form.wardName = matchedWard.name
+            }
+          }
+
+          // 4. Street address is everything before ward/district/province
+          const streetParts = segments.slice(0, segments.length - (form.wardCode ? 3 : 2))
+          if (streetParts.length) {
+            form.streetAddress = streetParts.join(', ')
+          }
+        }
+      }
+    }
+  }
+  updateFullShippingAddress()
+}
+
+const fillCustomerFromAuth = (force = false) => {
   if (authStore.isAuthenticated && authStore.user) {
-    if (authStore.user.fullName && !form.customerName) form.customerName = authStore.user.fullName
-    if (authStore.user.phone && !form.customerPhone) form.customerPhone = authStore.user.phone
-    if (authStore.user.email && !form.customerEmail) form.customerEmail = authStore.user.email
-    if (authStore.user.address && !form.streetAddress && !form.provinceCode) {
-      form.streetAddress = authStore.user.address
-      form.shippingAddress = authStore.user.address
+    if (authStore.user.fullName && (force || !form.customerName)) {
+      form.customerName = authStore.user.fullName
+    }
+    if (authStore.user.phone && (force || !form.customerPhone)) {
+      form.customerPhone = authStore.user.phone
+    }
+    if (authStore.user.email && (force || !form.customerEmail)) {
+      form.customerEmail = authStore.user.email
+    }
+    if (authStore.user.address && (force || (!form.streetAddress && !form.provinceCode))) {
+      parseAndFillAddress(authStore.user.address)
     }
   }
 }
@@ -469,15 +569,27 @@ const enrichCartThumbnails = async () => {
   }
 }
 
-onMounted(() => {
-  loadProvinces()
-  fillCustomerFromAuth()
+onMounted(async () => {
+  await loadProvinces()
+  fillCustomerFromAuth(true)
   enrichCartThumbnails()
 })
 
-watch(() => authStore.isAuthenticated, () => {
-  fillCustomerFromAuth()
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  if (isAuth) {
+    fillCustomerFromAuth(true)
+  }
 })
+
+watch(
+  () => authStore.user,
+  (newUser) => {
+    if (newUser) {
+      fillCustomerFromAuth(true)
+    }
+  },
+  { deep: true }
+)
 
 const rules = {
   customerName: [{ required: true, message: 'Vui lòng nhập họ tên người nhận', trigger: 'blur' }],
@@ -749,6 +861,31 @@ const submitOrder = async () => {
 
     &:hover {
       background: #27272a;
+    }
+  }
+
+  .banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+
+    .btn-sync-profile {
+      height: 32px;
+      padding: 0 12px;
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #000000;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #000000;
+        color: #ffffff;
+      }
     }
   }
 

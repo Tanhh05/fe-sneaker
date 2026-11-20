@@ -56,6 +56,10 @@ const routes = [
       }
     ]
   },
+  // Storefront Aliases
+  { path: '/catalog', redirect: '/shop' },
+  { path: '/order-tracking', redirect: '/tracking' },
+  { path: '/account/orders', redirect: '/my-orders' },
 
   // ==========================================
   // AUTHENTICATION
@@ -68,27 +72,41 @@ const routes = [
   },
 
   // ==========================================
-  // ADMIN & POS MANAGEMENT (PROTECTED)
+  // MODEL 1: POINT OF SALE (POS COUNTER)
+  // ==========================================
+  {
+    path: '/pos',
+    component: AdminLayout,
+    children: [
+      {
+        path: '',
+        name: 'SalesPos',
+        component: () => import('@/views/sales/SalesPosView.vue'),
+        meta: { title: 'Bán hàng tại quầy (POS)', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
+      }
+    ]
+  },
+  // POS Aliases
+  { path: '/sales', redirect: '/pos' },
+  { path: '/admin/pos', redirect: '/pos' },
+  { path: '/admin/sales', redirect: '/pos' },
+
+  // ==========================================
+  // ENTERPRISE ADMIN MANAGEMENT PORTAL
   // ==========================================
   {
     path: '/admin',
-    redirect: '/dashboard'
-  },
-  {
-    path: '/',
     component: AdminLayout,
     children: [
+      {
+        path: '',
+        redirect: '/admin/dashboard'
+      },
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/DashboardView.vue'),
         meta: { title: 'Dashboard Tổng quan', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
-      },
-      {
-        path: 'sales',
-        name: 'SalesPos',
-        component: () => import('@/views/sales/SalesPosView.vue'),
-        meta: { title: 'Bán hàng tại quầy (POS)', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
       },
       {
         path: 'orders',
@@ -124,7 +142,7 @@ const routes = [
         path: 'variants',
         name: 'Variants',
         component: () => import('@/views/variants/VariantsView.vue'),
-        meta: { title: 'Biến thể sản phẩm (SKU, Size, Màu sắc)', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
+        meta: { title: 'Biến thể SKU & Size/Màu', roles: ['ADMIN', 'MANAGER', 'STAFF'] }
       },
       {
         path: 'categories',
@@ -177,6 +195,23 @@ const routes = [
     ]
   },
 
+  // Backward-compatibility shortcuts
+  { path: '/dashboard', redirect: '/admin/dashboard' },
+  { path: '/orders', redirect: '/admin/orders' },
+  { path: '/orders/:id', redirect: (to) => `/admin/orders/${to.params.id}` },
+  { path: '/products', redirect: '/admin/products' },
+  { path: '/products/create', redirect: '/admin/products/create' },
+  { path: '/products/:id/edit', redirect: (to) => `/admin/products/${to.params.id}/edit` },
+  { path: '/variants', redirect: '/admin/variants' },
+  { path: '/categories', redirect: '/admin/categories' },
+  { path: '/brands', redirect: '/admin/brands' },
+  { path: '/purchases', redirect: '/admin/purchases' },
+  { path: '/suppliers', redirect: '/admin/suppliers' },
+  { path: '/customers', redirect: '/admin/customers' },
+  { path: '/employees', redirect: '/admin/employees' },
+  { path: '/reports', redirect: '/admin/reports' },
+  { path: '/users', redirect: '/admin/users' },
+
   // ==========================================
   // ERROR & ACCESS CONTROL SCREENS
   // ==========================================
@@ -221,7 +256,7 @@ router.beforeEach((to, _from, next) => {
   if (to.meta?.guestOnly) {
     if (authStore.isAuthenticated) {
       if (authStore.isAdmin || authStore.isManager || authStore.isStaff) {
-        return next('/dashboard')
+        return next('/admin/dashboard')
       }
       return next('/403')
     }

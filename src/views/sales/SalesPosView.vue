@@ -3,13 +3,16 @@
     <div class="page-header">
       <div class="page-title-group">
         <h2 class="page-title">Bán Hàng Tại Quầy (POS Counter)</h2>
-        <p class="page-subtitle">Tìm giày theo tên hoặc mã SKU, chọn Size &amp; Màu sắc, kiểm tra số lượng sẵn có và xuất hóa đơn</p>
+        <p class="page-subtitle">Quét mã vạch SKU trên hộp giày hoặc tìm kiếm mẫu giày, kích cỡ, màu sắc và xuất hóa đơn</p>
       </div>
-      <div>
-        <el-button @click="loadCatalog">Làm mới danh mục SKU</el-button>
-        <el-button type="primary" plain @click="$router.push('/orders')">
-          Danh sách đơn hàng &rarr;
-        </el-button>
+      <div class="header-action-group">
+        <button class="pos-hdr-btn" @click="loadCatalog">
+          <el-icon><Refresh /></el-icon>
+          <span>Làm mới SKU</span>
+        </button>
+        <button class="pos-hdr-btn primary" @click="$router.push('/admin/orders')">
+          <span>Danh sách đơn hàng &rarr;</span>
+        </button>
       </div>
     </div>
 
@@ -17,79 +20,63 @@
       <!-- LEFT COLUMN: Product & Variant Picker -->
       <el-col :xs="24" :lg="14">
         <div class="table-card pos-catalog-card" v-loading="loading">
-          <!-- HIGH-SPEED BARCODE SCANNER BOX -->
-          <div class="pos-barcode-scanner-bar">
-            <div class="scanner-hero">
-              <div class="scanner-badge-laser">
-                <span class="laser-dot"></span>
-                <span class="scanner-label">MÁY QUÉT MÃ VẠCH (BARCODE SCANNER)</span>
-                <span class="scanner-tip">⚡ Hỗ trợ máy quét cầm tay USB / Bluetooth &amp; Camera</span>
-              </div>
-              <div class="scanner-row">
-                <el-input
-                  ref="barcodeInputRef"
-                  v-model="barcodeScanInput"
-                  placeholder="⚡ BẮN MÃ VẠCH TRÊN HỘP GIÀY (SKU) — Tự động thêm vào đơn trong 1 giây..."
-                  size="large"
-                  clearable
-                  class="barcode-quick-input"
-                  @keyup.enter="handleBarcodeScanned"
-                >
-                  <template #prefix>
-                    <el-icon class="input-scan-icon"><Tickets /></el-icon>
-                  </template>
-                  <template #append>
-                    <el-button type="primary" class="btn-scan-action" @click="handleBarcodeScanned">
-                      THÊM NGAY (ENTER)
-                    </el-button>
-                  </template>
-                </el-input>
-                <el-button
-                  type="success"
-                  plain
-                  size="large"
-                  class="btn-camera-scan"
-                  @click="openCameraScanner"
-                >
-                  📸 Camera Quét
-                </el-button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Search & Filter Bar -->
-          <el-row :gutter="10" style="margin-bottom: 14px">
-            <el-col :xs="24" :sm="10">
+          <!-- UNIFIED MASTER SEARCH & BARCODE SCANNER TOOLBAR -->
+          <div class="pos-master-toolbar">
+            <div class="search-scan-row">
               <el-input
+                ref="barcodeInputRef"
                 v-model="searchQuery"
-                placeholder="Tìm nhanh theo tên giày hoặc mã SKU (VD: AF1-40-W)..."
+                placeholder="Quét mã vạch trên hộp giày (SKU) hoặc gõ tìm tên giày..."
                 clearable
-                :prefix-icon="Search"
-              />
-            </el-col>
-            <el-col :xs="12" :sm="7">
-              <el-select v-model="selectedSizeFilter" placeholder="Lọc Size EU" clearable style="width: 100%">
-                <el-option v-for="s in sizes" :key="s.id" :label="`Size ${s.sizeValue}`" :value="s.id" />
-              </el-select>
-            </el-col>
-            <el-col :xs="12" :sm="7">
-              <el-select v-model="selectedColorFilter" placeholder="Lọc Màu sắc" clearable style="width: 100%">
-                <el-option v-for="c in colors" :key="c.id" :label="c.colorName" :value="c.id" />
-              </el-select>
-            </el-col>
-          </el-row>
+                class="master-search-input"
+                @keyup.enter="handleScanOrEnter"
+              >
+                <template #prefix>
+                  <el-icon class="search-icon"><Search /></el-icon>
+                </template>
+              </el-input>
 
-          <!-- Interactive Product -> Size -> Color Selector Box -->
-          <div class="selector-panel">
-            <div class="selector-title">Chọn theo từng bước (Sản phẩm &rarr; Size &rarr; Màu sắc):</div>
-            <el-row :gutter="10" align="middle">
-              <el-col :xs="24" :sm="9">
+              <button class="btn-scan-trigger" @click="handleScanOrEnter" title="Nhấn để quét mã hoặc thêm nhanh (Enter)">
+                <el-icon><Tickets /></el-icon>
+                <span>Quét mã (Enter)</span>
+              </button>
+
+              <button class="btn-camera-trigger" @click="openCameraScanner" title="Mở camera quét mã vạch">
+                <el-icon><Camera /></el-icon>
+                <span>Camera</span>
+              </button>
+            </div>
+
+            <!-- Filter Controls + Inline Quick Step Selector -->
+            <div class="sub-controls-row">
+              <div class="filter-dropdowns">
+                <el-select
+                  v-model="selectedSizeFilter"
+                  placeholder="Lọc Size EU"
+                  clearable
+                  class="filter-select"
+                >
+                  <el-option v-for="s in sizes" :key="s.id" :label="`Size EU ${s.sizeValue}`" :value="s.id" />
+                </el-select>
+                <el-select
+                  v-model="selectedColorFilter"
+                  placeholder="Lọc Màu sắc"
+                  clearable
+                  class="filter-select"
+                >
+                  <el-option v-for="c in colors" :key="c.id" :label="c.colorName" :value="c.id" />
+                </el-select>
+              </div>
+
+              <!-- Compact Step Picker Strip -->
+              <div class="quick-step-strip">
+                <span class="strip-label">CHỌN NHANH:</span>
                 <el-select
                   v-model="stepProductId"
-                  placeholder="1. Chọn mẫu giày Sneaker"
+                  placeholder="Mẫu giày..."
                   filterable
                   clearable
-                  style="width: 100%"
+                  class="step-select prod"
                   @change="onStepProductChange"
                 >
                   <el-option
@@ -99,31 +86,27 @@
                     :value="p.id"
                   />
                 </el-select>
-              </el-col>
-              <el-col :xs="12" :sm="5">
                 <el-select
                   v-model="stepSizeId"
-                  placeholder="2. Chọn Size"
+                  placeholder="Size"
                   :disabled="!stepProductId"
                   clearable
-                  style="width: 100%"
+                  class="step-select size"
                   @change="onStepSizeChange"
                 >
                   <el-option
                     v-for="s in availableSizesForStepProduct"
                     :key="s.sizeId"
-                    :label="`Size ${s.sizeValue}`"
+                    :label="`EU ${s.sizeValue}`"
                     :value="s.sizeId"
                   />
                 </el-select>
-              </el-col>
-              <el-col :xs="12" :sm="5">
                 <el-select
                   v-model="stepColorId"
-                  placeholder="3. Chọn Màu"
+                  placeholder="Màu"
                   :disabled="!stepSizeId"
                   clearable
-                  style="width: 100%"
+                  class="step-select color"
                 >
                   <el-option
                     v-for="c in availableColorsForStep"
@@ -132,36 +115,38 @@
                     :value="c.colorId"
                   />
                 </el-select>
-              </el-col>
-              <el-col :xs="24" :sm="5">
-                <el-button
-                  type="primary"
-                  style="width: 100%"
+                <button
+                  class="step-add-btn"
                   :disabled="!matchedStepVariant || matchedStepVariant.availableQuantity <= 0"
+                  title="Thêm biến thể đã chọn vào đơn"
                   @click="addVariantToCart(matchedStepVariant)"
                 >
-                  + Thêm vào đơn
-                </el-button>
-              </el-col>
-            </el-row>
-            <div v-if="matchedStepVariant" class="step-match-info">
-              SKU: <span class="code-badge">{{ matchedStepVariant.sku }}</span> |
-              Giá bán: <strong class="price-text">{{ formatCurrency(matchedStepVariant.salePrice) }}</strong> |
-              Số lượng sẵn có: <strong>{{ matchedStepVariant.availableQuantity }} đôi</strong>
+                  <el-icon><Plus /></el-icon>
+                  <span>Thêm</span>
+                </button>
+              </div>
+            </div>
+
+            <div v-if="matchedStepVariant" class="step-match-alert">
+              <span>SKU: <strong>{{ matchedStepVariant.sku }}</strong></span>
+              <span class="divider">/</span>
+              <span>Giá: <strong>{{ formatCurrency(matchedStepVariant.salePrice) }}</strong></span>
+              <span class="divider">/</span>
+              <span>Sẵn có: <strong class="stock-num">{{ matchedStepVariant.availableQuantity }} đôi</strong></span>
             </div>
           </div>
 
           <!-- Variant SKU Grid / Table -->
-          <el-table :data="paginatedVariants" stripe border style="width: 100%">
+          <el-table :data="paginatedVariants" stripe border style="width: 100%" class="pos-table">
             <template #empty>
               <el-empty description="Không tìm thấy biến thể SKU phù hợp" :image-size="72" />
             </template>
-            <el-table-column label="Mã SKU" width="115">
+            <el-table-column label="Mã SKU" width="120">
               <template #default="{ row }">
                 <span class="code-badge">{{ row.sku }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Sản phẩm Sneaker" min-width="160">
+            <el-table-column label="Sản phẩm Sneaker" min-width="170">
               <template #default="{ row }">
                 <div class="pos-prod-cell">
                   <img
@@ -178,30 +163,28 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="Size / Màu" width="125">
+            <el-table-column label="Size / Màu" width="155">
               <template #default="{ row }">
                 <div class="pos-attr-cell">
-                  <span class="code-badge" style="font-size: 10.5px; padding: 1px 5px">
-                    {{ row.sizeValue }}
-                  </span>
-                  <span class="color-dot" :style="{ backgroundColor: row.hexCode }"></span>
-                  <span class="color-text">{{ row.colorName }}</span>
+                  <span class="size-pill">{{ row.sizeValue }}</span>
+                  <span class="color-dot" :style="{ backgroundColor: row.hexCode || '#000000' }"></span>
+                  <span class="color-text" :title="row.colorName">{{ row.colorName }}</span>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="Đơn giá" width="110" align="right">
+            <el-table-column label="Đơn giá" width="115" align="right">
               <template #default="{ row }">
                 <span class="price-text">{{ formatCurrency(row.salePrice) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Sẵn có" width="75" align="center">
+            <el-table-column label="Sẵn có" width="85" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.availableQuantity > 0 ? 'success' : 'danger'" size="small">
-                  {{ row.availableQuantity }}
-                </el-tag>
+                <span :class="['stock-pill', row.availableQuantity > 0 ? 'in-stock' : 'out-stock']">
+                  {{ row.availableQuantity }} đôi
+                </span>
               </template>
             </el-table-column>
-            <el-table-column label="Chọn" width="100" align="center">
+            <el-table-column label="Thao tác" width="90" align="center">
               <template #default="{ row }">
                 <div class="row-actions">
                   <button
@@ -244,16 +227,17 @@
       <el-col :xs="24" :lg="10">
         <div class="table-card pos-cart-card">
           <div class="cart-header">
-            <h3>Đơn hàng hiện tại ({{ totalCartQty }} đôi)</h3>
-            <el-button
+            <div class="cart-header-title">
+              <h3>Đơn hàng hiện tại</h3>
+              <span class="cart-count-badge">{{ totalCartQty }} đôi</span>
+            </div>
+            <button
               v-if="cart.length > 0"
-              size="small"
-              type="danger"
-              text
+              class="cart-clear-btn"
               @click="cart = []"
             >
-              Xóa toàn bộ giỏ
-            </el-button>
+              Xóa giỏ
+            </button>
           </div>
 
           <!-- Customer Selection + Quick Add Customer -->
@@ -281,8 +265,16 @@
           </div>
 
           <!-- Cart Items -->
-          <div v-if="cart.length === 0" class="empty-cart">
-            <el-empty description="Chưa có sản phẩm nào trong đơn hàng" :image-size="85" />
+          <div v-if="cart.length === 0" class="empty-cart-state">
+            <div class="empty-box-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="1.5">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+              </svg>
+            </div>
+            <div class="empty-title">CHƯA CÓ SẢN PHẨM TRONG ĐƠN</div>
+            <div class="empty-hint">Quét mã vạch hộp giày hoặc chọn từ danh mục bên trái</div>
           </div>
           <div v-else class="cart-list">
             <div v-for="(item, index) in cart" :key="item.variant.id" class="cart-item">
@@ -290,11 +282,11 @@
                 <div class="item-title">{{ item.variant.productName }}</div>
                 <div class="item-meta">
                   <span class="code-badge">{{ item.variant.sku }}</span>
-                  <span>Size {{ item.variant.sizeValue }} · {{ item.variant.colorName }}</span>
+                  <span class="attr-text">Size {{ item.variant.sizeValue }} · {{ item.variant.colorName }}</span>
                   <span class="avail">(Sẵn có: {{ item.variant.availableQuantity }})</span>
                 </div>
                 <div class="item-price">
-                  {{ formatCurrency(item.variant.salePrice) }} x {{ item.quantity }} =
+                  {{ formatCurrency(item.variant.salePrice) }} &times; {{ item.quantity }} =
                   <strong class="price-text">{{ formatCurrency(item.variant.salePrice * item.quantity) }}</strong>
                 </div>
               </div>
@@ -304,7 +296,7 @@
                   :min="1"
                   :max="item.variant.availableQuantity"
                   size="small"
-                  style="width: 100px"
+                  style="width: 95px"
                 />
                 <button
                   class="cart-delete-btn"
@@ -319,18 +311,18 @@
 
           <!-- Payment & Summary -->
           <div class="checkout-section">
-            <el-form label-position="top" size="small">
+            <el-form label-position="top" size="small" class="pos-checkout-form">
               <el-row :gutter="12">
                 <el-col :span="12">
-                  <el-form-item label="Phương thức thanh toán">
-                    <el-radio-group v-model="checkoutForm.paymentMethod">
+                  <el-form-item label="PHƯƠNG THỨC THANH TOÁN">
+                    <el-radio-group v-model="checkoutForm.paymentMethod" class="pos-radio-group">
                       <el-radio-button label="CASH">Tiền mặt</el-radio-button>
                       <el-radio-button label="BANK_TRANSFER">Chuyển khoản</el-radio-button>
                     </el-radio-group>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="Trạng thái xác nhận đơn">
+                  <el-form-item label="TRẠNG THÁI XÁC NHẬN">
                     <el-select v-model="checkoutForm.status" style="width: 100%">
                       <el-option label="Hoàn thành ngay (COMPLETED)" value="COMPLETED" />
                       <el-option label="Xác nhận giữ đơn (CONFIRMED)" value="CONFIRMED" />
@@ -342,12 +334,12 @@
 
               <el-form-item
                 v-if="checkoutForm.paymentMethod === 'BANK_TRANSFER'"
-                label="Mã giao dịch chuyển khoản / Ngân hàng"
+                label="MÃ GIAO DỊCH CHUYỂN KHOẢN / NGÂN HÀNG"
               >
-                <el-input v-model="checkoutForm.paymentReference" placeholder="VD: Vietcombank FT26313..." />
+                <el-input v-model="checkoutForm.paymentReference" placeholder="VD: Vietcombank FT26313 hoặc SePay..." />
               </el-form-item>
 
-              <el-form-item label="Ghi chú đơn hàng">
+              <el-form-item label="GHI CHÚ ĐƠN HÀNG">
                 <el-input v-model="checkoutForm.note" placeholder="Ghi chú thêm nếu có..." />
               </el-form-item>
             </el-form>
@@ -372,7 +364,7 @@
               :disabled="cart.length === 0 || submitting"
               @click="submitSaleOrder"
             >
-              <span v-if="submitting">Đang tạo đơn hàng...</span>
+              <span v-if="submitting">ĐANG TẠO ĐƠN HÀNG...</span>
               <span v-else>XÁC NHẬN ĐƠN HÀNG &amp; XUẤT HÓA ĐƠN</span>
             </button>
           </div>
@@ -436,7 +428,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Delete, Plus, Printer, Tickets } from '@element-plus/icons-vue'
+import { Search, Delete, Plus, Printer, Tickets, Camera, Refresh } from '@element-plus/icons-vue'
 import { variantService } from '@/services/variantService'
 import { productService } from '@/services/productService'
 import { customerService } from '@/services/customerService'
@@ -682,9 +674,59 @@ const playScanBeep = (isSuccess = true) => {
   }
 }
 
-// --- BARCODE SCAN PROCESSOR ---
+// --- UNIFIED SEARCH & BARCODE SCAN PROCESSOR ---
+function handleScanOrEnter() {
+  const code = searchQuery.value.trim()
+  if (!code) return
+
+  const cleanCode = code.toLowerCase()
+  const matched = variants.value.find(
+    (v) =>
+      v.sku.toLowerCase() === cleanCode ||
+      (v.barcode && v.barcode.toLowerCase() === cleanCode) ||
+      String(v.id) === cleanCode ||
+      (v.productCode && v.productCode.toLowerCase() === cleanCode)
+  )
+
+  if (matched) {
+    if (matched.availableQuantity <= 0) {
+      playScanBeep(false)
+      ElMessage.error(`⚠️ Đôi ${matched.productName} (SKU: ${matched.sku}) đã hết hàng trong kho!`)
+      return
+    }
+    addVariantToCart(matched)
+    playScanBeep(true)
+    searchQuery.value = ''
+    debouncedSearchQuery.value = ''
+    nextTick(() => {
+      barcodeInputRef.value?.focus()
+    })
+  } else {
+    if (filteredVariants.value.length === 1) {
+      const single = filteredVariants.value[0]
+      if (single.availableQuantity <= 0) {
+        playScanBeep(false)
+        ElMessage.error(`⚠️ Đôi ${single.productName} (SKU: ${single.sku}) đã hết hàng trong kho!`)
+        return
+      }
+      addVariantToCart(single)
+      playScanBeep(true)
+      searchQuery.value = ''
+      debouncedSearchQuery.value = ''
+      nextTick(() => {
+        barcodeInputRef.value?.focus()
+      })
+    } else if (filteredVariants.value.length === 0) {
+      playScanBeep(false)
+      ElMessage.warning(`❌ Không tìm thấy mã vạch / SKU: "${code}". Vui lòng thử lại!`)
+    } else {
+      ElMessage.info(`Tìm thấy ${filteredVariants.value.length} mẫu phù hợp. Bấm dấu [+] để thêm vào đơn.`)
+    }
+  }
+}
+
 function handleBarcodeScanned() {
-  const code = barcodeScanInput.value.trim()
+  const code = barcodeScanInput.value.trim() || searchQuery.value.trim()
   if (!code) return
   processScannedSku(code)
 }
@@ -709,6 +751,8 @@ function processScannedSku(code) {
     addVariantToCart(matched)
     playScanBeep(true)
     barcodeScanInput.value = ''
+    searchQuery.value = ''
+    debouncedSearchQuery.value = ''
     nextTick(() => {
       barcodeInputRef.value?.focus()
     })
@@ -855,163 +899,262 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.selector-panel {
-  background: #fafafa;
-  border: 1px solid #e5e5e5;
-  border-radius: 0;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  .selector-title {
+.header-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .pos-hdr-btn {
+    height: 36px;
+    padding: 0 16px;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+    font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 800;
-    text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #000000;
-    margin-bottom: 10px;
-  }
-  .step-match-info {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #525252;
-  }
-}
-
-.pos-cart-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-
-  .cart-header {
-    display: flex;
-    justify-content: space-between;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
     align-items: center;
-    border-bottom: 1px solid #e5e5e5;
-    padding-bottom: 12px;
-    h3 {
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #000000;
-    }
-  }
-
-  .customer-box {
-    background: #fafafa;
-    padding: 14px;
+    gap: 6px;
     border-radius: 0;
-    border: 1px solid #e5e5e5;
-    .box-label {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #737373;
-      margin-bottom: 6px;
+
+    &:hover {
+      background: #f4f4f5;
     }
-    .cust-row {
-      display: flex;
-      gap: 8px;
-    }
-  }
 
-  .cart-list {
-    max-height: 290px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    .cart-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 0;
-      border: 1px solid #e5e5e5;
-      background: #ffffff;
-
-      .item-info {
-        .item-title {
-          font-size: 13px;
-          font-weight: 800;
-          color: #000000;
-        }
-        .item-meta {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          color: #737373;
-          margin: 4px 0;
-          .avail {
-            color: #10b981;
-            font-weight: 700;
-          }
-        }
-        .item-price {
-          font-size: 12px;
-        }
-      }
-
-      .item-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-    }
-  }
-
-  .checkout-section {
-    border-top: 1px solid #e5e5e5;
-    padding-top: 14px;
-
-    .summary-totals {
+    &.primary {
       background: #000000;
       color: #ffffff;
-      padding: 16px 18px;
-      border-radius: 0;
-      border: 1px solid #000000;
-      margin-bottom: 12px;
 
-      .row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 13px;
-        color: #a1a1aa;
-        margin-bottom: 4px;
-
-        span:last-child {
-          color: #ffffff;
-          font-variant-numeric: tabular-nums;
-        }
-      }
-
-      .final {
-        border-top: 1px solid #27272a;
-        padding-top: 10px;
-        margin-top: 8px;
-        font-size: 17px;
-        font-weight: 900;
-        color: #ffffff;
-
-        span:last-child {
-          color: #ffffff;
-          font-size: 20px;
-        }
+      &:hover {
+        background: #27272a;
+        border-color: #27272a;
       }
     }
   }
 }
 
+/* UNIFIED MASTER TOOLBAR */
+.pos-master-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  .search-scan-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+
+    .master-search-input {
+      flex: 1;
+
+      :deep(.el-input__wrapper) {
+        border-radius: 0 !important;
+        box-shadow: 0 0 0 1px #000000 inset !important;
+        height: 40px;
+        background-color: #ffffff;
+
+        &.is-focus {
+          box-shadow: 0 0 0 2px #000000 inset !important;
+        }
+
+        input {
+          font-weight: 600;
+          font-size: 13px;
+
+          &::placeholder {
+            color: #71717a;
+            font-size: 12px;
+            font-weight: 400;
+          }
+        }
+      }
+    }
+
+    .btn-scan-trigger {
+      height: 40px;
+      padding: 0 18px;
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #000000;
+      border-radius: 0;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      box-sizing: border-box;
+
+      &:hover {
+        background: #27272a;
+        border-color: #27272a;
+      }
+    }
+
+    .btn-camera-trigger {
+      height: 40px;
+      padding: 0 14px;
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #000000;
+      border-radius: 0;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+
+      &:hover {
+        background: #000000;
+        color: #ffffff;
+      }
+    }
+  }
+
+  .sub-controls-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .filter-dropdowns {
+      display: flex;
+      gap: 6px;
+
+      .filter-select {
+        width: 135px;
+
+        :deep(.el-input__wrapper) {
+          border-radius: 0 !important;
+          height: 34px;
+        }
+      }
+    }
+
+    .quick-step-strip {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      padding: 4px 8px;
+      min-width: 320px;
+
+      .strip-label {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        color: #000000;
+        white-space: nowrap;
+        margin-right: 2px;
+      }
+
+      .step-select {
+        :deep(.el-input__wrapper) {
+          border-radius: 0 !important;
+          height: 28px;
+          font-size: 11.5px;
+        }
+
+        &.prod {
+          flex: 2;
+          min-width: 140px;
+        }
+
+        &.size {
+          width: 85px;
+        }
+
+        &.color {
+          width: 100px;
+        }
+      }
+
+      .step-add-btn {
+        height: 28px;
+        padding: 0 10px;
+        background: #000000;
+        color: #ffffff;
+        border: 1px solid #000000;
+        border-radius: 0;
+        font-family: var(--font-sans);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        transition: all 0.12s ease;
+
+        &:hover:not(:disabled) {
+          background: #27272a;
+          border-color: #27272a;
+        }
+
+        &:disabled {
+          background: #e4e4e7;
+          border-color: #d4d4d8;
+          color: #a1a1aa;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .step-match-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #f4f4f5;
+    border: 1px dashed #d4d4d8;
+    font-size: 11.5px;
+    color: #3f3f46;
+
+    .divider {
+      color: #a1a1aa;
+    }
+
+    strong {
+      color: #000000;
+    }
+
+    .stock-num {
+      color: #16a34a;
+    }
+  }
+}
+
+/* DATA TABLE ATTRS & BADGES */
 .pos-prod-cell {
   display: flex;
   align-items: center;
   gap: 8px;
 
   .pos-prod-thumb {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 0;
     object-fit: cover;
     border: 1px solid #e5e5e5;
@@ -1054,45 +1197,60 @@ onUnmounted(() => {
 .pos-attr-cell {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  min-width: 0;
+
+  .size-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    background: #f4f4f5;
+    color: #000000;
+    border: 1px solid #d4d4d4;
+    padding: 1px 6px;
+    border-radius: 0;
+    flex-shrink: 0;
+  }
+
+  .color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+  }
 
   .color-text {
     font-size: 11.5px;
-    color: #27272a;
+    color: #18181b;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 85px;
   }
 }
 
-.pos-add-btn {
-  height: 26px;
-  padding: 0 9px;
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #000000;
-  border-radius: 0;
-  font-family: var(--font-sans);
-  font-size: 10px;
+.stock-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.12s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 0;
+  border: 1px solid;
+  letter-spacing: 0.02em;
 
-  &:hover:not(:disabled) {
-    background: #27272a;
-    border-color: #27272a;
+  &.in-stock {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
   }
 
-  &:disabled {
-    background: #f4f4f5;
-    color: #a1a1aa;
-    border-color: #e4e4e7;
-    cursor: not-allowed;
+  &.out-stock {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
   }
 }
 
@@ -1113,6 +1271,245 @@ onUnmounted(() => {
 
     strong {
       color: #000000;
+    }
+  }
+}
+
+/* RIGHT CART CARD */
+.pos-cart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 12px;
+
+    .cart-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      h3 {
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #000000;
+        margin: 0;
+      }
+
+      .cart-count-badge {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 800;
+        background: #000000;
+        color: #ffffff;
+        padding: 2px 7px;
+        border-radius: 0;
+      }
+    }
+
+    .cart-clear-btn {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .customer-box {
+    background: #fafafa;
+    padding: 12px 14px;
+    border-radius: 0;
+    border: 1px solid #e5e5e5;
+
+    .box-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #737373;
+      margin-bottom: 6px;
+    }
+
+    .cust-row {
+      display: flex;
+      gap: 8px;
+
+      :deep(.el-input__wrapper) {
+        border-radius: 0 !important;
+      }
+    }
+  }
+
+  .empty-cart-state {
+    padding: 36px 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px dashed #e5e5e5;
+    background: #fafafa;
+
+    .empty-title {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #18181b;
+      text-transform: uppercase;
+    }
+
+    .empty-hint {
+      font-size: 11px;
+      color: #71717a;
+      max-width: 250px;
+      line-height: 1.4;
+    }
+  }
+
+  .cart-list {
+    max-height: 290px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 0;
+      border: 1px solid #e5e5e5;
+      background: #ffffff;
+
+      .item-info {
+        .item-title {
+          font-size: 12.5px;
+          font-weight: 800;
+          color: #000000;
+        }
+
+        .item-meta {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: #737373;
+          margin: 4px 0;
+
+          .avail {
+            color: #10b981;
+            font-weight: 700;
+          }
+        }
+
+        .item-price {
+          font-size: 12px;
+        }
+      }
+
+      .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+    }
+  }
+
+  .checkout-section {
+    border-top: 1px solid #e5e5e5;
+    padding-top: 14px;
+
+    .pos-checkout-form {
+      :deep(.el-form-item__label) {
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        color: #71717a !important;
+        padding-bottom: 4px !important;
+      }
+
+      :deep(.el-input__wrapper) {
+        border-radius: 0 !important;
+      }
+    }
+
+    .pos-radio-group {
+      width: 100%;
+      display: flex;
+
+      :deep(.el-radio-button) {
+        flex: 1;
+
+        .el-radio-button__inner {
+          width: 100%;
+          border-radius: 0 !important;
+          font-weight: 800 !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-transform: uppercase !important;
+        }
+
+        &.is-active .el-radio-button__inner {
+          background-color: #000000 !important;
+          border-color: #000000 !important;
+          color: #ffffff !important;
+          box-shadow: -1px 0 0 0 #000000 !important;
+        }
+      }
+    }
+
+    .summary-totals {
+      background: #000000;
+      color: #ffffff;
+      padding: 16px 18px;
+      border-radius: 0;
+      border: 1px solid #000000;
+      margin-bottom: 12px;
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #a1a1aa;
+        margin-bottom: 4px;
+
+        span:last-child {
+          color: #ffffff;
+          font-variant-numeric: tabular-nums;
+        }
+      }
+
+      .final {
+        border-top: 1px solid #27272a;
+        padding-top: 10px;
+        margin-top: 8px;
+        font-size: 16px;
+        font-weight: 900;
+        color: #ffffff;
+
+        span:last-child {
+          color: #ffffff;
+          font-size: 19px;
+        }
+      }
     }
   }
 }
@@ -1194,105 +1591,6 @@ onUnmounted(() => {
   }
 }
 
-/* BARCODE SCANNER HERO BAR */
-.pos-barcode-scanner-bar {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  border: 1px solid #1e293b;
-
-  .scanner-hero {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    .scanner-badge-laser {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      color: #38bdf8;
-
-      .laser-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ef4444;
-        box-shadow: 0 0 8px #ef4444;
-        animation: laserBlink 1.2s infinite;
-      }
-
-      .scanner-tip {
-        font-size: 10px;
-        font-weight: 500;
-        color: #94a3b8;
-        margin-left: auto;
-      }
-    }
-
-    .scanner-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-
-      .barcode-quick-input {
-        flex: 1;
-
-        :deep(.el-input__wrapper) {
-          background: #1e293b;
-          box-shadow: 0 0 0 1px #334155 inset;
-          color: #ffffff;
-
-          &.is-focus {
-            box-shadow: 0 0 0 2px #38bdf8 inset;
-          }
-
-          input {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.02em;
-
-            &::placeholder {
-              color: #64748b;
-              font-weight: 500;
-              font-size: 12.5px;
-            }
-          }
-        }
-
-        :deep(.el-input-group__append) {
-          background: #38bdf8;
-          border-color: #38bdf8;
-          color: #0f172a;
-          font-weight: 900;
-          cursor: pointer;
-
-          button {
-            color: #0f172a;
-            font-weight: 900;
-          }
-        }
-      }
-
-      .btn-camera-scan {
-        height: 40px;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-    }
-  }
-}
-
-@keyframes laserBlink {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
-}
-
 /* CAMERA SCANNER DIALOG */
 .camera-scanner-body {
   display: flex;
@@ -1306,7 +1604,7 @@ onUnmounted(() => {
     height: 280px;
     background: #000;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1333,7 +1631,7 @@ onUnmounted(() => {
         width: 260px;
         height: 160px;
         border: 2px solid #10b981;
-        border-radius: 8px;
+        border-radius: 0;
         position: relative;
         box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
 

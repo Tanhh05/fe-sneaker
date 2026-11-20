@@ -52,7 +52,7 @@ function goToStore() {
 }
 
 function goToAdmin() {
-  router.push('/dashboard')
+  router.push('/admin/dashboard')
 }
 </script>
 

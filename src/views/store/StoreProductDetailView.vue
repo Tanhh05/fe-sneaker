@@ -100,9 +100,14 @@
           <div class="option-group">
             <div class="group-title-row">
               <span class="group-title">CHỌN KÍCH CỠ (SIZE EU / VN)</span>
-              <button class="size-chart-link" @click="showSizeGuide = true">
-                Bảng quy đổi size ↗
-              </button>
+              <div class="size-action-links">
+                <button type="button" class="btn-smart-finder" @click="showSmartSizeFinder = true">
+                  ⚡ Gợi ý size ↗
+                </button>
+                <button type="button" class="size-chart-link" @click="showSizeGuide = true">
+                  Bảng size ↗
+                </button>
+              </div>
             </div>
 
             <div class="size-matrix">
@@ -241,6 +246,189 @@
           </div>
         </div>
       </div>
+
+      <!-- ================= CUSTOMER REVIEWS & ON-FEET SECTION ================= -->
+      <section class="reviews-section" id="customer-reviews">
+        <div class="reviews-head-row">
+          <div>
+            <h2 class="reviews-title">ĐÁNH GIÁ SẢN PHẨM</h2>
+            <span class="reviews-sub">
+              {{ reviewsSummary?.totalReviews ? `${reviewsSummary.totalReviews} nhận xét thực tế từ người mua` : 'Chưa có đánh giá nào cho sản phẩm này' }}
+            </span>
+          </div>
+
+          <div class="overall-rating-box" v-if="reviewsSummary?.averageRating">
+            <span class="rating-val">{{ averageRatingDisplay }}</span>
+            <div class="rating-sub">
+              <el-rate :model-value="Number(averageRatingDisplay)" disabled text-color="#0f172a" />
+              <span class="scale-text">/ 5.0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Minimalist Analytics Card -->
+        <div class="reviews-analytics-card">
+          <!-- Phân bổ sao -->
+          <div class="analytics-col">
+            <div class="col-heading">TỶ LỆ ĐÁNH GIÁ SAO</div>
+            <div class="star-bars-simple">
+              <div v-for="star in [5, 4, 3, 2, 1]" :key="star" class="star-row">
+                <span class="star-num">{{ star }} ★</span>
+                <div class="bar-track">
+                  <div class="bar-fill" :style="{ width: getStarPercent(star) + '%' }"></div>
+                </div>
+                <span class="star-pct">{{ getStarPercent(star) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thước đo độ vừa vặn -->
+          <div class="analytics-col">
+            <div class="col-heading">ĐỘ VỪA VẶN (FIT METER)</div>
+            <div class="fit-bars-simple">
+              <div class="fit-row">
+                <span class="fit-label">Chuẩn size (True to size)</span>
+                <div class="bar-track">
+                  <div class="bar-fill" :style="{ width: getFitPercent('TRUE_TO_SIZE') + '%' }"></div>
+                </div>
+                <span class="fit-pct">{{ getFitPercent('TRUE_TO_SIZE') }}%</span>
+              </div>
+
+              <div class="fit-row">
+                <span class="fit-label">Hơi chật (Tăng 0.5 size)</span>
+                <div class="bar-track">
+                  <div class="bar-fill muted" :style="{ width: getFitPercent('HALF_SIZE_UP') + '%' }"></div>
+                </div>
+                <span class="fit-pct">{{ getFitPercent('HALF_SIZE_UP') }}%</span>
+              </div>
+
+              <div class="fit-row">
+                <span class="fit-label">Hơi rộng (Lùi 0.5 size)</span>
+                <div class="bar-track">
+                  <div class="bar-fill muted" :style="{ width: getFitPercent('HALF_SIZE_DOWN') + '%' }"></div>
+                </div>
+                <span class="fit-pct">{{ getFitPercent('HALF_SIZE_DOWN') }}%</span>
+              </div>
+            </div>
+            <p class="fit-note">{{ fitAdviceText }}</p>
+          </div>
+        </div>
+
+        <!-- On-feet Strip -->
+        <div v-if="allOnFeetPhotos.length > 0" class="onfeet-strip-block">
+          <div class="onfeet-header">
+            <span>ẢNH ON-FEET THỰC TẾ ({{ allOnFeetPhotos.length }})</span>
+          </div>
+          <div class="onfeet-thumbs">
+            <div
+              v-for="(photo, idx) in allOnFeetPhotos"
+              :key="idx"
+              class="onfeet-thumb-item"
+              @click="openLightbox(photo)"
+            >
+              <img :src="photo.url" :alt="`On-feet ${idx}`" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Minimal Filter Tabs -->
+        <div class="filter-tabs-row">
+          <button
+            v-for="f in reviewFilterOptions"
+            :key="f.value"
+            class="filter-pill"
+            :class="{ active: currentReviewFilter === f.value }"
+            @click="currentReviewFilter = f.value"
+          >
+            {{ f.label }} ({{ f.count }})
+          </button>
+        </div>
+
+        <!-- Reviews Feed -->
+        <div v-if="filteredReviewList.length > 0" class="reviews-feed">
+          <div v-for="review in filteredReviewList" :key="review.id" class="review-row-item">
+            <div class="row-header">
+              <div class="user-block">
+                <div class="user-avatar">
+                  {{ review.customerName ? review.customerName.charAt(0).toUpperCase() : 'U' }}
+                </div>
+                <div class="user-details">
+                  <div class="name-line">
+                    <strong class="user-name">{{ review.customerName || 'Khách hàng' }}</strong>
+                    <span v-if="review.verifiedBuyer" class="verified-tag">✓ Đã mua hàng</span>
+                  </div>
+                  <span class="date-line">{{ formatReviewDate(review.createdAt) }}</span>
+                </div>
+              </div>
+
+              <div class="rating-block">
+                <el-rate :model-value="review.rating" disabled text-color="#0f172a" />
+                <span v-if="review.fitFeedback" class="fit-tag">
+                  {{ getFitFeedbackLabel(review.fitFeedback) }}
+                </span>
+              </div>
+            </div>
+
+            <p class="review-text">{{ review.comment }}</p>
+
+            <!-- Photos -->
+            <div v-if="review.photoUrls && review.photoUrls.length > 0" class="review-photos-row">
+              <div
+                v-for="(pUrl, pIdx) in review.photoUrls"
+                :key="pIdx"
+                class="photo-thumb"
+                @click="openLightbox({ url: pUrl, customerName: review.customerName, comment: review.comment })"
+              >
+                <img :src="pUrl" :alt="`Photo ${pIdx}`" />
+              </div>
+            </div>
+
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn-helpful-simple"
+                :class="{ active: helpfulMap[review.id] }"
+                @click="toggleHelpful(review)"
+              >
+                👍 Hữu ích ({{ (review.helpfulCount || 0) + (helpfulMap[review.id] ? 1 : 0) }})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div v-else class="reviews-empty-clean">
+          <p>Chưa có đánh giá nào phù hợp với bộ lọc.</p>
+          <router-link to="/my-orders" class="btn-orders-link">
+            Vào Đơn hàng của tôi để đánh giá &rarr;
+          </router-link>
+        </div>
+      </section>
+
+      <!-- Lightbox Modal for Full Image View -->
+      <el-dialog
+        v-model="lightboxVisible"
+        width="650px"
+        class="lightbox-dialog"
+        :show-close="true"
+        align-center
+      >
+        <div v-if="activeLightboxPhoto" class="lightbox-content">
+          <img :src="activeLightboxPhoto.url" alt="On-feet full size" class="lightbox-img" />
+          <div class="lightbox-caption">
+            <strong>{{ activeLightboxPhoto.customerName }}</strong>
+            <p v-if="activeLightboxPhoto.comment">{{ activeLightboxPhoto.comment }}</p>
+          </div>
+        </div>
+      </el-dialog>
+
+      <!-- Smart Size Finder Modal -->
+      <SmartSizeFinderModal
+        v-model="showSmartSizeFinder"
+        :product-name="product ? product.productName : ''"
+        :brand-name="product ? product.brandName : ''"
+        @select-size="handleSmartSizeSelect"
+      />
     </div>
 
     <!-- Size Guide Dialog -->
@@ -260,6 +448,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
+import SmartSizeFinderModal from '@/components/store/SmartSizeFinderModal.vue'
 import { useCartStore } from '@/stores/cart'
 import { useWishlistStore } from '@/stores/wishlist'
 import { formatCurrency } from '@/utils/formatters'
@@ -273,6 +462,169 @@ const loading = ref(false)
 const product = ref(null)
 const activeImage = ref('')
 const quantity = ref(1)
+
+// SMART SIZE FINDER STATE
+const showSmartSizeFinder = ref(false)
+
+const handleSmartSizeSelect = (recSize) => {
+  if (!availableSizesForColor.value || availableSizesForColor.value.length === 0) return
+  const found = availableSizesForColor.value.find(s => String(s.sizeValue) === String(recSize))
+  if (found) {
+    selectSize(found)
+  } else {
+    ElMessage.info(`Size ${recSize} tạm hết trong kho màu này, mời bạn chọn size kế cận!`)
+  }
+}
+
+// REVIEWS & ON-FEET STATE
+const reviewsSummary = ref(null)
+const currentReviewFilter = ref('ALL')
+const helpfulMap = ref({})
+const lightboxVisible = ref(false)
+const activeLightboxPhoto = ref(null)
+
+const loadReviews = async () => {
+  try {
+    const id = route.params.id
+    const res = await storeService.getProductReviews(id)
+    reviewsSummary.value = res?.data || null
+  } catch (err) {
+    console.warn('Lỗi nạp đánh giá sản phẩm:', err)
+  }
+}
+
+const averageRatingDisplay = computed(() => {
+  if (!reviewsSummary.value || !reviewsSummary.value.averageRating) return '5.0'
+  return reviewsSummary.value.averageRating.toFixed(1)
+})
+
+const getStarCount = (star) => {
+  if (!reviewsSummary.value) return 0
+  const map = {
+    5: reviewsSummary.value.fiveStarCount || 0,
+    4: reviewsSummary.value.fourStarCount || 0,
+    3: reviewsSummary.value.threeStarCount || 0,
+    2: reviewsSummary.value.twoStarCount || 0,
+    1: reviewsSummary.value.oneStarCount || 0
+  }
+  return map[star] || 0
+}
+
+const getStarPercent = (star) => {
+  const total = reviewsSummary.value?.totalReviews || 0
+  if (total === 0) return star === 5 ? 100 : 0
+  return Math.round((getStarCount(star) / total) * 100)
+}
+
+const getFitPercent = (fitType) => {
+  const total = reviewsSummary.value?.totalReviews || 0
+  if (total === 0) {
+    return fitType === 'TRUE_TO_SIZE' ? 100 : 0
+  }
+  const count =
+    fitType === 'TRUE_TO_SIZE'
+      ? reviewsSummary.value.trueToSizeCount || 0
+      : fitType === 'HALF_SIZE_UP'
+      ? reviewsSummary.value.halfSizeUpCount || 0
+      : reviewsSummary.value.halfSizeDownCount || 0
+  return Math.round((count / total) * 100)
+}
+
+const fitAdviceText = computed(() => {
+  const truePct = getFitPercent('TRUE_TO_SIZE')
+  const upPct = getFitPercent('HALF_SIZE_UP')
+  const downPct = getFitPercent('HALF_SIZE_DOWN')
+
+  if (truePct >= 70) {
+    return 'Đa số khách hàng nhận xét giày đi chuẩn size (True to size). Bạn có thể tự tin chọn đúng size thường đi.'
+  } else if (upPct > downPct && upPct >= 40) {
+    return 'Form giày có phần ôm khít. Đa số khách hàng khuyên nên tăng 0.5 size để đi thoải mái hơn.'
+  } else if (downPct >= 40) {
+    return 'Form giày khá rộng/dài. Bạn nên cân nhắc lùi 0.5 size so với size thông thường.'
+  }
+  return 'Phần lớn khách hàng đánh giá giày mang vừa vặn chuẩn size.'
+})
+
+const allOnFeetPhotos = computed(() => {
+  if (!reviewsSummary.value?.reviews) return []
+  const photos = []
+  reviewsSummary.value.reviews.forEach((r) => {
+    if (r.photoUrls && r.photoUrls.length > 0) {
+      r.photoUrls.forEach((url) => {
+        photos.push({
+          url,
+          customerName: r.customerName || 'Khách hàng',
+          comment: r.comment
+        })
+      })
+    }
+  })
+  return photos
+})
+
+const reviewFilterOptions = computed(() => {
+  const total = reviewsSummary.value?.totalReviews || 0
+  const photoCount = (reviewsSummary.value?.reviews || []).filter(
+    (r) => r.photoUrls && r.photoUrls.length > 0
+  ).length
+  const fiveStar = reviewsSummary.value?.fiveStarCount || 0
+  const fourStar = reviewsSummary.value?.fourStarCount || 0
+  const threeStar = (reviewsSummary.value?.threeStarCount || 0) + (reviewsSummary.value?.twoStarCount || 0) + (reviewsSummary.value?.oneStarCount || 0)
+
+  return [
+    { label: 'Tất cả', value: 'ALL', count: total },
+    { label: '📸 Có ảnh On-feet', value: 'HAS_PHOTO', count: photoCount },
+    { label: '5 sao', value: '5', count: fiveStar },
+    { label: '4 sao', value: '4', count: fourStar },
+    { label: '3 sao trở xuống', value: '3_DOWN', count: threeStar }
+  ]
+})
+
+const filteredReviewList = computed(() => {
+  const list = reviewsSummary.value?.reviews || []
+  if (currentReviewFilter.value === 'ALL') return list
+  if (currentReviewFilter.value === 'HAS_PHOTO') {
+    return list.filter((r) => r.photoUrls && r.photoUrls.length > 0)
+  }
+  if (currentReviewFilter.value === '5') {
+    return list.filter((r) => r.rating === 5)
+  }
+  if (currentReviewFilter.value === '4') {
+    return list.filter((r) => r.rating === 4)
+  }
+  if (currentReviewFilter.value === '3_DOWN') {
+    return list.filter((r) => r.rating <= 3)
+  }
+  return list
+})
+
+const formatReviewDate = (isoStr) => {
+  if (!isoStr) return ''
+  try {
+    const d = new Date(isoStr)
+    return d.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  } catch {
+    return isoStr
+  }
+}
+
+const getFitFeedbackLabel = (fit) => {
+  const map = {
+    TRUE_TO_SIZE: '✨ Vừa vặn chuẩn size',
+    HALF_SIZE_UP: '👟 Hơi chật (Tăng 0.5 size)',
+    HALF_SIZE_DOWN: '👟 Hơi rộng (Lùi 0.5 size)'
+  }
+  return map[fit] || 'Chuẩn size'
+}
+
+const toggleHelpful = (review) => {
+  helpfulMap.value[review.id] = !helpfulMap.value[review.id]
+}
+
+const openLightbox = (photo) => {
+  activeLightboxPhoto.value = photo
+  lightboxVisible.value = true
+}
 
 const handleToggleWishlist = () => {
   if (!product.value) return
@@ -414,6 +766,7 @@ const handleBuyNow = () => {
 
 onMounted(() => {
   loadProduct()
+  loadReviews()
 })
 </script>
 
@@ -671,20 +1024,48 @@ onMounted(() => {
         color: #525252;
       }
 
-      .size-chart-link {
-        background: none;
-        border: none;
-        font-family: inherit;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        color: #737373;
-        text-decoration: underline;
-        cursor: pointer;
-        padding: 0;
+      .size-action-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
 
-        &:hover {
+        .btn-smart-finder {
+          background: #ffffff;
           color: #000000;
+          border: 1px solid #000000;
+          padding: 3px 8px;
+          border-radius: 4px;
+          font-family: inherit;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.15s ease;
+
+          &:hover {
+            background: #000000;
+            color: #ffffff;
+          }
+        }
+
+        .size-chart-link {
+          background: none;
+          border: none;
+          font-family: inherit;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          color: #737373;
+          text-decoration: underline;
+          cursor: pointer;
+          padding: 0;
+
+          &:hover {
+            color: #000000;
+          }
         }
       }
     }
@@ -1017,6 +1398,471 @@ onMounted(() => {
         color: #000000;
         font-weight: 700;
       }
+    }
+  }
+}
+
+/* ================= REVIEWS SECTION (MINIMALIST & COHESIVE) ================= */
+.reviews-section {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid #e5e5e5;
+
+  .reviews-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .reviews-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #000000;
+      margin: 0 0 4px;
+      text-transform: uppercase;
+    }
+
+    .reviews-sub {
+      font-size: 13px;
+      color: #737373;
+    }
+
+    .overall-rating-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .rating-val {
+        font-size: 32px;
+        font-weight: 900;
+        color: #000000;
+        line-height: 1;
+      }
+
+      .rating-sub {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .scale-text {
+          font-size: 11px;
+          color: #737373;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  /* ANALYTICS CARD */
+  .reviews-analytics-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    background: #fafafa;
+    border: 1px solid #ebebeb;
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 30px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .analytics-col {
+      .col-heading {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #000000;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      /* STAR BARS */
+      .star-bars-simple {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .star-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+
+          .star-num {
+            width: 42px;
+            font-weight: 600;
+            color: #525252;
+          }
+
+          .bar-track {
+            flex: 1;
+            height: 6px;
+            background: #e5e5e5;
+            border-radius: 3px;
+            overflow: hidden;
+
+            .bar-fill {
+              height: 100%;
+              background: #000000;
+              border-radius: 3px;
+              transition: width 0.3s ease;
+            }
+          }
+
+          .star-pct {
+            width: 32px;
+            text-align: right;
+            font-weight: 700;
+            color: #171717;
+          }
+        }
+      }
+
+      /* FIT BARS */
+      .fit-bars-simple {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .fit-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+
+          .fit-label {
+            width: 160px;
+            font-weight: 600;
+            color: #525252;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .bar-track {
+            flex: 1;
+            height: 6px;
+            background: #e5e5e5;
+            border-radius: 3px;
+            overflow: hidden;
+
+            .bar-fill {
+              height: 100%;
+              background: #000000;
+              border-radius: 3px;
+
+              &.muted {
+                background: #737373;
+              }
+            }
+          }
+
+          .fit-pct {
+            width: 32px;
+            text-align: right;
+            font-weight: 700;
+            color: #171717;
+          }
+        }
+      }
+
+      .fit-note {
+        font-size: 12px;
+        color: #737373;
+        margin: 12px 0 0;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  /* ON-FEET STRIP */
+  .onfeet-strip-block {
+    margin-bottom: 28px;
+
+    .onfeet-header {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #000000;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .onfeet-thumbs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+
+      .onfeet-thumb-item {
+        width: 100px;
+        height: 100px;
+        flex-shrink: 0;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: pointer;
+        background: #fafafa;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.2s;
+        }
+
+        &:hover img {
+          transform: scale(1.06);
+        }
+      }
+    }
+  }
+
+  /* FILTER PILLS */
+  .filter-tabs-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+
+    .filter-pill {
+      padding: 6px 14px;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #525252;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #f0f0f0;
+        color: #000000;
+      }
+
+      &.active {
+        background: #000000;
+        border-color: #000000;
+        color: #ffffff;
+      }
+    }
+  }
+
+  /* REVIEWS FEED */
+  .reviews-feed {
+    display: flex;
+    flex-direction: column;
+
+    .review-row-item {
+      padding: 20px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 10px;
+
+        .user-block {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #000000;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .user-details {
+            .name-line {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+
+              .user-name {
+                font-size: 13px;
+                font-weight: 800;
+                color: #000000;
+              }
+
+              .verified-tag {
+                font-size: 10px;
+                font-weight: 700;
+                color: #15803d;
+                background: #f0fdf4;
+                border: 1px solid #bbf7d0;
+                padding: 1px 5px;
+                border-radius: 2px;
+              }
+            }
+
+            .date-line {
+              font-size: 11px;
+              color: #a3a3a3;
+            }
+          }
+        }
+
+        .rating-block {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .fit-tag {
+            font-size: 11px;
+            font-weight: 700;
+            background: #f5f5f5;
+            color: #404040;
+            padding: 2px 7px;
+            border-radius: 3px;
+          }
+        }
+      }
+
+      .review-text {
+        font-size: 13px;
+        color: #404040;
+        line-height: 1.6;
+        margin: 0 0 12px;
+      }
+
+      .review-photos-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+
+        .photo-thumb {
+          width: 72px;
+          height: 72px;
+          border-radius: 4px;
+          overflow: hidden;
+          border: 1px solid #e5e5e5;
+          cursor: pointer;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.2s;
+          }
+
+          &:hover img {
+            transform: scale(1.06);
+          }
+        }
+      }
+
+      .row-actions {
+        .btn-helpful-simple {
+          background: transparent;
+          border: 1px solid #e5e5e5;
+          border-radius: 4px;
+          padding: 4px 10px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #525252;
+          cursor: pointer;
+          transition: all 0.15s ease;
+
+          &:hover {
+            border-color: #000000;
+            color: #000000;
+          }
+
+          &.active {
+            background: #000000;
+            border-color: #000000;
+            color: #ffffff;
+          }
+        }
+      }
+    }
+  }
+
+  /* EMPTY CLEAN */
+  .reviews-empty-clean {
+    padding: 32px 0;
+    text-align: center;
+    color: #737373;
+    font-size: 13px;
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .btn-orders-link {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #000000;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 4px;
+      text-decoration: none;
+
+      &:hover {
+        background: #262626;
+      }
+    }
+  }
+}
+
+/* LIGHTBOX MODAL */
+.lightbox-dialog {
+  :deep(.el-dialog__body) {
+    padding: 0;
+  }
+}
+
+.lightbox-content {
+  display: flex;
+  flex-direction: column;
+
+  .lightbox-img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .lightbox-caption {
+    padding: 16px 20px;
+    background: #0f172a;
+    color: #ffffff;
+
+    strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin: 0;
+      line-height: 1.4;
     }
   }
 }

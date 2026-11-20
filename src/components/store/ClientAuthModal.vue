@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :model-value="modelValue"
-    width="480px"
+    width="560px"
     class="client-auth-dialog"
     :show-close="true"
     @update:model-value="$emit('update:modelValue', $event)"
@@ -22,48 +22,156 @@
           </div>
         </div>
 
-        <div class="user-details-list">
-          <div class="detail-row">
-            <span class="lbl">Tên đăng nhập:</span>
-            <span class="val">@{{ authStore.user?.username }}</span>
+        <!-- QUICK EDIT PROFILE FORM -->
+        <div class="user-edit-profile-card">
+          <div class="edit-profile-title-bar">
+            <div class="edit-title-left">
+              <span class="edit-profile-heading">CẬP NHẬT THÔNG TIN TÀI KHOẢN</span>
+              <span class="edit-profile-sub">Cập nhật nhanh Họ tên, SĐT, Email &amp; Địa chỉ nhận hàng</span>
+            </div>
+            <span class="username-tag">@{{ authStore.user?.username }}</span>
           </div>
-          <div class="detail-row" v-if="authStore.user?.email">
-            <span class="lbl">Email:</span>
-            <span class="val">{{ authStore.user?.email }}</span>
-          </div>
-          <div class="detail-row" v-if="authStore.user?.phone">
-            <span class="lbl">Số điện thoại:</span>
-            <span class="val">{{ authStore.user?.phone }}</span>
-          </div>
-        </div>
 
-        <div class="auth-actions-group">
-          <button class="auth-btn primary" @click="goToMyOrders">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-              <path d="m3.3 7 8.7 5 8.7-5"></path>
-              <path d="M12 22V12"></path>
-            </svg>
-            QUẢN LÝ ĐƠN HÀNG CỦA TÔI
-          </button>
+          <el-form label-position="top" class="profile-edit-form" @submit.prevent="handleUpdateProfile">
+            <div class="form-grid-2col">
+              <el-form-item label="Họ và tên (*)">
+                <el-input
+                  v-model="profileForm.fullName"
+                  placeholder="Nhập họ và tên..."
+                  clearable
+                />
+              </el-form-item>
 
-          <button class="auth-btn secondary" @click="goToTracking">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="1" y="3" width="15" height="13"></rect>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
-              <circle cx="5.5" cy="18.5" r="2.5"></circle>
-              <circle cx="18.5" cy="18.5" r="2.5"></circle>
-            </svg>
-            TRA CỨU &amp; THEO DÕI ĐƠN HÀNG
-          </button>
+              <el-form-item label="Số điện thoại (*)">
+                <el-input
+                  v-model="profileForm.phone"
+                  placeholder="VD: 0901234567..."
+                  clearable
+                />
+              </el-form-item>
+            </div>
 
-          <button v-if="isStaffOrAdmin" class="auth-btn secondary" @click="goToAdmin">
-            TRUY CẬP KÊNH QUẢN TRỊ (ADMIN) &rarr;
-          </button>
+            <el-form-item label="Địa chỉ Email">
+              <el-input
+                v-model="profileForm.email"
+                placeholder="VD: name@example.com..."
+                clearable
+              />
+            </el-form-item>
 
-          <button class="auth-btn outline-danger" @click="handleLogout">
-            ĐĂNG XUẤT TÀI KHOẢN
-          </button>
+            <!-- ADDRESS PICKER SECTION -->
+            <div class="address-builder-section">
+              <div class="address-section-header">
+                <span class="sec-label">ĐỊA CHỈ GIAO HÀNG (Đ/C)</span>
+                <button
+                  type="button"
+                  class="btn-toggle-address-mode"
+                  @click="showAddressSelects = !showAddressSelects"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span>{{ showAddressSelects ? 'Nhập tay tự do' : '⚡ Chọn nhanh Tỉnh/Huyện/Xã' }}</span>
+                </button>
+              </div>
+
+              <!-- Fast Cascade Dropdowns (City -> District -> Ward) -->
+              <div v-if="showAddressSelects" class="cascade-address-container">
+                <div class="cascade-row-3col">
+                  <el-form-item label="Tỉnh / Thành phố (*)" class="cascade-item">
+                    <el-select
+                      v-model="selectedProvinceCode"
+                      placeholder="Chọn Tỉnh / TP"
+                      filterable
+                      clearable
+                      :loading="loadingProvinces"
+                      @change="handleProvinceChange"
+                      style="width: 100%"
+                    >
+                      <el-option
+                        v-for="p in provincesList"
+                        :key="p.code"
+                        :label="p.name"
+                        :value="p.code"
+                      />
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item label="Quận / Huyện (*)" class="cascade-item">
+                    <el-select
+                      v-model="selectedDistrictCode"
+                      placeholder="Chọn Quận / Huyện"
+                      filterable
+                      clearable
+                      :disabled="!selectedProvinceCode"
+                      :loading="loadingDistricts"
+                      @change="handleDistrictChange"
+                      style="width: 100%"
+                    >
+                      <el-option
+                        v-for="d in districtsList"
+                        :key="d.code"
+                        :label="d.name"
+                        :value="d.code"
+                      />
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item label="Phường / Xã (*)" class="cascade-item">
+                    <el-select
+                      v-model="selectedWardCode"
+                      placeholder="Chọn Phường / Xã"
+                      filterable
+                      clearable
+                      :disabled="!selectedDistrictCode"
+                      :loading="loadingWards"
+                      @change="handleWardChange"
+                      style="width: 100%"
+                    >
+                      <el-option
+                        v-for="w in wardsList"
+                        :key="w.code"
+                        :label="w.name"
+                        :value="w.code"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </div>
+
+                <el-form-item label="Số nhà, tên đường" class="cascade-item">
+                  <el-input
+                    v-model="streetAddress"
+                    placeholder="VD: Số 18 ngõ 42 Phố Huế..."
+                    @input="rebuildFullAddress"
+                    clearable
+                  />
+                </el-form-item>
+              </div>
+
+              <!-- Full Address Preview / Direct Edit -->
+              <el-form-item :label="showAddressSelects ? 'Địa chỉ hoàn chỉnh tạo từ API:' : 'Địa chỉ chi tiết đầy đủ:'" class="cascade-item full-addr-item">
+                <el-input
+                  v-model="profileForm.address"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="Số nhà, tên đường, Phường/Xã, Quận/Huyện, Tỉnh/TP..."
+                  clearable
+                />
+              </el-form-item>
+            </div>
+
+            <button
+              class="auth-submit-btn save-profile-btn"
+              :disabled="savingProfile"
+              @click.prevent="handleUpdateProfile"
+            >
+              <svg v-if="!savingProfile" class="btn-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>{{ savingProfile ? 'ĐANG LƯU THAY ĐỔI...' : 'LƯU THAY ĐỔI THÔNG TIN' }}</span>
+            </button>
+          </el-form>
         </div>
       </div>
 
@@ -195,10 +303,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { vnAddressService } from '@/services/vnAddressService'
 
 const props = defineProps({
   modelValue: {
@@ -218,6 +327,147 @@ const authStore = useAuthStore()
 
 const activeTab = ref(props.initialTab)
 const loading = ref(false)
+
+// QUICK EDIT PROFILE STATE
+const savingProfile = ref(false)
+const profileForm = reactive({
+  fullName: '',
+  phone: '',
+  email: '',
+  address: ''
+})
+
+// FAST CASCADE ADDRESS STATE (Provinces API)
+const showAddressSelects = ref(true)
+const provincesList = ref([])
+const districtsList = ref([])
+const wardsList = ref([])
+
+const selectedProvinceCode = ref(null)
+const selectedDistrictCode = ref(null)
+const selectedWardCode = ref(null)
+const streetAddress = ref('')
+
+const provinceName = ref('')
+const districtName = ref('')
+const wardName = ref('')
+
+const loadingProvinces = ref(false)
+const loadingDistricts = ref(false)
+const loadingWards = ref(false)
+
+const loadProvinces = async () => {
+  if (provincesList.value.length > 0) return
+  loadingProvinces.value = true
+  try {
+    provincesList.value = await vnAddressService.getProvinces()
+  } catch (err) {
+    console.error('Lỗi nạp Tỉnh/TP:', err)
+  } finally {
+    loadingProvinces.value = false
+  }
+}
+
+const handleProvinceChange = async (val) => {
+  selectedDistrictCode.value = null
+  selectedWardCode.value = null
+  districtName.value = ''
+  wardName.value = ''
+  districtsList.value = []
+  wardsList.value = []
+
+  const found = provincesList.value.find(p => p.code === val)
+  provinceName.value = found ? found.name : ''
+  rebuildFullAddress()
+
+  if (val) {
+    loadingDistricts.value = true
+    try {
+      districtsList.value = await vnAddressService.getDistricts(val)
+    } catch (err) {
+      console.error('Lỗi nạp Quận/Huyện:', err)
+    } finally {
+      loadingDistricts.value = false
+    }
+  }
+}
+
+const handleDistrictChange = async (val) => {
+  selectedWardCode.value = null
+  wardName.value = ''
+  wardsList.value = []
+
+  const found = districtsList.value.find(d => d.code === val)
+  districtName.value = found ? found.name : ''
+  rebuildFullAddress()
+
+  if (val) {
+    loadingWards.value = true
+    try {
+      wardsList.value = await vnAddressService.getWards(val)
+    } catch (err) {
+      console.error('Lỗi nạp Phường/Xã:', err)
+    } finally {
+      loadingWards.value = false
+    }
+  }
+}
+
+const handleWardChange = (val) => {
+  const found = wardsList.value.find(w => w.code === val)
+  wardName.value = found ? found.name : ''
+  rebuildFullAddress()
+}
+
+const rebuildFullAddress = () => {
+  const parts = []
+  if (streetAddress.value && streetAddress.value.trim()) {
+    parts.push(streetAddress.value.trim())
+  }
+  if (wardName.value) {
+    parts.push(wardName.value)
+  }
+  if (districtName.value) {
+    parts.push(districtName.value)
+  }
+  if (provinceName.value) {
+    parts.push(provinceName.value)
+  }
+  if (parts.length > 0) {
+    profileForm.address = parts.join(', ')
+  }
+}
+
+const syncProfileForm = () => {
+  if (authStore.user) {
+    profileForm.fullName = authStore.user.fullName || ''
+    profileForm.phone = authStore.user.phone || ''
+    profileForm.email = authStore.user.email || ''
+    profileForm.address = authStore.user.address || ''
+  }
+}
+
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val) {
+      syncProfileForm()
+      loadProvinces()
+      if (authStore.isAuthenticated) {
+        authStore.fetchCurrentUser().then(() => syncProfileForm())
+      }
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => authStore.user,
+  () => {
+    syncProfileForm()
+  },
+  { deep: true }
+)
 
 const isStaffOrAdmin = computed(() => authStore.isAdmin || authStore.isManager || authStore.isStaff)
 
@@ -412,25 +662,42 @@ async function handleRegister() {
   })
 }
 
-async function handleLogout() {
-  await authStore.logout()
-  ElMessage.info('Bạn đã đăng xuất tài khoản thành công.')
-  emit('update:modelValue', false)
-}
+async function handleUpdateProfile() {
+  if (!profileForm.fullName || !profileForm.fullName.trim()) {
+    ElMessage.warning('Vui lòng nhập họ và tên của bạn')
+    return
+  }
+  if (profileForm.phone && profileForm.phone.trim()) {
+    const cleanPhone = profileForm.phone.trim()
+    if (!/^[0-9]{9,11}$/.test(cleanPhone)) {
+      ElMessage.warning('Số điện thoại không hợp lệ (từ 9 đến 11 chữ số)')
+      return
+    }
+  }
+  if (profileForm.email && profileForm.email.trim()) {
+    const cleanEmail = profileForm.email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      ElMessage.warning('Địa chỉ email không đúng định dạng')
+      return
+    }
+  }
 
-function goToMyOrders() {
-  emit('update:modelValue', false)
-  router.push('/my-orders')
-}
-
-function goToTracking() {
-  emit('update:modelValue', false)
-  router.push('/tracking')
-}
-
-function goToAdmin() {
-  emit('update:modelValue', false)
-  router.push('/dashboard')
+  savingProfile.value = true
+  try {
+    const updated = await authStore.updateProfile({
+      fullName: profileForm.fullName.trim(),
+      phone: profileForm.phone ? profileForm.phone.trim() : null,
+      email: profileForm.email ? profileForm.email.trim() : null,
+      address: profileForm.address ? profileForm.address.trim() : null
+    })
+    ElMessage.success('Cập nhật thông tin tài khoản thành công!')
+    emit('authenticated', updated)
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Cập nhật thông tin không thành công, vui lòng thử lại!'
+    ElMessage.error(msg)
+  } finally {
+    savingProfile.value = false
+  }
 }
 </script>
 
@@ -681,85 +948,192 @@ function goToAdmin() {
     }
   }
 
-  .user-details-list {
+  .user-edit-profile-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    padding: 12px 14px;
-    margin-bottom: 20px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
 
-    .detail-row {
+    .edit-profile-title-bar {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
-      padding: 4px 0;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
 
-      .lbl {
-        color: #64748b;
-        font-weight: 600;
+      .edit-title-left {
+        display: flex;
+        flex-direction: column;
+
+        .edit-profile-heading {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          color: #0f172a;
+          text-transform: uppercase;
+        }
+
+        .edit-profile-sub {
+          font-size: 11px;
+          color: #64748b;
+          margin-top: 2px;
+        }
       }
 
-      .val {
-        color: #0f172a;
-        font-weight: 700;
+      .username-tag {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 800;
+        background: #000000;
+        color: #ffffff;
+        padding: 2px 7px;
       }
     }
-  }
 
-  .auth-actions-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    .profile-edit-form {
+      :deep(.el-form-item) {
+        margin-bottom: 10px;
 
-    .auth-btn {
-      width: 100%;
-      height: 40px;
-      border-radius: 0;
-      font-family: var(--font-sans);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s ease;
+        .el-form-item__label {
+          font-size: 10.5px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          color: #334155;
+          padding-bottom: 2px;
+          margin-bottom: 0;
+          line-height: 1.2;
+        }
 
-      .btn-icon {
-        width: 14px;
-        height: 14px;
+        .el-input__wrapper,
+        .el-textarea__inner {
+          border-radius: 0;
+          box-shadow: 0 0 0 1px #cbd5e1 inset;
+          font-size: 12px;
+          padding: 6px 10px;
+
+          &.is-focus,
+          &:focus {
+            box-shadow: 0 0 0 2px #000000 inset !important;
+          }
+        }
       }
 
-      &.primary {
+      .form-grid-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+
+        @media (max-width: 480px) {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+      }
+
+      .address-builder-section {
+        margin: 10px 0 8px;
+        padding: 10px 12px;
+        background: #ffffff;
+        border: 1px dashed #cbd5e1;
+
+        .address-section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+
+          .sec-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            color: #0f172a;
+          }
+
+          .btn-toggle-address-mode {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+
+            &:hover {
+              background: #e2e8f0;
+              color: #1d4ed8;
+            }
+          }
+        }
+
+        .cascade-address-container {
+          margin-bottom: 4px;
+
+          .cascade-row-3col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+
+            @media (max-width: 500px) {
+              grid-template-columns: 1fr;
+              gap: 4px;
+            }
+          }
+
+          .cascade-item {
+            margin-bottom: 8px !important;
+
+            :deep(.el-select) {
+              .el-input__wrapper {
+                height: 32px;
+              }
+            }
+          }
+        }
+
+        .full-addr-item {
+          margin-bottom: 2px !important;
+        }
+      }
+
+      .save-profile-btn {
+        margin-top: 4px;
+        width: 100%;
+        height: 38px;
         background: #000000;
         color: #ffffff;
         border: 1px solid #000000;
+        border-radius: 0;
+        font-family: var(--font-sans);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
 
-        &:hover {
-          background: #27272a;
+        .btn-check-svg {
+          width: 14px;
+          height: 14px;
         }
-      }
 
-      &.secondary {
-        background: #f4f4f5;
-        color: #18181b;
-        border: 1px solid #d4d4d8;
-
-        &:hover {
-          background: #e4e4e7;
-          border-color: #18181b;
+        &:hover:not(:disabled) {
+          background: #1e293b;
+          border-color: #1e293b;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
         }
-      }
 
-      &.outline-danger {
-        background: transparent;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-
-        &:hover {
-          background: #fef2f2;
-          border-color: #dc2626;
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
       }
     }

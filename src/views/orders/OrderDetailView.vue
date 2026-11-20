@@ -25,6 +25,11 @@
       </div>
 
       <div class="bar-right" v-if="order">
+        <button type="button" class="btn-print" style="margin-right: 8px" @click="fetchOrderDetail">
+          <el-icon><Refresh /></el-icon>
+          <span>LÀM MỚI</span>
+        </button>
+
         <button type="button" class="btn-print" @click="invoiceVisible = true">
           <el-icon><Printer /></el-icon>
           <span>IN HÓA ĐƠN</span>
@@ -338,7 +343,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -349,7 +354,8 @@ import {
   Close,
   User,
   CreditCard,
-  Location
+  Location,
+  Refresh
 } from '@element-plus/icons-vue'
 import { orderService } from '@/services/orderService'
 import { formatCurrency, formatDateTime } from '@/utils/formatters'
@@ -431,14 +437,14 @@ async function fetchOrderDetail() {
     order.value = res.data
   } catch (err) {
     ElMessage.error('Không thể tải thông tin đơn hàng!')
-    router.push('/orders')
+    router.push('/admin/orders')
   } finally {
     loading.value = false
   }
 }
 
 function goBack() {
-  router.push('/orders')
+  router.push('/admin/orders')
 }
 
 function changeStatus(targetStatus, actionTitle) {
@@ -474,8 +480,38 @@ function changeStatus(targetStatus, actionTitle) {
     .catch(() => {})
 }
 
+let orderDetailPolling = null
+
+async function silentFetchOrderDetail() {
+  if (!orderId.value) return
+  try {
+    const res = await orderService.getOrderById(orderId.value)
+    if (res?.data) {
+      order.value = res.data
+      if (res.data.status !== 'PENDING' && res.data.status !== 'DRAFT') {
+        if (orderDetailPolling) {
+          clearInterval(orderDetailPolling)
+          orderDetailPolling = null
+        }
+      }
+    }
+  } catch (e) {}
+}
+
 onMounted(() => {
   fetchOrderDetail()
+  orderDetailPolling = setInterval(() => {
+    if (order.value && (order.value.status === 'PENDING' || order.value.status === 'DRAFT')) {
+      silentFetchOrderDetail()
+    }
+  }, 4000)
+})
+
+onUnmounted(() => {
+  if (orderDetailPolling) {
+    clearInterval(orderDetailPolling)
+    orderDetailPolling = null
+  }
 })
 </script>
 

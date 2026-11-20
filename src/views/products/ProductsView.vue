@@ -61,7 +61,7 @@
             <div v-else class="product-thumb placeholder">SNK</div>
           </template>
         </el-table-column>
-        <el-table-column label="Mã SP" width="90" align="center">
+        <el-table-column label="Mã SP" width="115" align="center">
           <template #default="{ row }">
             <span class="code-badge">{{ row.productCode }}</span>
           </template>
@@ -232,11 +232,11 @@ function resetFilter() {
 }
 
 function openCreate() {
-  router.push('/products/create')
+  router.push('/admin/products/create')
 }
 
 function openEdit(row) {
-  router.push(`/products/${row.id}/edit`)
+  router.push(`/admin/products/${row.id}/edit`)
 }
 
 async function openDetail(row) {
@@ -247,7 +247,7 @@ async function openDetail(row) {
 
 function goToVariants() {
   detailVisible.value = false
-  router.push('/variants')
+  router.push('/admin/variants')
 }
 
 function handleProductAction(cmd, row) {

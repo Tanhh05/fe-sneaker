@@ -29,8 +29,8 @@
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <span class="eyebrow">ORDER CONFIRMED</span>
-          <h1 class="headline">ĐẶT HÀNG THÀNH CÔNG</h1>
+          <span class="eyebrow">{{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'ORDER CONFIRMED' : 'ORDER PLACED (PENDING PAYMENT)' }}</span>
+          <h1 class="headline">{{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'ĐƠN HÀNG ĐÃ ĐƯỢC XÁC NHẬN 🎉' : 'ĐẶT HÀNG THÀNH CÔNG' }}</h1>
           <p class="order-code-prompt">
             Mã đơn hàng:
             <span class="order-code-badge" @click="copyOrderCode" title="Click để sao chép">
@@ -54,10 +54,10 @@
             >
               <div class="box-head">
                 <span class="box-eyebrow" :class="{ 'paid-eyebrow': isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED' }">
-                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'SEPAY AUTO-CONFIRMED' : 'PAYMENT GATEWAY' }}
+                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'SEPAY AUTO-CONFIRMED' : 'CỔNG THANH TOÁN SEPAY' }}
                 </span>
                 <h3 class="box-title">
-                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'THANH TOÁN THÀNH CÔNG 🎉' : 'THANH TOÁN CHUYỂN KHOẢN VIETQR' }}
+                  {{ (isPaidSuccess || order.status === 'CONFIRMED' || order.status === 'COMPLETED') ? 'THANH TOÁN THÀNH CÔNG 🎉' : 'QUÉT MÃ QR SEPAY ĐỂ THANH TOÁN' }}
                 </h3>
               </div>
 
@@ -88,30 +88,30 @@
                     <img
                       v-if="order.qrPaymentUrl"
                       :src="order.qrPaymentUrl"
-                      alt="VietQR"
+                      alt="Mã QR SePay"
                       class="vietqr-img"
                     />
-                    <p class="qr-scan-hint">Mở app Ngân hàng để quét mã QR</p>
+                    <p class="qr-scan-hint">Mở app Ngân hàng để quét mã QR SePay</p>
                   </div>
 
                   <div class="qr-specs">
                     <div class="spec-line">
                       <span class="lbl">Ngân hàng:</span>
-                      <span class="val strong">MB Bank (Quân Đội)</span>
+                      <span class="val strong">{{ order.bankName || 'MBBank (Quân Đội)' }}</span>
                     </div>
                     <div class="spec-line">
                       <span class="lbl">Chủ tài khoản:</span>
-                      <span class="val strong">SNEAKERHUB PRO</span>
+                      <span class="val strong">{{ order.accountName || 'SNEAKERHUB PRO' }}</span>
                     </div>
                     <div class="spec-line">
                       <span class="lbl">Số tài khoản:</span>
-                      <span class="val code-val" @click="copyText('0901000001', 'Số tài khoản')">
-                        0901000001 <span class="copy-hint">Sao chép</span>
+                      <span class="val code-val" @click="copyText(order.bankAccount || '0346771322', 'Số tài khoản')">
+                        {{ order.bankAccount || '0346771322' }} <span class="copy-hint">Sao chép</span>
                       </span>
                     </div>
                     <div class="spec-line">
                       <span class="lbl">Số tiền:</span>
-                      <span class="val price-val">{{ formatCurrency(order.totalAmount) }}</span>
+                      <span class="val price-val">{{ formatCurrency(order.finalAmount || order.totalAmount) }}</span>
                     </div>
                     <div class="spec-line">
                       <span class="lbl">Nội dung CK:</span>

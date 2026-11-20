@@ -180,6 +180,15 @@
                   <strong class="item-subtotal">
                     {{ formatCurrency(item.subtotal) }}
                   </strong>
+                  <button
+                    v-if="order.status === 'COMPLETED'"
+                    type="button"
+                    class="btn-item-review"
+                    @click="openReviewModal(order, item)"
+                  >
+                    <el-icon><Star /></el-icon>
+                    <span>Đánh giá &amp; Ảnh on-feet</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -215,6 +224,17 @@
                 <button type="button" class="btn-card-action secondary" @click="openOrderDetailDrawer(order)">
                   <el-icon><Tickets /></el-icon>
                   <span>Chi tiết &amp; Lịch sử</span>
+                </button>
+
+                <!-- REVIEW BUTTON (WHEN COMPLETED) -->
+                <button
+                  v-if="order.status === 'COMPLETED'"
+                  type="button"
+                  class="btn-card-action review-highlight"
+                  @click="openReviewForFirstItem(order)"
+                >
+                  <el-icon><Star /></el-icon>
+                  <span>Đánh giá sản phẩm</span>
                 </button>
 
                 <!-- PAY NOW VIA VIETQR (IF BANK_TRANSFER & NOT COMPLETED/CANCELLED) -->
@@ -352,6 +372,15 @@
                 <div class="drawer-item-sub">
                   {{ formatCurrency(item.unitPrice) }} &times; {{ item.quantity }} = <strong>{{ formatCurrency(item.subtotal) }}</strong>
                 </div>
+                <button
+                  v-if="selectedOrder.status === 'COMPLETED'"
+                  type="button"
+                  class="btn-drawer-review"
+                  @click="openReviewModal(selectedOrder, item)"
+                >
+                  <el-icon><Star /></el-icon>
+                  <span>Viết đánh giá &amp; Gửi ảnh on-feet</span>
+                </button>
               </div>
             </div>
           </div>
@@ -429,18 +458,18 @@
           <div class="bank-details-card">
             <div class="bank-row">
               <span class="bank-lbl">Ngân hàng:</span>
-              <strong class="bank-val">MBBank (Ngân hàng Quân Đội)</strong>
+              <strong class="bank-val">{{ qrOrder.bankName || 'MBBank (Ngân hàng Quân Đội)' }}</strong>
             </div>
             <div class="bank-row">
               <span class="bank-lbl">Số tài khoản:</span>
-              <strong class="bank-val mono" @click="copyText('0901000001', 'Đã chép số tài khoản MBBank!')">
-                0901000001
+              <strong class="bank-val mono" @click="copyText(qrOrder.bankAccount || '0346771322', 'Đã chép số tài khoản MBBank!')">
+                {{ qrOrder.bankAccount || '0346771322' }}
                 <el-icon class="copy-ic"><DocumentCopy /></el-icon>
               </strong>
             </div>
             <div class="bank-row">
               <span class="bank-lbl">Chủ tài khoản:</span>
-              <strong class="bank-val">SNEAKERHUB PRO</strong>
+              <strong class="bank-val">{{ qrOrder.accountName || 'SNEAKERHUB PRO' }}</strong>
             </div>
             <div class="bank-row">
               <span class="bank-lbl">Số tiền:</span>
@@ -514,6 +543,15 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- CUSTOMER REVIEW MODAL -->
+    <CustomerReviewModal
+      v-model="reviewModalVisible"
+      :product="reviewProduct"
+      :order-code="reviewOrderCode"
+      :customer-phone="reviewCustomerPhone"
+      @submitted="handleReviewSubmitted"
+    />
   </div>
 </template>
 
@@ -533,8 +571,10 @@ import {
   Warning,
   DocumentCopy,
   Van,
-  Box
+  Box,
+  Star
 } from '@element-plus/icons-vue'
+import CustomerReviewModal from '@/components/store/CustomerReviewModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import storeService from '@/services/storeService'
@@ -551,6 +591,36 @@ const currentTab = ref('ALL')
 const searchQuery = ref('')
 const paymentFilter = ref('')
 const guestPhone = ref('')
+
+// REVIEW STATE
+const reviewModalVisible = ref(false)
+const reviewProduct = ref(null)
+const reviewOrderCode = ref('')
+const reviewCustomerPhone = ref('')
+
+const openReviewModal = (order, item) => {
+  reviewOrderCode.value = order.orderCode
+  reviewCustomerPhone.value = order.customerPhone || (authStore.user ? authStore.user.phone : '')
+  reviewProduct.value = {
+    id: item.productId,
+    productName: item.productName,
+    thumbnailUrl: item.thumbnailUrl
+  }
+  reviewModalVisible.value = true
+}
+
+const openReviewForFirstItem = (order) => {
+  if (order.details && order.details.length > 0) {
+    openReviewModal(order, order.details[0])
+  } else {
+    ElMessage.info('Không tìm thấy sản phẩm trong đơn hàng để đánh giá')
+  }
+}
+
+const handleReviewSubmitted = () => {
+  ElMessage.success('🎉 Cảm ơn bạn! Đánh giá và ảnh On-feet đã được đăng thành công.')
+  fetchMyOrders()
+}
 
 // DRAWER & MODAL STATES
 const drawerVisible = ref(false)
@@ -1535,6 +1605,27 @@ onMounted(() => {
           font-weight: 800;
           color: #0f172a;
         }
+
+        .btn-item-review {
+          margin-top: 6px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 10px;
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid #0f172a;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+
+          &:hover {
+            background: #0f172a;
+            color: #ffffff;
+          }
+        }
       }
     }
   }
@@ -1651,6 +1742,17 @@ onMounted(() => {
           &:hover {
             background: #f1f5f9;
             border-color: #94a3b8;
+          }
+        }
+
+        &.review-highlight {
+          background: #0f172a;
+          border-color: #0f172a;
+          color: #ffffff;
+
+          &:hover {
+            background: #000000;
+            border-color: #000000;
           }
         }
 
@@ -1976,6 +2078,27 @@ onMounted(() => {
         .drawer-item-sub {
           font-size: 12px;
           color: #0f172a;
+        }
+
+        .btn-drawer-review {
+          margin-top: 8px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid #0f172a;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+
+          &:hover {
+            background: #0f172a;
+            color: #ffffff;
+          }
         }
       }
     }

@@ -5,12 +5,13 @@
       <div class="layout-container hero-grid">
         <div class="hero-content">
           <div class="hero-eyebrow">
-            <span class="eyebrow-dash"></span>
-            <span>CURATED ARCHIVE • SEASON 2026</span>
+            <span class="eyebrow-accent-tag">CURATED ARCHIVE</span>
+            <span class="eyebrow-sep">•</span>
+            <span class="eyebrow-sub">SEASON 2026 // STREETWEAR VAULT</span>
           </div>
           <h1 class="hero-headline">
             DEFINED BY CULTURE.<br />
-            BUILT FOR THE STREET.
+            <span class="headline-accent">BUILT FOR THE STREET.</span>
           </h1>
           <p class="hero-lead">
             Không gian lưu trữ và phân phối Sneaker chính hãng. Tuyển chọn những thiết kế kinh điển và các bản collab danh giá từ Nike, Air Jordan, Adidas, New Balance.
@@ -24,39 +25,120 @@
               </svg>
             </router-link>
             <router-link to="/tracking" class="btn-outline-action">
-              TRA CỨU ĐƠN HÀNG
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+              <span>TRA CỨU ĐƠN HÀNG</span>
             </router-link>
           </div>
 
-          <div class="hero-stats">
-            <div class="stat-item">
-              <span class="stat-number">100%</span>
-              <span class="stat-label">AUTHENTIC GUARANTEE</span>
+          <div class="hero-pillars">
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div class="pillar-info">
+                <span class="pillar-title">100% CHÍNH HÃNG</span>
+                <span class="pillar-sub">Kiểm định Legit Check</span>
+              </div>
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">0₫</span>
-              <span class="stat-label">FREESHIP TOÀN QUỐC TỪ 1TR</span>
+
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+              </div>
+              <div class="pillar-info">
+                <span class="pillar-title">FREESHIP TỪ 1TR</span>
+                <span class="pillar-sub">Giao nhanh toàn quốc</span>
+              </div>
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">07</span>
-              <span class="stat-label">NGÀY ĐỔI SIZE MIỄN PHÍ</span>
+
+            <div class="pillar-card">
+              <div class="pillar-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+              </div>
+              <div class="pillar-info">
+                <span class="pillar-title">07 NGÀY ĐỔI SIZE</span>
+                <span class="pillar-sub">Hỗ trợ đổi tận nơi</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="hero-visual">
           <div class="visual-frame">
+            <div class="visual-badge-top">
+              <span class="live-dot"></span>
+              <span class="badge-text">TOP 1 BEST-SELLER</span>
+            </div>
+            <div class="visual-ref-tag">
+              <span>{{ heroProduct?.productCode || 'TOP #1' }} // {{ heroProduct?.brandName || 'SNEAKER' }}</span>
+            </div>
             <img
-              src="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=1000&q=85"
-              alt="Air Jordan 1 Hero"
+              :src="heroImage"
+              :alt="heroProduct?.productName || 'Sneaker'"
               class="hero-img"
             />
             <div class="floating-grail-tag">
-              <span class="grail-label">ICON OF THE MONTH</span>
-              <span class="grail-title">Air Jordan 1 Retro High OG</span>
-              <span class="grail-price">5.200.000₫</span>
+              <div class="grail-header">
+                <span class="grail-label">BÁN CHẠY NHẤT THÁNG</span>
+                <span class="grail-edition">{{ heroProduct?.categoryName || 'HOT DROP' }}</span>
+              </div>
+              <div class="grail-body">
+                <div class="grail-title">{{ heroProduct?.productName || 'Nike Air Force 1 07 Low' }}</div>
+
+                <!-- Sizes & Colors Row -->
+                <div class="grail-specs" v-if="heroSizes.length || heroColors.length">
+                  <div class="spec-row" v-if="heroSizes.length">
+                    <span class="spec-label">SIZES:</span>
+                    <div class="spec-chips">
+                      <span
+                        v-for="s in heroSizes"
+                        :key="s.sizeValue"
+                        class="spec-chip"
+                        :class="{ 'out-of-stock': !s.inStock }"
+                        :title="s.inStock ? `Size EU ${s.sizeValue} (Sẵn hàng)` : `Size EU ${s.sizeValue} (Hết hàng)`"
+                      >
+                        {{ s.sizeValue }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="spec-row" v-if="heroColors.length">
+                    <span class="spec-label">MÀU SẮC:</span>
+                    <div class="color-chips">
+                      <div
+                        v-for="c in heroColors"
+                        :key="c.colorName"
+                        class="color-dot-chip"
+                        :style="{ backgroundColor: c.hexCode }"
+                        :title="c.colorName"
+                      ></div>
+                      <span class="color-count-label">({{ heroColors.length }} màu)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grail-meta-row">
+                  <span class="grail-price">{{ formatCurrency(heroProduct?.salePrice || 0) }}</span>
+                  <router-link :to="heroProduct ? ('/product/' + heroProduct.id) : '/shop'" class="grail-link-btn">
+                    <span>XEM NGAY</span>
+                    <span class="link-arrow">→</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -186,7 +268,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import storeService from '@/services/storeService'
@@ -200,6 +282,54 @@ const loading = ref(false)
 const brands = ref([])
 const categories = ref([])
 const featuredProducts = ref([])
+const bestSellerProduct = ref(null)
+
+const heroProduct = computed(() => {
+  return bestSellerProduct.value || featuredProducts.value[0] || null
+})
+
+const heroImage = computed(() => {
+  if (!heroProduct.value) {
+    return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800'
+  }
+  return heroProduct.value.thumbnailUrl || 
+    (heroProduct.value.imageUrls && heroProduct.value.imageUrls[0]) || 
+    'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800'
+})
+
+const heroSizes = computed(() => {
+  if (!heroProduct.value || !heroProduct.value.variants) return []
+  const map = new Map()
+  heroProduct.value.variants.forEach(v => {
+    if (v.sizeValue && !map.has(v.sizeValue)) {
+      map.set(v.sizeValue, {
+        sizeValue: v.sizeValue,
+        inStock: (v.availableQuantity || 0) > 0
+      })
+    }
+  })
+  return Array.from(map.values()).sort((a, b) => {
+    const na = parseFloat(a.sizeValue)
+    const nb = parseFloat(b.sizeValue)
+    if (!isNaN(na) && !isNaN(nb)) return na - nb
+    return a.sizeValue.localeCompare(b.sizeValue)
+  })
+})
+
+const heroColors = computed(() => {
+  if (!heroProduct.value || !heroProduct.value.variants) return []
+  const map = new Map()
+  heroProduct.value.variants.forEach(v => {
+    if (v.colorName && !map.has(v.colorName)) {
+      map.set(v.colorName, {
+        colorName: v.colorName,
+        hexCode: v.hexCode || '#111827',
+        colorCode: v.colorCode || ''
+      })
+    }
+  })
+  return Array.from(map.values())
+})
 
 const toggleWishlist = (product) => {
   const isAdded = wishlistStore.toggleFavorite(product)
@@ -213,14 +343,16 @@ const toggleWishlist = (product) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const [bRes, cRes, pRes] = await Promise.all([
+    const [bRes, cRes, pRes, bestRes] = await Promise.all([
       storeService.getBrands(),
       storeService.getCategories(),
-      storeService.getFeaturedProducts()
+      storeService.getFeaturedProducts(),
+      storeService.getBestSellerProduct()
     ])
     brands.value = bRes?.data || []
     categories.value = cRes?.data || []
     featuredProducts.value = pRes?.data || []
+    bestSellerProduct.value = bestRes?.data || null
   } catch (err) {
     console.error('Lỗi nạp dữ liệu trang chủ:', err)
   } finally {
@@ -256,7 +388,7 @@ onMounted(() => {
 /* Hero Section */
 .hero-editorial {
   padding: 70px 0 80px;
-  background: #fafafa;
+  background: #ffffff;
   border-bottom: 1px solid #ebebeb;
 
   @media (max-width: 768px) {
@@ -266,7 +398,7 @@ onMounted(() => {
   .hero-grid {
     display: grid;
     grid-template-columns: 1.15fr 1fr;
-    gap: 60px;
+    gap: 54px;
     align-items: center;
 
     @media (max-width: 992px) {
@@ -276,29 +408,45 @@ onMounted(() => {
   }
 
   .hero-eyebrow {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    color: #737373;
+    gap: 8px;
     margin-bottom: 18px;
 
-    .eyebrow-dash {
-      width: 20px;
-      height: 2px;
+    .eyebrow-accent-tag {
       background: #000000;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+    }
+
+    .eyebrow-sep {
+      color: #d4d4d4;
+      font-size: 11px;
+    }
+
+    .eyebrow-sub {
+      color: #71717a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
     }
   }
 
   .hero-headline {
-    font-size: 48px;
+    font-size: 50px;
     font-weight: 900;
-    line-height: 1.08;
-    letter-spacing: -0.03em;
+    line-height: 1.06;
+    letter-spacing: -0.035em;
     color: #000000;
-    margin: 0 0 20px;
+    margin: 0 0 18px;
+
+    .headline-accent {
+      display: inline-block;
+      color: #000000;
+    }
 
     @media (max-width: 992px) {
       font-size: 38px;
@@ -315,11 +463,11 @@ onMounted(() => {
   }
 
   .hero-lead {
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15.5px;
+    line-height: 1.65;
     color: #525252;
     max-width: 520px;
-    margin: 0 0 36px;
+    margin: 0 0 32px;
 
     @media (max-width: 600px) {
       font-size: 14px;
@@ -329,16 +477,16 @@ onMounted(() => {
 
   .hero-actions {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     align-items: center;
-    margin-bottom: 48px;
+    margin-bottom: 38px;
     flex-wrap: wrap;
 
     @media (max-width: 600px) {
       flex-direction: column;
       width: 100%;
       gap: 12px;
-      margin-bottom: 32px;
+      margin-bottom: 30px;
 
       .btn-primary-action,
       .btn-outline-action {
@@ -353,11 +501,12 @@ onMounted(() => {
       gap: 10px;
       background: #000000;
       color: #ffffff;
-      padding: 16px 28px;
-      font-size: 13px;
+      padding: 15px 28px;
+      font-size: 12.5px;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-decoration: none;
+      border: 1px solid #000000;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
       .arrow-svg {
@@ -368,6 +517,7 @@ onMounted(() => {
 
       &:hover {
         background: #262626;
+        border-color: #262626;
         .arrow-svg {
           transform: translateX(4px);
         }
@@ -377,109 +527,187 @@ onMounted(() => {
     .btn-outline-action {
       display: inline-flex;
       align-items: center;
-      padding: 15px 26px;
-      font-size: 13px;
-      font-weight: 700;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 12.5px;
+      font-weight: 800;
       letter-spacing: 0.06em;
       text-decoration: none;
       color: #000000;
       border: 1px solid #000000;
-      background: transparent;
+      background: #ffffff;
       transition: all 0.2s ease;
+
+      .btn-icon {
+        color: #000000;
+      }
 
       &:hover {
         background: #000000;
         color: #ffffff;
+
+        .btn-icon {
+          color: #ffffff;
+        }
       }
     }
   }
 
-  .hero-stats {
-    display: flex;
-    align-items: center;
-    gap: 24px;
+  .hero-pillars {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
     padding-top: 28px;
     border-top: 1px solid #e5e5e5;
 
     @media (max-width: 600px) {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      padding-top: 20px;
-
-      .stat-divider {
-        display: none !important;
-      }
-    }
-
-    @media (max-width: 380px) {
       grid-template-columns: 1fr;
+      gap: 10px;
+      padding-top: 20px;
     }
 
-    .stat-item {
+    .pillar-card {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
 
-      .stat-number {
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
+      &:hover {
+        border-color: #000000;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+
+      .pillar-icon {
+        width: 30px;
+        height: 30px;
+        background: #f4f4f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: #000000;
+        flex-shrink: 0;
       }
 
-      .stat-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        color: #737373;
-        margin-top: 2px;
-      }
-    }
+      .pillar-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
 
-    .stat-divider {
-      width: 1px;
-      height: 30px;
-      background: #e5e5e5;
+        .pillar-title {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.03em;
+          color: #000000;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .pillar-sub {
+          font-size: 10px;
+          color: #71717a;
+          font-weight: 500;
+          margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
     }
   }
 
   .visual-frame {
     position: relative;
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
-    padding: 24px;
+    background: #000000;
+    border: 1px solid #000000;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.16);
 
-    @media (max-width: 600px) {
-      padding: 12px;
+    .visual-badge-top {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 3;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      padding: 5px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+      }
+
+      .badge-text {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: #ffffff;
+        text-transform: uppercase;
+      }
+    }
+
+    .visual-ref-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 3;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 5px 10px;
+      font-size: 9.5px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      letter-spacing: 0.08em;
+      color: #000000;
+      border: 1px solid #000000;
     }
 
     .hero-img {
       width: 100%;
-      height: 480px;
+      height: 490px;
       object-fit: cover;
       display: block;
       filter: contrast(1.02);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 
       @media (max-width: 992px) {
         height: 380px;
       }
 
       @media (max-width: 600px) {
-        height: 260px;
+        height: 280px;
       }
+    }
+
+    &:hover .hero-img {
+      transform: scale(1.04);
     }
 
     .floating-grail-tag {
       position: absolute;
-      bottom: 40px;
-      left: 40px;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(8px);
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 3;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(12px);
       color: #ffffff;
-      padding: 16px 22px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      padding: 14px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
 
       @media (max-width: 600px) {
         bottom: 12px;
@@ -488,25 +716,151 @@ onMounted(() => {
         padding: 12px 14px;
       }
 
-      .grail-label {
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        color: #a3a3a3;
+      .grail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+
+        .grail-label {
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          color: #a1a1aa;
+          text-transform: uppercase;
+        }
+
+        .grail-edition {
+          font-family: var(--font-mono);
+          font-size: 9px;
+          font-weight: 800;
+          background: #27272a;
+          padding: 2px 6px;
+          color: #f4f4f5;
+          letter-spacing: 0.05em;
+        }
       }
 
       .grail-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 800;
         letter-spacing: -0.01em;
-        margin: 4px 0;
+        color: #ffffff;
+        margin-bottom: 6px;
       }
 
-      .grail-price {
-        font-size: 16px;
-        font-weight: 900;
-        color: #ffffff;
-        font-variant-numeric: tabular-nums;
+      .grail-specs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+        padding: 6px 0;
+        border-top: 1px dashed rgba(255, 255, 255, 0.15);
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+
+        .spec-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .spec-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            min-width: 44px;
+          }
+
+          .spec-chips {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+
+            .spec-chip {
+              font-family: var(--font-mono);
+              font-size: 10px;
+              font-weight: 700;
+              padding: 2px 6px;
+              background: rgba(255, 255, 255, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              color: #ffffff;
+              line-height: 1.2;
+
+              &.out-of-stock {
+                opacity: 0.4;
+                text-decoration: line-through;
+              }
+            }
+          }
+
+          .color-chips {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .color-dot-chip {
+              width: 13px;
+              height: 13px;
+              border-radius: 50%;
+              border: 1.5px solid rgba(255, 255, 255, 0.7);
+              box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+              cursor: pointer;
+              transition: transform 0.15s ease;
+
+              &:hover {
+                transform: scale(1.2);
+              }
+            }
+
+            .color-count-label {
+              font-size: 9.5px;
+              color: #a1a1aa;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+
+      .grail-meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .grail-price {
+          font-size: 16px;
+          font-weight: 900;
+          color: #ffffff;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .grail-link-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #ffffff;
+          color: #000000;
+          padding: 5px 12px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-decoration: none;
+          text-transform: uppercase;
+          transition: all 0.15s ease;
+
+          .link-arrow {
+            transition: transform 0.15s ease;
+          }
+
+          &:hover {
+            background: #e4e4e7;
+            .link-arrow {
+              transform: translateX(3px);
+            }
+          }
+        }
       }
     }
   }

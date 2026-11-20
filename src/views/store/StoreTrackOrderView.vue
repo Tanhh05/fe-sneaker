@@ -127,13 +127,13 @@
               </div>
             </div>
 
-            <!-- VietQR reminder if needed -->
+            <!-- SePay QR reminder if needed -->
             <div v-if="orderData.paymentMethod === 'BANK_TRANSFER' && orderData.qrPaymentUrl" class="qr-quick-box">
-              <span class="qr-quick-title">MÃ VIETQR ĐƠN HÀNG NÀY</span>
+              <span class="qr-quick-title">MÃ QR SEPAY ĐƠN HÀNG NÀY</span>
               <div class="qr-flex">
-                <img :src="orderData.qrPaymentUrl" alt="VietQR" class="qr-small" />
+                <img :src="orderData.qrPaymentUrl" alt="Mã QR SePay" class="qr-small" />
                 <div class="qr-text">
-                  <p>MB Bank: <strong>0901000001</strong></p>
+                  <p>{{ orderData.bankName || 'MBBank' }}: <strong>{{ orderData.bankAccount || '0346771322' }}</strong></p>
                   <p>Nội dung: <strong>{{ orderData.orderCode }}</strong></p>
                 </div>
               </div>
